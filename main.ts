@@ -18,6 +18,8 @@ how to deal with 0
 what if 1. is not the start of the row
 what to do if the line is too long
 what to do if this is the first line in the file
+increase performance by removing the look-back, but requires the first part of the list to already be sorted.
+can make the jumps to be of size 10, or powers of 2
 
 understand how indends work in md
 first line of file does not start with \n, and so are indends, they have some spacings
@@ -53,49 +55,73 @@ https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 // main logic = cursorHandler
 // mainlogicActivity = handleCursorActivity
 export default class ExamplePlugin extends Plugin {
-	private mainLogic: (editor: Editor) => void;
+	private editor: Editor | null = null;
+	private isProcessing: boolean = false;
 
 	onload() {
 		console.log("onLoad");
-		this.mainLogic = this.mainLogicActivity.bind(this);
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor: Editor) => {
-				this.mainLogic(editor);
+				this.editor = editor;
+				if (this.editor == null) return;
+
+				if (!this.isProcessing) {
+					try {
+						this.isProcessing = true;
+						this.mainActivity();
+					} finally {
+						this.isProcessing = false;
+					}
+				}
 			})
 		);
 	}
 
-	// find if line starts with a num
-	getNumInList(lineText: string): number {
-		let match = lineText.match(/^(\d+)\. /);
-		return match == undefined ? -1 : parseInt(match[1]);
-	}
+	mainActivity() {
+		if (this.editor == undefined) return;
 
-	mainLogicActivity(editor: Editor) {
-		if (editor == undefined) return;
-
-		const cursor = editor.getCursor();
+		const cursor = this.editor.getCursor();
 		const currLineIndex = cursor?.line;
 
 		if (currLineIndex == undefined) return;
+		if (this.getNumInList(currLineIndex) < 0) return;
 
-		let startIndex;
-		// if curr line is not in a numbered list
-		if (
-			this.getNumInList(editor.getLine(currLineIndex)) < 0 ||
-			currLineIndex == 0
-		) {
-			startIndex = currLineIndex;
-		} else {
-			let lookbackIndex = currLineIndex - 1;
-			while (this.getNumInList(editor.getLine(lookbackIndex)) > 0) {
-				lookbackIndex--;
-			}
-			startIndex = lookbackIndex + 1;
+		const startIndex = this.findStartIndex(currLineIndex);
+		this.updateRange(startIndex, currLineIndex);
+	}
+
+	updateRange(startIndex: number, endIndex: number) {
+		const val = this.getNumInList(startIndex);
+
+		for (let i: number = 0; i < endIndex - startIndex + 1; i++) {
+			const currIndex = startIndex + i;
+			const currVal = val + i;
+
+			const lineText = this.editor!.getLine(currIndex);
+			const match = lineText.match(/^(\d+)\. /);
+
+			if (match == undefined) return;
+
+			const newLineText = lineText.replace(match[0], `${currVal}. `);
+			this.editor!.setLine(currIndex, newLineText);
 		}
+	}
 
-		console.log("start index is: ", startIndex);
-		console.log("curr index is: ", currLineIndex);
+	findStartIndex(currLineIndex: number) {
+		if (currLineIndex == 0) return 0;
+
+		let prevIndex = currLineIndex - 1;
+		while (this.getNumInList(prevIndex) > 0) {
+			prevIndex--;
+		}
+		return prevIndex + 1;
+	}
+
+	// find if line starts with a num
+	getNumInList(lineNum: number): number {
+		const lineText = this.editor!.getLine(lineNum);
+		const match = lineText.match(/^(\d+)\. /);
+		return match == undefined ? -1 : parseInt(match[1]);
 	}
 }
 
