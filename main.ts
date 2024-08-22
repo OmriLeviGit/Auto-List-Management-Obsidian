@@ -1,14 +1,5 @@
-import {
-	App,
-	Editor,
-	editorEditorField,
-	MarkdownView,
-	Modal,
-	Notice,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-} from "obsidian";
+import { Plugin, Editor } from "obsidian";
+import { App, PluginManifest, MarkdownView, Modal, Notice, PluginSettingTab, Setting } from "obsidian";
 
 /*
 how it should work:
@@ -28,7 +19,12 @@ works with 0, consists with markdown
 use editor.transaction(() -> {}) to change history all at once
 when looking backwards, save the last prev number found in list, so to avoid updating
 
+update the package.json description etc
 add undo button
+
+// need 2 functions:
+1. checks 1 prev and then continue until the next one is correct
+2. find start, make it 1, continue until the next one is correct
 
 add tests
 
@@ -54,12 +50,11 @@ https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
 // main logic = cursorHandler
 // mainlogicActivity = handleCursorActivity
-export default class ExamplePlugin extends Plugin {
+export default class RenumberList extends Plugin {
 	private editor: Editor | null = null;
 	private isProcessing: boolean = false;
 
 	onload() {
-		console.log("onLoad");
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor: Editor) => {
 				this.editor = editor;
@@ -68,7 +63,7 @@ export default class ExamplePlugin extends Plugin {
 				if (!this.isProcessing) {
 					try {
 						this.isProcessing = true;
-						this.mainActivity();
+						this.handleListNumbering();
 					} finally {
 						this.isProcessing = false;
 					}
@@ -77,21 +72,57 @@ export default class ExamplePlugin extends Plugin {
 		);
 	}
 
-	mainActivity() {
-		if (this.editor == undefined) return;
-
-		const cursor = this.editor.getCursor();
-		const currLineIndex = cursor?.line;
-
+	public handleListNumbering() {
+		const currLineIndex = this.editor?.getCursor()?.line;	// get the line the cursor is at
 		if (currLineIndex == undefined) return;
-		if (this.getNumInList(currLineIndex) < 0) return;
-
-		const startIndex = this.findStartIndex(currLineIndex);
-		this.updateRange(startIndex, currLineIndex);
+		if (this.getNumInList(currLineIndex) == -1) return;		// check if is in a numbered list
+		this.renumber(currLineIndex);
 	}
 
-	updateRange(startIndex: number, endIndex: number) {
-		const val = this.getNumInList(startIndex);
+	public renumber(startIndex: number) {
+		// add transaction
+		if (startIndex < 0) {
+			console.log("error, line index must be non negative");
+			return;
+		}
+
+		let flag = true;
+		let currIndex = startIndex;
+
+		if (currIndex > 0) {
+			if (this.getNumInList(currIndex - 1) !== -1) {		 
+				currIndex--;
+				flag = false;
+			}
+		}
+		
+		let prevVal = this.getNumInList(currIndex);
+
+		while (true) {
+			currIndex++;
+			const expectedVal = prevVal + 1;
+			prevVal = expectedVal;
+
+			const lineText = this.editor!.getLine(currIndex);
+			const match = lineText.match(/^(\d+)\. /);
+			if (match === null) break;
+
+			const actualVal = parseInt(match[1]);
+
+			if (expectedVal === actualVal) {
+				if (flag == true) break;
+
+				flag = true;
+				continue;
+			}
+
+			const newLineText = lineText.replace(match[0], `${expectedVal}. `);
+			this.editor!.setLine(currIndex, newLineText);
+		}
+	}
+
+	public updateRangeFromOne(startIndex: number, endIndex: number) {
+		const val = 1;
 
 		for (let i: number = 0; i < endIndex - startIndex + 1; i++) {
 			const currIndex = startIndex + i;
@@ -107,7 +138,7 @@ export default class ExamplePlugin extends Plugin {
 		}
 	}
 
-	findStartIndex(currLineIndex: number) {
+	public findStartingIndex(currLineIndex: number) {
 		if (currLineIndex == 0) return 0;
 
 		let prevIndex = currLineIndex - 1;
@@ -118,7 +149,7 @@ export default class ExamplePlugin extends Plugin {
 	}
 
 	// find if line starts with a num
-	getNumInList(lineNum: number): number {
+	public getNumInList(lineNum: number): number {
 		const lineText = this.editor!.getLine(lineNum);
 		const match = lineText.match(/^(\d+)\. /);
 		return match == undefined ? -1 : parseInt(match[1]);
