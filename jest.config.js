@@ -1,9 +1,10 @@
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
 	preset: "ts-jest",
 	testEnvironment: "node",
 	transform: {
-		"^.+\\.ts?$": "ts-jest",
+		"^.+\\.tsx?$": ["ts-jest", {}],
 	},
-	testRegex: "/tests/.*\\.(test|spec)?\\.(ts|tsx)$",
-	moduleFileExtensions: ["ts", "js"],
+	testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+	moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
 };

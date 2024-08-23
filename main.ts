@@ -1,158 +1,48 @@
 import { Plugin, Editor } from "obsidian";
-import { App, PluginManifest, MarkdownView, Modal, Notice, PluginSettingTab, Setting } from "obsidian";
+import { ListRenumberer } from "src/ListRenumberer";
 
 /*
-how it should work:
-when typing, check current line. if its of type 'x. ' and the line above it is also 'y. ', make x = y and iterate down until curr line != of type 'x. '
-edge cases:
-how to deal with 0
-what if 1. is not the start of the row
-what to do if the line is too long
-what to do if this is the first line in the file
-increase performance by removing the look-back, but requires the first part of the list to already be sorted.
-can make the jumps to be of size 10, or powers of 2
+edge cases for the readme:
+[ ] how to deal with 0
+[ ] what if 1. is not the start of the row
+[ ] what to do if the line is too long
+[ ] what to do if this is the first line in the file
+[ ] increase performance by removing the look-back, but requires the first part of the list to already be sorted.
+[ ] can make the jumps to be of size 10, or powers of 2
 
+TODO: 
 understand how indends work in md
-first line of file does not start with \n, and so are indends, they have some spacings
-handle IO
 works with 0, consists with markdown
-use editor.transaction(() -> {}) to change history all at once
-when looking backwards, save the last prev number found in list, so to avoid updating
+use editor.transaction(() -> {}) to change history all at once (make sure ctrl z works)
 
-update the package.json description etc
-add undo button
-
-// need 2 functions:
-1. checks 1 prev and then continue until the next one is correct
-2. find start, make it 1, continue until the next one is correct
-
-add tests
-
-for the following list:
-2.
-3.
-5.
-give 2 options:
-
-look above. if none, leave as it is.
-look above, if not 1, make it 1.
-1.
-2.
-3.
-from 2 and onwards: change number to above + 1
-2.
-3.
-4.
-
-**remove all logs, and update manifest:
+update the package.json description, manifest, remove all logs etc
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
- 
+
+// need 3 functionalities:
+regular update, from current to last, be togglable (so that func 3 would be relavant).
+update the entire file
+update current cursor list
 */
-// main logic = cursorHandler
-// mainlogicActivity = handleCursorActivity
+
 export default class RenumberList extends Plugin {
-	private editor: Editor | null = null;
 	private isProcessing: boolean = false;
+	private listRenumberer: ListRenumberer;
 
 	onload() {
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor: Editor) => {
-				this.editor = editor;
-				if (this.editor == null) return;
+				this.listRenumberer = new ListRenumberer(editor);
 
 				if (!this.isProcessing) {
 					try {
 						this.isProcessing = true;
-						this.handleListNumbering();
+						this.listRenumberer.core();
 					} finally {
 						this.isProcessing = false;
 					}
 				}
 			})
 		);
-	}
-
-	public handleListNumbering() {
-		const currLineIndex = this.editor?.getCursor()?.line;	// get the line the cursor is at
-		if (currLineIndex == undefined) return;
-		if (this.getNumInList(currLineIndex) == -1) return;		// check if is in a numbered list
-		this.renumber(currLineIndex);
-	}
-
-	public renumber(startIndex: number) {
-		// add transaction
-		if (startIndex < 0) {
-			console.log("error, line index must be non negative");
-			return;
-		}
-
-		let flag = true;
-		let currIndex = startIndex;
-
-		if (currIndex > 0) {
-			if (this.getNumInList(currIndex - 1) !== -1) {		 
-				currIndex--;
-				flag = false;
-			}
-		}
-		
-		let prevVal = this.getNumInList(currIndex);
-
-		while (true) {
-			currIndex++;
-			const expectedVal = prevVal + 1;
-			prevVal = expectedVal;
-
-			const lineText = this.editor!.getLine(currIndex);
-			const match = lineText.match(/^(\d+)\. /);
-			if (match === null) break;
-
-			const actualVal = parseInt(match[1]);
-
-			if (expectedVal === actualVal) {
-				if (flag == true) break;
-
-				flag = true;
-				continue;
-			}
-
-			const newLineText = lineText.replace(match[0], `${expectedVal}. `);
-			this.editor!.setLine(currIndex, newLineText);
-		}
-	}
-
-	public updateRangeFromOne(startIndex: number, endIndex: number) {
-		const val = 1;
-
-		for (let i: number = 0; i < endIndex - startIndex + 1; i++) {
-			const currIndex = startIndex + i;
-			const currVal = val + i;
-
-			const lineText = this.editor!.getLine(currIndex);
-			const match = lineText.match(/^(\d+)\. /);
-
-			if (match == undefined) return;
-
-			const newLineText = lineText.replace(match[0], `${currVal}. `);
-			this.editor!.setLine(currIndex, newLineText);
-		}
-	}
-
-	public findStartingIndex(currLineIndex: number) {
-		if (currLineIndex == 0) return 0;
-
-		let prevIndex = currLineIndex - 1;
-		while (this.getNumInList(prevIndex) > 0) {
-			prevIndex--;
-		}
-		return prevIndex + 1;
-	}
-
-	// find if line starts with a num
-	public getNumInList(lineNum: number): number {
-		const lineText = this.editor!.getLine(lineNum);
-		const match = lineText.match(/^(\d+)\. /);
-		return match == undefined ? -1 : parseInt(match[1]);
 	}
 }
 
