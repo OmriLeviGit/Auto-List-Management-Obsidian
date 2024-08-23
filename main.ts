@@ -36,7 +36,7 @@ export default class RenumberList extends Plugin {
 				if (!this.isProcessing) {
 					try {
 						this.isProcessing = true;
-						this.listRenumberer.core();
+						this.listRenumberer.renumberLocally();
 					} finally {
 						this.isProcessing = false;
 					}
