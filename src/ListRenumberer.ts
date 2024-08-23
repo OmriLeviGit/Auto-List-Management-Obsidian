@@ -2,81 +2,45 @@ import { Editor } from "obsidian";
 export class ListRenumberer {
 	constructor(private editor: Editor) {}
 
-	public core() {
-		// rename core
-		const currLineIndex = this.editor?.getCursor()?.line; // get the line the cursor is at
-		if (currLineIndex == undefined) return;
-		if (this.getNumInList(currLineIndex) == -1) return; // check if is in a numbered list
-		this.renumber(currLineIndex);
-	}
+	public renumberLocally() {
+		let currLine = this.editor.getCursor().line;
+		if (currLine == undefined) return;
+		if (this.getNumInList(currLine) === -1) return; // if not part of a numbered list, there's no need to renumber
 
-	public renumber(startIndex: number) {
 		// add transaction
-		if (startIndex < 0) {
-			console.log("error, line index must be non negative");
-			return;
-		}
 
+		// if currLine != 0, renumber starting the previous line
 		let flag = true;
-		let currIndex = startIndex;
-
-		if (currIndex > 0) {
-			if (this.getNumInList(currIndex - 1) !== -1) {
-				currIndex--;
+		if (currLine > 0) {
+			if (this.getNumInList(currLine - 1) !== -1) {
+				currLine--;
 				flag = false;
 			}
 		}
 
-		let prevVal = this.getNumInList(currIndex);
+		let prevNumber = this.getNumInList(currLine);
 
 		while (true) {
-			currIndex++;
-			const expectedVal = prevVal + 1;
-			prevVal = expectedVal;
+			currLine++;
+			const expectedNumber = prevNumber + 1;
+			prevNumber = expectedNumber;
 
-			const lineText = this.editor!.getLine(currIndex);
+			const lineText = this.editor!.getLine(currLine);
 			const match = lineText.match(/^(\d+)\. /);
 			if (match === null) break;
 
-			const actualVal = parseInt(match[1]);
+			const actualNumber = parseInt(match[1]);
 
-			if (expectedVal === actualVal) {
+			if (expectedNumber === actualNumber) {
 				if (flag == true) break;
 
 				flag = true;
 				continue;
 			}
 
-			const newLineText = lineText.replace(match[0], `${expectedVal}. `);
-			this.editor!.setLine(currIndex, newLineText);
+			const newLineText = lineText.replace(match[0], `${expectedNumber}. `);
+			this.editor!.setLine(currLine, newLineText);
 		}
-	}
-
-	public updateRangeFromOne(startIndex: number, endIndex: number) {
-		const val = 1;
-
-		for (let i: number = 0; i < endIndex - startIndex + 1; i++) {
-			const currIndex = startIndex + i;
-			const currVal = val + i;
-
-			const lineText = this.editor!.getLine(currIndex);
-			const match = lineText.match(/^(\d+)\. /);
-
-			if (match == undefined) return;
-
-			const newLineText = lineText.replace(match[0], `${currVal}. `);
-			this.editor!.setLine(currIndex, newLineText);
-		}
-	}
-
-	public findStartingIndex(currLineIndex: number) {
-		if (currLineIndex == 0) return 0;
-
-		let prevIndex = currLineIndex - 1;
-		while (this.getNumInList(prevIndex) > 0) {
-			prevIndex--;
-		}
-		return prevIndex + 1;
 	}
 
 	// find if line starts with a num
@@ -86,3 +50,13 @@ export class ListRenumberer {
 		return match == undefined ? -1 : parseInt(match[1]);
 	}
 }
+
+// public findStartingIndex(currLineIndex: number) {
+// 	if (currLineIndex == 0) return 0;
+
+// 	let prevIndex = currLineIndex - 1;
+// 	while (this.getNumInList(prevIndex) > 0) {
+// 		prevIndex--;
+// 	}
+// 	return prevIndex + 1;
+// }
