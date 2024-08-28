@@ -13,14 +13,14 @@ TODO:
 
 
 TODO: 
-
+clone to a new dir and make sure a the script downloads all dependencies
 update the package.json description, manifest, remove all logs etc
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 
 // need 3 functionalities:
 regular update, from current to last in block, be togglable (so that func 3 would be relavant).
 update the entire file
-update current cursor list
+update current block
 */
 
 export default class RenumberList extends Plugin {
@@ -32,15 +32,11 @@ export default class RenumberList extends Plugin {
 				if (!this.isProcessing) {
 					try {
 						this.isProcessing = true;
-
 						const currLine = editor.getCursor().line;
-						if (currLine == undefined) return;
+						if (!currLine) return;
+						if (getItemNum(currLine, editor) === -1) return; // not a part of a numbered list
 
-						console.log("curr: ", currLine);
-
-						if (getItemNum(currLine, editor) === -1) return; // if not part of a numbered list, there's no need to renumber
-
-						renumberLocally(editor, currLine); // maybe use "update()"
+						renumberLocally(editor, currLine);
 					} finally {
 						this.isProcessing = false;
 					}
