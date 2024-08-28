@@ -4,12 +4,12 @@ import { getItemNum, PATTERN } from "./utils";
 function renumberLocally(editor: Editor, currLine: number) {
 	const lastLine = editor.lastLine();
 
-	// If not the starting line, start from the previous one
-	if (currLine > 0 && getItemNum(currLine - 1, editor) !== -1) {
+	// If not the first line in file, start from the previous one
+	if (currLine > 0 && getItemNum(editor, currLine - 1) !== -1) {
 		currLine--;
 	}
 
-	let prevItemNum = getItemNum(currLine, editor);
+	let prevItemNum = getItemNum(editor, currLine);
 	let isFirstItem = true;
 
 	while (currLine < lastLine) {

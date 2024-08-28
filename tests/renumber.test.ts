@@ -1,5 +1,5 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { renumberLocally } from "../src/renumber";
+import { renumberLocally } from "../src/renumberLocally";
 
 describe("RenumberLocally tests", () => {
 	test("Renumber from the first index", () => {
