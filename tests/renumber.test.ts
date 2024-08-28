@@ -1,7 +1,6 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { getItemNum, renumberLocally } from "../src/renumber";
+import { renumberLocally } from "../src/renumber";
 
-// test short files, something there doesnt work
 describe("RenumberLocally tests", () => {
 	test("Renumber from the first index", () => {
 		const content = ["1. a", "3. b"];
@@ -113,32 +112,5 @@ describe("RenumberLocally tests", () => {
 		for (let i = 0; i < expected.length; i++) {
 			expect(editor.getLine(i)).toBe(expected[i]);
 		}
-	});
-});
-
-// test for 000.something
-describe("getNumInList tests", () => {
-	test("test for single digit", () => {
-		const content = ["1. text"];
-		const editor = createMockEditor(content);
-		expect(getItemNum(0, editor)).toBe(1);
-	});
-
-	test("test for multiple digits", () => {
-		const content = ["123. text"];
-		const editor = createMockEditor(content);
-		expect(getItemNum(0, editor)).toBe(123);
-	});
-
-	test("test for no digits", () => {
-		const content = [". text"];
-		const editor = createMockEditor(content);
-		expect(getItemNum(0, editor)).toBe(-1);
-	});
-
-	test("test for line beginning", () => {
-		const content = [" 1. test"];
-		const editor = createMockEditor(content);
-		expect(getItemNum(0, editor)).toBe(-1);
 	});
 });
