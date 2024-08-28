@@ -18,6 +18,9 @@ export const createMockEditor = (initialContent: string[]) => {
 			}
 			content[n] = text;
 		}),
+		lastLine: jest.fn().mockImplementation((): number => {
+			return content.length - 1;
+		}),
 	};
 
 	return new Proxy({} as Editor, {

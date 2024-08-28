@@ -1,20 +1,18 @@
 import { Plugin, Editor } from "obsidian";
-import { renumberLocally, getNumInList } from "src/renumber";
+import { renumberLocally, getItemNum } from "src/renumber";
 
 /*
-edge cases for the readme:
-[ ] how to deal with 0
-[ ] what if 1. is not the start of the row
-[ ] what to do if the line is too long
-[ ] what to do if this is the first line in the file
-[ ] increase performance by removing the look-back, but requires the first part of the list to already be sorted.
-[ ] can make the jumps to be of size 10, or powers of 2
+for the readme:
+how we deal with 0 and 000. (consistent with markdown)
+
+TODO:
+[ ] make sure numbers in sequence work with shift-enter which adds too spaces **add to readme
+[ ] use editor.transaction(() -> {}) to change history all at once (make sure ctrl z works)
+[ ] restore the ability to renumber from the start as a toggle
+[ ] nested numbering
+
 
 TODO: 
-understand how indends work in md
-works with 0, consists with markdown
-use editor.transaction(() -> {}) to change history all at once (make sure ctrl z works)
-return the ability to renumber from the start as a toggle
 
 update the package.json description, manifest, remove all logs etc
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
@@ -38,7 +36,9 @@ export default class RenumberList extends Plugin {
 						const currLine = editor.getCursor().line;
 						if (currLine == undefined) return;
 
-						if (getNumInList(currLine, editor) === -1) return; // if not part of a numbered list, there's no need to renumber
+						console.log("curr: ", currLine);
+
+						if (getItemNum(currLine, editor) === -1) return; // if not part of a numbered list, there's no need to renumber
 
 						renumberLocally(editor, currLine); // maybe use "update()"
 					} finally {
