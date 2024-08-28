@@ -2,8 +2,8 @@ import { createMockEditor } from "./__mocks__/createMockEditor";
 import { getItemNum, renumberLocally } from "../src/renumber";
 
 // test short files, something there doesnt work
-describe("renumberLocally tests", () => {
-	test("renumber from the first index", () => {
+describe("RenumberLocally tests", () => {
+	test("Renumber from the first index", () => {
 		const content = ["1. a", "3. b"];
 		const editor = createMockEditor(content);
 		renumberLocally(editor, 0);
@@ -13,11 +13,21 @@ describe("renumberLocally tests", () => {
 		}
 	});
 
-	test("renumber from the last index", () => {
+	test("Renumber from the last index", () => {
 		const content = ["1. a", "3. b"];
 		const editor = createMockEditor(content);
 		renumberLocally(editor, 1);
 		const expected = ["1. a", "2. b"];
+		for (let i = 0; i < expected.length; i++) {
+			expect(editor.getLine(i)).toBe(expected[i]);
+		}
+	});
+
+	test("If previous was not a numbered item, start from current", () => {
+		const content = ["A", "1. a", "3. b"];
+		const editor = createMockEditor(content);
+		renumberLocally(editor, 1);
+		const expected = ["A", "1. a", "2. b"];
 		for (let i = 0; i < expected.length; i++) {
 			expect(editor.getLine(i)).toBe(expected[i]);
 		}
@@ -88,6 +98,18 @@ describe("renumberLocally tests", () => {
 		const editor = createMockEditor(content);
 		renumberLocally(editor, 1);
 		const expected = ["1. a", " 6. A"];
+		for (let i = 0; i < expected.length; i++) {
+			expect(editor.getLine(i)).toBe(expected[i]);
+		}
+	});
+
+	test("Local changes only - stop at the first correctly numbered item", () => {
+		console.log("\n#############\n");
+
+		const content = ["1. a", "3. b", "3. c", "5. d"];
+		const editor = createMockEditor(content);
+		renumberLocally(editor, 1);
+		const expected = ["1. a", "2. b", "3. c", "5. d"];
 		for (let i = 0; i < expected.length; i++) {
 			expect(editor.getLine(i)).toBe(expected[i]);
 		}
