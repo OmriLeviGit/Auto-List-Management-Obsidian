@@ -1,5 +1,5 @@
 import { Plugin, Editor } from "obsidian";
-import { ListRenumberer } from "src/ListRenumberer";
+import { renumberLocally, getNumInList } from "src/renumber";
 
 /*
 edge cases for the readme:
@@ -14,29 +14,33 @@ TODO:
 understand how indends work in md
 works with 0, consists with markdown
 use editor.transaction(() -> {}) to change history all at once (make sure ctrl z works)
+return the ability to renumber from the start as a toggle
 
 update the package.json description, manifest, remove all logs etc
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 
 // need 3 functionalities:
-regular update, from current to last, be togglable (so that func 3 would be relavant).
+regular update, from current to last in block, be togglable (so that func 3 would be relavant).
 update the entire file
 update current cursor list
 */
 
 export default class RenumberList extends Plugin {
 	private isProcessing: boolean = false;
-	private listRenumberer: ListRenumberer;
 
 	onload() {
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor: Editor) => {
-				this.listRenumberer = new ListRenumberer(editor);
-
 				if (!this.isProcessing) {
 					try {
 						this.isProcessing = true;
-						this.listRenumberer.renumberLocally();
+
+						const currLine = editor.getCursor().line;
+						if (currLine == undefined) return;
+
+						if (getNumInList(currLine, editor) === -1) return; // if not part of a numbered list, there's no need to renumber
+
+						renumberLocally(editor, currLine); // maybe use "update()"
 					} finally {
 						this.isProcessing = false;
 					}

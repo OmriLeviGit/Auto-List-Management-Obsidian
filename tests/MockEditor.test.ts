@@ -1,7 +1,7 @@
 import { createMockEditor, MockEditor } from "./__mocks__/createMockEditor";
 
 describe("Mock editor tests", () => {
-	const content = ["First item", "Second item", "Third item"];
+	const content = ["First line", "Second line", "Third line"];
 	let mockEditor: MockEditor;
 
 	beforeEach(() => {
@@ -9,7 +9,7 @@ describe("Mock editor tests", () => {
 	});
 
 	test("getLine returns correct content for valid index", () => {
-		expect(mockEditor.getLine(0)).toBe("First item");
+		expect(mockEditor.getLine(0)).toBe("First line");
 	});
 
 	test("getLine throws error for negative index", () => {
