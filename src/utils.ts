@@ -3,6 +3,9 @@ import { Editor } from "obsidian";
 const PATTERN = /^(\d+)\. /;
 
 function getItemNum(editor: Editor, lineNum: number): number {
+	if (lineNum < 0) {
+		return -1;
+	}
 	const lineText = editor.getLine(lineNum);
 	const match = lineText.match(PATTERN);
 	return match == undefined ? -1 : parseInt(match[1]);

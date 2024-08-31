@@ -2,7 +2,7 @@ import { createMockEditor } from "./__mocks__/createMockEditor";
 import { renumberLocally } from "../src/renumberLocally";
 
 describe("RenumberLocally tests", () => {
-	test("Renumber from the first index", () => {
+	test("Renumber from index 0", () => {
 		const content = ["1. a", "3. b"];
 		const editor = createMockEditor(content);
 		renumberLocally(editor, 0);
@@ -102,9 +102,27 @@ describe("RenumberLocally tests", () => {
 		}
 	});
 
-	test("Local changes only - stop at the first correctly numbered item", () => {
-		console.log("\n#############\n");
+	test("Local changes only - begin at index 0, stop at the first correctly numbered item", () => {
+		const content = ["1. a", "3. b", "3. c", "5. d"];
+		const editor = createMockEditor(content);
+		renumberLocally(editor, 0);
+		const expected = ["1. a", "2. b", "3. c", "5. d"];
+		for (let i = 0; i < expected.length; i++) {
+			expect(editor.getLine(i)).toBe(expected[i]);
+		}
+	});
 
+	test("Local changes only - begin at the middle, stop at the first correctly numbered item", () => {
+		const content = ["1. a", "2. b", "3. c", "5. d"];
+		const editor = createMockEditor(content);
+		renumberLocally(editor, 1);
+		const expected = ["1. a", "2. b", "3. c", "5. d"];
+		for (let i = 0; i < expected.length; i++) {
+			expect(editor.getLine(i)).toBe(expected[i]);
+		}
+	});
+
+	test("Local changes only - correct according to previous, stop at the first correctly numbered item", () => {
 		const content = ["1. a", "3. b", "3. c", "5. d"];
 		const editor = createMockEditor(content);
 		renumberLocally(editor, 1);

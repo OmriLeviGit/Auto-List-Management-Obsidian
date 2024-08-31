@@ -1,4 +1,4 @@
-import { Editor } from "obsidian";
+import { Editor, EditorTransaction } from "obsidian";
 export const createMockEditor = (initialContent: string[]) => {
 	let content = [...initialContent];
 
@@ -20,6 +20,17 @@ export const createMockEditor = (initialContent: string[]) => {
 		}),
 		lastLine: jest.fn().mockImplementation((): number => {
 			return content.length - 1;
+		}),
+		transaction: jest.fn().mockImplementation((tx: EditorTransaction, origin?: string) => {
+			const changes = tx.changes;
+			if (changes == undefined) {
+				console.log("changes is undefined");
+				return;
+			}
+
+			changes.forEach((change) => {
+				editor.setLine(change.from.line, change.text);
+			});
 		}),
 	};
 

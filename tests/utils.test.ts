@@ -25,4 +25,9 @@ describe("getItemNum tests", () => {
 		const editor = createMockEditor(content);
 		expect(getItemNum(editor, 0)).toBe(-1);
 	});
+	test("access negative number", () => {
+		const content = ["A"];
+		const editor = createMockEditor(content);
+		expect(getItemNum(editor, -1)).toBe(-1);
+	});
 });
