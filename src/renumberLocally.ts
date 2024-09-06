@@ -2,8 +2,6 @@ import { Editor, EditorChange } from "obsidian";
 import { getItemNum, PATTERN } from "./utils";
 
 function renumberLocally(editor: Editor, currLine: number): boolean {
-	console.log("renmumber is called");
-
 	let editRes = false;
 	const currNum = getItemNum(editor, currLine);
 

@@ -1,7 +1,7 @@
-import { Plugin, Editor } from "obsidian";
+import { Plugin, Editor, MarkdownView } from "obsidian";
 import { renumberLocally } from "src/renumberLocally";
 import { getItemNum } from "./src/utils";
-import { handleText, handleUndo } from "./src/keyboardCommandHandlers";
+import PasteHandler from "./src/PasteHandler";
 
 /*
 for the readme:
@@ -13,9 +13,9 @@ as of now, listening to undo is not be possible. mention vim.
 TODO: others
 confirm moving between pages (which changes editors) does not break the listener assignments
 check what is this.registerEditorExtension()
-confirm "ctrl x" works as intended
 confirm RTL support
 deal with numbering such as 0.1 text 0.2 text etc.
+make functions async
 
 TODO: paste
 split into functions, make pasting accoring to the previous number
@@ -43,11 +43,12 @@ https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
 
 export default class RenumberList extends Plugin {
-	private isProcessing: boolean = false;
-	private currentEditor: Editor;
-	private isLastActionRenumber = false;
+    private isProcessing: boolean = false;
+    private editor: Editor;
+    private isLastActionRenumber = false;
+    private pasteHandler: PasteHandler;
 
-	/*
+    /*
 	console.log(checkLastLineIsNumbered("Some text\n1. Numbered item")); // true
 	console.log(checkLastLineIsNumbered("Some text\nNot numbered")); // false
 	console.log(checkLastLineIsNumbered("1. Single numbered line")); // true
@@ -56,81 +57,64 @@ export default class RenumberList extends Plugin {
 	console.log(checkLastLineIsNumbered("1. First\n2. Second\nNot numbered")); // false
 	*/
 
-	onload() {
-		// const editor = this.app.workspace.activeEditor?.editor;
-		// if (!editor) {
-		// 	console.log("no active editor");
-		// 	return;
-		// }
+    onload() {
+        console.log("loading");
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (!view) {
+            return;
+        }
 
-		console.log("active editor detected");
-		// this.currentEditor = editor;
+        this.editor = view.editor;
+        this.pasteHandler = new PasteHandler();
 
-		this.registerEvent(
-			this.app.workspace.on("editor-change", (editor: Editor) => {
-				this.handleEditorChange(editor);
-			})
-		);
+        console.log("active editor detected");
 
-		this.registerEvent(
-			this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-				if (evt.defaultPrevented) {
-					return;
-				}
-				evt.preventDefault();
+        this.registerEvent(this.app.workspace.on("editor-change", (editor: Editor) => this.handleEditorChange(editor)));
 
-				const pasteToggle = true; // get from the settings
+        this.registerEvent(
+            this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
+                this.app.workspace.off("editor-change", (editor: Editor) => this.handleEditorChange(editor));
+                this.pasteHandler.handlePaste(evt, editor);
+                this.pasteHandler.renumberAfterPaste(editor);
+                this.app.workspace.on("editor-change", (editor: Editor) => this.handleEditorChange(editor));
+            })
+        );
 
-				const textFromClipboard = evt.clipboardData?.getData("text");
+        window.addEventListener("keydown", this.handleUndo.bind(this));
+    }
 
-				if (!textFromClipboard) {
-					return;
-				}
+    handleEditorChange(editor: Editor) {
+        if (!this.isProcessing) {
+            try {
+                this.isProcessing = true;
 
-				let modifiedText = textFromClipboard;
-				let newIndex: number | undefined;
+                const currLine = editor.getCursor().line;
+                if (currLine === undefined) return;
 
-				if (pasteToggle) {
-					const result = handleText(textFromClipboard, editor);
-					if (result) {
-						({ modifiedText, newIndex } = result);
-					}
-				}
+                if (getItemNum(editor, currLine) === -1) {
+                    return; // not a part of a numbered list
+                }
 
-				const baseIndex = editor.getCursor().line; // need to be instantiated before editor edits
-				editor.replaceSelection(modifiedText);
-				renumberLocally(editor, baseIndex);
+                this.isLastActionRenumber = renumberLocally(editor, currLine);
+            } finally {
+                this.isProcessing = false;
+            }
+        }
+    }
 
-				if (newIndex !== undefined && newIndex !== baseIndex) {
-					renumberLocally(editor, newIndex);
-				}
-			})
-		);
+    // connect to current editor
+    handleUndo(event: KeyboardEvent) {
+        // if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+        // 	if (this.isLastActionRenumber) {
+        // 		console.log("last action: renumber");
+        // 		this.currentEditor.undo();
+        // 	}
+        // 	console.log("last action: other");
+        // }
+    }
 
-		window.addEventListener("keydown", handleUndo.bind(this));
-	}
-
-	handleEditorChange(editor: Editor) {
-		if (!this.isProcessing) {
-			try {
-				this.isProcessing = true;
-
-				const currLine = editor.getCursor().line;
-				if (currLine === undefined) return;
-
-				if (getItemNum(editor, currLine) === -1) {
-					return; // not a part of a numbered list
-				}
-
-				this.isLastActionRenumber = renumberLocally(editor, currLine);
-			} finally {
-				this.isProcessing = false;
-			}
-		}
-	}
-
-	onunload() {
-		console.log("RenumberList plugin unloaded");
-		window.removeEventListener("keydown", handleUndo);
-	}
+    onunload() {
+        console.log("RenumberList plugin unloaded");
+        window.removeEventListener("keydown", this.handleUndo);
+    }
 }
