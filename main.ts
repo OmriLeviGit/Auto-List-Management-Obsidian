@@ -15,6 +15,7 @@ confirm moving between pages (which changes editors) does not break the listener
 check what is this.registerEditorExtension()
 confirm "ctrl x" works as intended
 confirm RTL support
+deal with numbering such as 0.1 text 0.2 text etc.
 
 TODO: paste
 split into functions, make pasting accoring to the previous number
@@ -72,16 +73,36 @@ export default class RenumberList extends Plugin {
 		);
 
 		this.registerEvent(
-			this.app.workspace.on("editor-paste", (evt, editor: Editor) => {
+			this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
 				if (evt.defaultPrevented) {
 					return;
 				}
-
 				evt.preventDefault();
-				const editedText = handleText(evt.clipboardData?.getData("text"), editor);
 
-				if (editedText) {
-					editor.replaceSelection(editedText);
+				const pasteToggle = true; // get from the settings
+
+				const textFromClipboard = evt.clipboardData?.getData("text");
+
+				if (!textFromClipboard) {
+					return;
+				}
+
+				let modifiedText = textFromClipboard;
+				let newIndex: number | undefined;
+
+				if (pasteToggle) {
+					const result = handleText(textFromClipboard, editor);
+					if (result) {
+						({ modifiedText, newIndex } = result);
+					}
+				}
+
+				const baseIndex = editor.getCursor().line; // need to be instantiated before editor edits
+				editor.replaceSelection(modifiedText);
+				renumberLocally(editor, baseIndex);
+
+				if (newIndex !== undefined && newIndex !== baseIndex) {
+					renumberLocally(editor, newIndex);
 				}
 			})
 		);
