@@ -1,35 +1,42 @@
 import { Plugin, Editor } from "obsidian";
 import { renumberLocally } from "src/renumberLocally";
 import { getItemNum } from "./src/utils";
+import { handleText, handleUndo } from "./src/keyboardCommandHandlers";
 
 /*
 for the readme:
 how we deal with 0 and 000. (consistent with markdown)
 not adding a renumber to the entire block because the observer is activating every character typed
+does not get activated on regular obsidian renumbering # what did i mean here?
+as of now, listening to undo is not be possible. mention vim.
 
-TODO: bugs
-splitting an existing numbered list using 'enter' sets the first item to 1
-fix the tests
+TODO: others
+confirm moving between pages (which changes editors) does not break the listener assignments
+check what is this.registerEditorExtension()
+confirm "ctrl x" works as intended
+confirm RTL support
 
-TODO: transaction:
-[ ] support undo by listening, disabling action and redoing twice (make sure other plugins do not get triggered twice). redo is automatic.
-[ ] work with copy and paste. when pasting before a list:
-  if pasted into the beginning, the pasted should get the previous first number.
-lsitening to undo is probably not possible, set as default and ask user to set it up, and check how it works with vim
+TODO: paste
+split into functions, make pasting accoring to the previous number
+one transaction with the renumbering
+
+TODO: undo:
+make sure other plugins do not get triggered twice. it might already be like that.
+confirm it works when holding "ctrl z" down.
+support vim users
+
 TODO: spaces:
-[ ] make sure numbers in sequence work with shift-enter which adds two spaces **add to readme
-[ ] nested numbering
-	3 spaces -- shift enter
-	4 spaces == tab character -- indented (insert according to settings)
-	other languages support
+make sure numbers in sequence work with shift-enter which adds two spaces **add to readme
+nested numbering: 3 spaces - shift+enter, 4 spaces\tab character - indented (insert according to settings)
 
-TODO: 3 core functionalities:
+TODO: core functionalities:
 listener update, from current until line correctly numbered (togglable)
 update the entire file (from the menu)
 update selected (hot key)
+paste accoring to the previous number (togglabele)
 
 TODO:
-clone to a new dir and make sure a the script downloads all dependencies
+clone to a new dir and make sure the npm command downloads all dependencies
 update the package.json description, manifest, remove all logs etc, choose a name for the plugin
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
@@ -39,73 +46,70 @@ export default class RenumberList extends Plugin {
 	private currentEditor: Editor;
 	private isLastActionRenumber = false;
 
+	/*
+	console.log(checkLastLineIsNumbered("Some text\n1. Numbered item")); // true
+	console.log(checkLastLineIsNumbered("Some text\nNot numbered")); // false
+	console.log(checkLastLineIsNumbered("1. Single numbered line")); // true
+	console.log(checkLastLineIsNumbered("Text without newline")); // false
+	console.log(checkLastLineIsNumbered("1. First\n2. Second\n3. Third")); // true
+	console.log(checkLastLineIsNumbered("1. First\n2. Second\nNot numbered")); // false
+	*/
+
 	onload() {
+		// const editor = this.app.workspace.activeEditor?.editor;
+		// if (!editor) {
+		// 	console.log("no active editor");
+		// 	return;
+		// }
+
+		console.log("active editor detected");
+		// this.currentEditor = editor;
+
 		this.registerEvent(
 			this.app.workspace.on("editor-change", (editor: Editor) => {
-				// check on youtube if need to first remove other listeners, check if need to remove it in unload
-				if (!this.isProcessing) {
-					try {
-						console.log("editor-change");
-						this.isProcessing = true;
-						this.currentEditor = editor;
+				this.handleEditorChange(editor);
+			})
+		);
 
-						const currLine = editor.getCursor().line;
-						if (currLine === undefined) return;
+		this.registerEvent(
+			this.app.workspace.on("editor-paste", (evt, editor: Editor) => {
+				if (evt.defaultPrevented) {
+					return;
+				}
 
-						if (getItemNum(editor, currLine) === -1) {
-							return; // not a part of a numbered list
-						}
+				evt.preventDefault();
+				const editedText = handleText(evt.clipboardData?.getData("text"), editor);
 
-						this.isLastActionRenumber = renumberLocally(editor, currLine);
-					} finally {
-						this.isProcessing = false;
-					}
+				if (editedText) {
+					editor.replaceSelection(editedText);
 				}
 			})
 		);
 
-		// 	// pasting support
-		// 	this.registerEvent(
-		// 		this.app.workspace.on("editor-paste", (event, editor: Editor) => {
-		// 			const beforePaste = editor.getCursor().line; // bug when pasting something thats not a numbered list before a numbered list
+		window.addEventListener("keydown", handleUndo.bind(this));
+	}
 
-		// 			const l = editor.getLine(beforePaste + 1);
+	handleEditorChange(editor: Editor) {
+		if (!this.isProcessing) {
+			try {
+				this.isProcessing = true;
 
-		// 			const n = getItemNum(editor, beforePaste + 1);
+				const currLine = editor.getCursor().line;
+				if (currLine === undefined) return;
 
-		// 			console.log("n", n);
+				if (getItemNum(editor, currLine) === -1) {
+					return; // not a part of a numbered list
+				}
 
-		// 			// console.log(beforePaste + 1, l);
+				this.isLastActionRenumber = renumberLocally(editor, currLine);
+			} finally {
+				this.isProcessing = false;
+			}
+		}
+	}
 
-		// 			const changeHandler = (editor: Editor) => {
-		// 				renumberLocally(editor, beforePaste);
-		// 				this.app.workspace.off("editor-change", changeHandler);
-		// 			};
-
-		// 			this.registerEvent(this.app.workspace.on("editor-change", changeHandler));
-		// 		})
-		// 	);
-
-		// 	this.registerKeyDownListener();
-		// }
-
-		// onunload() {
-		// 	console.log("RenumberList plugin unloaded");
-		// 	window.removeEventListener("keydown", this.handleKeyDown);
-		// }
-
-		// registerKeyDownListener() {
-		// 	window.addEventListener("keydown", this.handleKeyDown.bind(this));
-		// }
-
-		// handleKeyDown(event: KeyboardEvent) {
-		// 	if ((event.ctrlKey || event.metaKey) && event.key === "z") {
-		// 		// TODO: find the undo button
-		// 		if (this.isLastActionRenumber) {
-		// 			this.currentEditor.undo();
-		// 			console.log("last action");
-		// 		}
-		// 		console.log("not last action");
-		// 	}
+	onunload() {
+		console.log("RenumberList plugin unloaded");
+		window.removeEventListener("keydown", handleUndo);
 	}
 }

@@ -11,7 +11,7 @@ function getItemNum(editor: Editor, lineNum: number): number {
 	return match == undefined ? -1 : parseInt(match[1]);
 }
 
-function getBlockStart(editor: Editor, currLineIndex: number) {
+function getListStart(editor: Editor, currLineIndex: number) {
 	if (currLineIndex == 0) return 0;
 
 	let prevIndex = currLineIndex - 1;
@@ -21,4 +21,4 @@ function getBlockStart(editor: Editor, currLineIndex: number) {
 	return prevIndex + 1;
 }
 
-export { getItemNum, getBlockStart, PATTERN };
+export { getItemNum, getListStart as getBlockStart, PATTERN };
