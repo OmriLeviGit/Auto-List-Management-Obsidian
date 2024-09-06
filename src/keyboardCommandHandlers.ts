@@ -1,48 +1,57 @@
 import { Editor } from "obsidian";
 import { getItemNum, PATTERN } from "./utils";
 
-function handleText(pastedText: string | undefined, editor: Editor): string | undefined {
-	if (pastedText === undefined) {
-		return pastedText;
+// bugs: copy and paste multi line, copy 1 numebred line alone, paste into the middle multi line
+// its probably a problem with firstitemnumber
+// check how does pasting into the middle of the line works
+
+// renumebr first line and last line of the pasted content
+
+type TextModificationResult = { modifiedText: string; newIndex: number };
+
+function handleText(pastedText: string, editor: Editor): TextModificationResult | undefined {
+	console.log("in handleText");
+	const lines = pastedText.split("\n");
+	const baseIndex = editor.getCursor().line;
+	const offset = getTextOffset(lines);
+
+	if (offset < 0) {
+		return undefined;
+	}
+	const matchFound = lines[offset].match(PATTERN);
+
+	let firstItem = getItemNum(editor, baseIndex);
+	firstItem = firstItem === -1 ? getItemNum(editor, baseIndex + 1) : firstItem;
+
+	console.log("first item: ", firstItem);
+
+	if (!matchFound || firstItem === -1) {
+		return undefined; // paste as usual
 	}
 
-	// bugs: copy and paste the same number into the same place, copy 1 numebred line alone
-	// its probably a problem with firstitemnumber
-	// check how does pasting into the middle of the line works
+	const modifiedText = pastedText.replace(matchFound[0], `${firstItem}. `);
+	console.log("modified text:\n", modifiedText);
+	const newIndex = baseIndex + offset;
 
-	const baseIndex = editor.getCursor().line;
+	// console.log("cursor was at index:", baseIndex);
+	// console.log("the starting value that is required: ", firstItem);
+	// console.log("@@@", newText);
+	// console.log("need to change the value of line: ", offset, "in the copied text, which wil be the new start");
+	// console.log("new list global start index: ", newIndex);
+	// console.log("in the new index:", editor.getLine(newIndex));
 
-	const lines = pastedText.split("\n");
-	let offset = lines.length;
-	let lastMatch: RegExpMatchArray | null = null;
+	return { modifiedText, newIndex };
+}
 
+function getTextOffset(lines: string[]): number {
+	let offset = -1;
 	for (let i = lines.length - 1; i >= 0; i--) {
-		const match = lines[i].match(PATTERN);
-		if (!match) {
+		if (!lines[i].match(PATTERN)) {
 			break;
 		}
-		lastMatch = match;
 		offset = i;
 	}
-
-	if (lastMatch === null) {
-		console.log("no match found");
-		// paste as usual
-		return pastedText;
-	}
-
-	const firstItemNumber = getItemNum(editor, baseIndex + 1);
-	console.log("cursor was at index:", baseIndex);
-	console.log("the starting value that is required: ", firstItemNumber);
-
-	const newText = pastedText.replace(lastMatch[0], `${firstItemNumber}. `);
-	console.log("@@@", newText);
-
-	const newIndex = baseIndex + offset;
-	console.log("need to change the value of line: ", offset, "in the copied text, which wil be the new start");
-	console.log("new list global start index: ", newIndex);
-
-	return newText;
+	return offset;
 }
 
 // connect to current editor
