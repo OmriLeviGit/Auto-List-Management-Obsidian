@@ -5,72 +5,76 @@ import { renumberLocally } from "./renumberLocally";
 type TextModificationResult = { modifiedText: string; newIndex: number };
 
 export default class PasteHandler {
-	private baseIndex: number;
-	private newIndex: number | undefined;
+    private baseIndex: number | undefined;
+    private newIndex: number | undefined;
 
-	handlePaste(evt: ClipboardEvent, editor: Editor) {
-		if (evt.defaultPrevented) {
-			return;
-		}
-		evt.preventDefault();
+    // sandwich doesnt work at the top:
+    /*
+61. asdfdsaasfvvvvvd
+6454
+fewf
+1. asdfdsa3. asdfdsaf3v. asdfdsfafv
+*/
 
-		this.baseIndex = editor.listSelections()[0].head.line;
-		const pasteToggle = true; // get from the settings
+    modifyText(pastedText: string, editor: Editor): TextModificationResult | undefined {
+        const { anchor, head } = editor.listSelections()[0];
+        const baseIndex = Math.max(anchor.line, head.line);
 
-		const textFromClipboard = evt.clipboardData?.getData("text");
+        const lines = pastedText.split("\n");
+        const offset = this.getTextOffset(lines);
 
-		if (!textFromClipboard) {
-			return;
-		}
+        if (offset < 0) {
+            return undefined;
+        }
 
-		let modifiedText = textFromClipboard;
+        const matchFound = lines[offset].match(PATTERN);
 
-		if (pasteToggle) {
-			const result = this.modifyText(textFromClipboard, editor);
-			if (result) {
-				modifiedText = result.modifiedText;
-				this.newIndex = result.newIndex;
-			}
-		}
+        let firstItem = getItemNum(editor, baseIndex);
+        if (firstItem === -1) {
+            firstItem = getItemNum(editor, baseIndex + 1);
+        }
 
-		editor.replaceSelection(modifiedText);
-	}
+        if (!matchFound || firstItem === -1) {
+            return undefined;
+        }
 
-	public renumberAfterPaste(editor: Editor) {
-		// TODO get rid of one of them
-		renumberLocally(editor, this.baseIndex - 1);
-		renumberLocally(editor, this.baseIndex);
+        const modifiedText = pastedText.replace(matchFound[0], `${firstItem}. `);
+        const newIndex = baseIndex + offset;
 
-		if (this.newIndex !== undefined && this.newIndex !== this.baseIndex) {
-			renumberLocally(editor, this.newIndex);
-		}
-	}
+        return { modifiedText, newIndex };
+    }
 
-	modifyText(pastedText: string, editor: Editor): TextModificationResult | undefined {
-		const lines = pastedText.split("\n");
-		const baseIndex = editor.getCursor().line;
-		const offset = this.getTextOffset(lines);
+    public renumberAfterPaste(editor: Editor) {
+        // TODO check if these 2 are needed because the other listener might be enough
+        // console.log("renumber after paste is called with base index: ", this.baseIndex);
+        if (this.baseIndex === undefined) {
+            return; // need to be called after pasting;
+        }
+        const first = renumberLocally(editor, this.baseIndex - 1);
+        const second = renumberLocally(editor, this.baseIndex);
 
-		if (offset < 0) {
-			return undefined;
-		}
+        if (first !== -1) {
+            console.log("@@first", first, "index - 1 is: ", this.baseIndex - 1);
+        }
 
-		const matchFound = lines[offset].match(PATTERN);
+        if (second !== -1) {
+            console.log("@@second@@@", second, "index is: ", this.baseIndex);
+        }
 
-		let firstItem = getItemNum(editor, baseIndex);
-		firstItem = firstItem === -1 ? getItemNum(editor, baseIndex + 1) : firstItem;
+        if (this.newIndex !== undefined && this.newIndex !== this.baseIndex) {
+            console.log("inside");
+            renumberLocally(editor, this.newIndex);
+        }
 
-		if (!matchFound || firstItem === -1) {
-			return undefined;
-		}
+        this.reset();
+    }
 
-		const modifiedText = pastedText.replace(matchFound[0], `${firstItem}. `);
-		const newIndex = baseIndex + offset;
+    private reset() {
+        this.baseIndex = undefined;
+        this.newIndex = undefined;
+    }
 
-		return { modifiedText, newIndex };
-	}
-
-	/*
+    /*
 	console.log("cursor was at index:", baseIndex);
 	console.log("the starting value that is required: ", firstItem);
 	console.log("@@@", newText);
@@ -79,14 +83,14 @@ export default class PasteHandler {
 	console.log("in the new index:", editor.getLine(newIndex));
 */
 
-	getTextOffset(lines: string[]): number {
-		let offset = -1;
-		for (let i = lines.length - 1; i >= 0; i--) {
-			if (!lines[i].match(PATTERN)) {
-				break;
-			}
-			offset = i;
-		}
-		return offset;
-	}
+    getTextOffset(lines: string[]): number {
+        let offset = -1;
+        for (let i = lines.length - 1; i >= 0; i--) {
+            if (!lines[i].match(PATTERN)) {
+                break;
+            }
+            offset = i;
+        }
+        return offset;
+    }
 }

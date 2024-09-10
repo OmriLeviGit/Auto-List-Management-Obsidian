@@ -2,6 +2,7 @@ import { Plugin, Editor, MarkdownView } from "obsidian";
 import { renumberLocally } from "src/renumberLocally";
 import { getItemNum } from "./src/utils";
 import PasteHandler from "./src/PasteHandler";
+import { Mutex } from "async-mutex";
 
 /*
 for the readme:
@@ -41,11 +42,13 @@ clone to a new dir and make sure the npm command downloads all dependencies
 update the package.json description, manifest, remove all logs etc, choose a name for the plugin
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
+const mutex = new Mutex();
 
 export default class RenumberList extends Plugin {
     private isProcessing: boolean = false;
     private editor: Editor;
     private isLastActionRenumber = false;
+    private linesToEdit: number[] = [];
     private pasteHandler: PasteHandler;
 
     /*
@@ -69,14 +72,44 @@ export default class RenumberList extends Plugin {
 
         console.log("active editor detected");
 
-        this.registerEvent(this.app.workspace.on("editor-change", (editor: Editor) => this.handleEditorChange(editor)));
+        this.registerEvent(
+            this.app.workspace.on("editor-change", (editor: Editor) => {
+                mutex.runExclusive(() => {
+                    this.handleEditorChange(editor);
+                });
+            })
+        );
 
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                this.app.workspace.off("editor-change", (editor: Editor) => this.handleEditorChange(editor));
-                this.pasteHandler.handlePaste(evt, editor);
-                this.pasteHandler.renumberAfterPaste(editor);
-                this.app.workspace.on("editor-change", (editor: Editor) => this.handleEditorChange(editor));
+                const pasteToggle = true; //  TODO get from the settings
+
+                if (evt.defaultPrevented) {
+                    return;
+                }
+                evt.preventDefault();
+                mutex.runExclusive(() => {
+                    console.log("\n#paste acquired");
+                    const textFromClipboard = evt.clipboardData?.getData("text");
+
+                    const { anchor, head } = editor.listSelections()[0];
+                    const firstInPastedBlock = Math.min(anchor.line, head.line);
+
+                    this.linesToEdit.push(firstInPastedBlock);
+
+                    if (!textFromClipboard || !pasteToggle) {
+                        return;
+                    }
+
+                    const result = this.pasteHandler.modifyText(textFromClipboard, editor);
+                    if (result) {
+                        const { modifiedText, newIndex } = result;
+                        editor.replaceSelection(modifiedText);
+                        this.linesToEdit.push(newIndex);
+                    }
+
+                    renumberLocally(editor, this.linesToEdit);
+                });
             })
         );
 
@@ -88,14 +121,20 @@ export default class RenumberList extends Plugin {
             try {
                 this.isProcessing = true;
 
-                const currLine = editor.getCursor().line;
-                if (currLine === undefined) return;
+                console.log("\n#editor acquired");
 
+                const currLine = editor.getCursor().line;
+                if (currLine === undefined) {
+                    return;
+                }
+
+                console.log("editor change is called to line: ", currLine);
                 if (getItemNum(editor, currLine) === -1) {
                     return; // not a part of a numbered list
                 }
 
-                this.isLastActionRenumber = renumberLocally(editor, currLine);
+                console.log("check", currLine);
+                // this.isLastActionRenumber = renumberLocally(editor, currLine) !== -1;
             } finally {
                 this.isProcessing = false;
             }
