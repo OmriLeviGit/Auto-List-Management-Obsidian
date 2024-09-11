@@ -1,9 +1,8 @@
 import { Editor, EditorChange } from "obsidian";
 import { getItemNum, PATTERN } from "./utils";
 
-// const NO_CHANGES_MADE = -1;
 function renumberLocally(editor: Editor, ...lines: (number | number[])[]): boolean {
-    console.log("renumber locally is called");
+    console.log("renumber locally is called with: ", lines);
     const linesToProcess: number[] = lines.flat().filter((line) => typeof line === "number") as number[];
 
     if (linesToProcess.length === 0) {
@@ -14,9 +13,8 @@ function renumberLocally(editor: Editor, ...lines: (number | number[])[]): boole
     const lineCount = editor.lastLine() + 1;
 
     // renumber every line in the list
-    for (const line of linesToProcess) {
-        let currLine = line;
-
+    let currLine: number | undefined;
+    while ((currLine = linesToProcess.shift()) !== undefined) {
         const currNum = getItemNum(editor, currLine);
 
         if (currNum === -1) {
@@ -65,6 +63,8 @@ function renumberLocally(editor: Editor, ...lines: (number | number[])[]): boole
             expectedItemNum++;
         }
     }
+
+    console.log("@lines left in list: ", linesToProcess.length);
 
     editor.transaction({ changes });
 

@@ -45,20 +45,10 @@ https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 const mutex = new Mutex();
 
 export default class RenumberList extends Plugin {
-    private isProcessing: boolean = false;
     private editor: Editor;
     private isLastActionRenumber = false;
     private linesToEdit: number[] = [];
     private pasteHandler: PasteHandler;
-
-    /*
-	console.log(checkLastLineIsNumbered("Some text\n1. Numbered item")); // true
-	console.log(checkLastLineIsNumbered("Some text\nNot numbered")); // false
-	console.log(checkLastLineIsNumbered("1. Single numbered line")); // true
-	console.log(checkLastLineIsNumbered("Text without newline")); // false
-	console.log(checkLastLineIsNumbered("1. First\n2. Second\n3. Third")); // true
-	console.log(checkLastLineIsNumbered("1. First\n2. Second\nNot numbered")); // false
-	*/
 
     onload() {
         console.log("loading");
@@ -75,7 +65,11 @@ export default class RenumberList extends Plugin {
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
                 mutex.runExclusive(() => {
-                    this.handleEditorChange(editor);
+                    const { anchor, head } = editor.listSelections()[0];
+                    const currLine = Math.min(anchor.line, head.line);
+                    console.log("\n#editor acquired, to line: ", currLine);
+
+                    renumberLocally(editor, currLine);
                 });
             })
         );
@@ -89,23 +83,26 @@ export default class RenumberList extends Plugin {
                 }
                 evt.preventDefault();
                 mutex.runExclusive(() => {
-                    console.log("\n#paste acquired");
+                    console.log("\n###########paste acquired with", this.linesToEdit);
                     const textFromClipboard = evt.clipboardData?.getData("text");
 
-                    const { anchor, head } = editor.listSelections()[0];
-                    const firstInPastedBlock = Math.min(anchor.line, head.line);
-
-                    this.linesToEdit.push(firstInPastedBlock);
-
-                    if (!textFromClipboard || !pasteToggle) {
+                    if (!textFromClipboard) {
+                        console.log("clipboard data is undefined");
                         return;
                     }
 
-                    const result = this.pasteHandler.modifyText(textFromClipboard, editor);
-                    if (result) {
-                        const { modifiedText, newIndex } = result;
-                        editor.replaceSelection(modifiedText);
-                        this.linesToEdit.push(newIndex);
+                    const { anchor, head } = editor.listSelections()[0];
+                    console.log(`anchor: ${anchor.line}, head: ${head.line}`);
+
+                    if (anchor.line === head.line) {
+                        editor.replaceSelection(textFromClipboard);
+                    } else if (pasteToggle) {
+                        const result = this.pasteHandler.modifyText(textFromClipboard, editor);
+                        if (result) {
+                            const { modifiedText, newIndex } = result;
+                            this.linesToEdit.push(newIndex);
+                            editor.replaceSelection(modifiedText);
+                        }
                     }
 
                     renumberLocally(editor, this.linesToEdit);
@@ -114,31 +111,6 @@ export default class RenumberList extends Plugin {
         );
 
         window.addEventListener("keydown", this.handleUndo.bind(this));
-    }
-
-    handleEditorChange(editor: Editor) {
-        if (!this.isProcessing) {
-            try {
-                this.isProcessing = true;
-
-                console.log("\n#editor acquired");
-
-                const currLine = editor.getCursor().line;
-                if (currLine === undefined) {
-                    return;
-                }
-
-                console.log("editor change is called to line: ", currLine);
-                if (getItemNum(editor, currLine) === -1) {
-                    return; // not a part of a numbered list
-                }
-
-                console.log("check", currLine);
-                // this.isLastActionRenumber = renumberLocally(editor, currLine) !== -1;
-            } finally {
-                this.isProcessing = false;
-            }
-        }
     }
 
     // connect to current editor
