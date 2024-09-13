@@ -1,21 +1,9 @@
 import { Editor } from "obsidian";
 import { getItemNum, PATTERN } from "./utils";
-import { renumberLocally } from "./renumberLocally";
 
 type TextModificationResult = { modifiedText: string; newIndex: number };
 
 export default class PasteHandler {
-    private baseIndex: number | undefined;
-    private newIndex: number | undefined;
-
-    // sandwich doesnt work at the top:
-    /*
-61. asdfdsaasfvvvvvd
-6454
-fewf
-1. asdfdsa3. asdfdsaf3v. asdfdsfafv
-*/
-
     modifyText(pastedText: string, editor: Editor): TextModificationResult | undefined {
         const { anchor, head } = editor.listSelections()[0];
         const baseIndex = Math.max(anchor.line, head.line);
@@ -44,36 +32,6 @@ fewf
         return { modifiedText, newIndex };
     }
 
-    public renumberAfterPaste(editor: Editor) {
-        // TODO check if these 2 are needed because the other listener might be enough
-        // console.log("renumber after paste is called with base index: ", this.baseIndex);
-        if (this.baseIndex === undefined) {
-            return; // need to be called after pasting;
-        }
-        const first = renumberLocally(editor, this.baseIndex - 1);
-        const second = renumberLocally(editor, this.baseIndex);
-
-        if (first !== -1) {
-            console.log("@@first", first, "index - 1 is: ", this.baseIndex - 1);
-        }
-
-        if (second !== -1) {
-            console.log("@@second@@@", second, "index is: ", this.baseIndex);
-        }
-
-        if (this.newIndex !== undefined && this.newIndex !== this.baseIndex) {
-            console.log("inside");
-            renumberLocally(editor, this.newIndex);
-        }
-
-        this.reset();
-    }
-
-    private reset() {
-        this.baseIndex = undefined;
-        this.newIndex = undefined;
-    }
-
     /*
 	console.log("cursor was at index:", baseIndex);
 	console.log("the starting value that is required: ", firstItem);
@@ -82,6 +40,30 @@ fewf
 	console.log("new list global start index: ", newIndex);
 	console.log("in the new index:", editor.getLine(newIndex));
 */
+
+    modifyLineNum(editor: Editor, currLineIndex: number): string | undefined {
+        if (currLineIndex < 0) {
+            return;
+        }
+
+        const currLine = editor.getLine(currLineIndex);
+        const match = currLine.match(PATTERN);
+
+        if (match === null) {
+            return;
+        }
+
+        const prevLineMatch = currLineIndex > 0 ? getItemNum(editor, currLineIndex - 1) : -1;
+        const matchedNum = prevLineMatch > 0 ? prevLineMatch : getItemNum(editor, currLineIndex + 1);
+
+        if (matchedNum < 0) {
+            return;
+        }
+
+        const newLineText = currLine.replace(match[0], `${matchedNum}. `);
+
+        return newLineText;
+    }
 
     getTextOffset(lines: string[]): number {
         let offset = -1;

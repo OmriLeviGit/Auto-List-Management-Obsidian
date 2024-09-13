@@ -1,8 +1,8 @@
-import { Plugin, Editor, MarkdownView } from "obsidian";
+import { Plugin, Editor, EditorChange, MarkdownView } from "obsidian";
 import { renumberLocally } from "src/renumberLocally";
-import { getItemNum } from "./src/utils";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
+import { getListStart } from "./src/utils";
 
 /*
 for the readme:
@@ -35,7 +35,6 @@ TODO: core functionalities:
 listener update, from current until line correctly numbered (togglable)
 update the entire file (from the menu)
 update selected (hot key)
-paste accoring to the previous number (togglabele)
 
 TODO:
 clone to a new dir and make sure the npm command downloads all dependencies
@@ -49,6 +48,7 @@ export default class RenumberList extends Plugin {
     private isLastActionRenumber = false;
     private linesToEdit: number[] = [];
     private pasteHandler: PasteHandler;
+    private changes: EditorChange[] = [];
 
     onload() {
         console.log("loading");
@@ -76,14 +76,37 @@ export default class RenumberList extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                const pasteToggle = true; //  TODO get from the settings
+                // pasting before something changes to 9 instead of 11, after doesnt work at all
+                /*
+9. something
+11. wef101. wef101. wef10. few
+12. wef101. wef101. wef10. few
+13. wf101. wef101. we7. 10. few
+
+solution:
+# this logic is somewhat related to renumberlocally, but i would do it from scratch and maybe incorporate it into renumberlocally then
+make a function that given a line number: 
+checks if before us there is a numbered list. if there is, take its number and change text accordingly
+else, check if after us there is a numbered list. if so, take its number and change text accordingly.
+
+first, paste, then calculate the new index.
+use the function on the anchor, and push it to the linesToedit
+if the anchor and the new index are not the same, use the function on the new index, and push the new index aswell.
+
+call renumber on the lines to edit.
+
+
+^this should be done ONLY inside paste
+                */
 
                 if (evt.defaultPrevented) {
                     return;
                 }
                 evt.preventDefault();
+
                 mutex.runExclusive(() => {
                     console.log("\n###########paste acquired with", this.linesToEdit);
+
                     const textFromClipboard = evt.clipboardData?.getData("text");
 
                     if (!textFromClipboard) {
@@ -91,18 +114,18 @@ export default class RenumberList extends Plugin {
                         return;
                     }
 
-                    const { anchor, head } = editor.listSelections()[0];
-                    console.log(`anchor: ${anchor.line}, head: ${head.line}`);
+                    editor.replaceSelection(textFromClipboard); // paste either way
 
-                    if (anchor.line === head.line) {
-                        editor.replaceSelection(textFromClipboard);
-                    } else if (pasteToggle) {
-                        const result = this.pasteHandler.modifyText(textFromClipboard, editor);
-                        if (result) {
-                            const { modifiedText, newIndex } = result;
-                            this.linesToEdit.push(newIndex);
-                            editor.replaceSelection(modifiedText);
-                        }
+                    const { anchor, head } = editor.listSelections()[0];
+
+                    // change the anchor line and head line on the editor, without remembering history
+                    const anchorLine = this.pasteHandler.modifyLineNum(editor, anchor.line); // string
+                    this.linesToEdit.push(anchor.line); // number
+
+                    if (anchor.line !== head.line) {
+                        const newIndex = getListStart(editor, head.line);
+                        const headLine = this.pasteHandler.modifyLineNum(editor, newIndex);
+                        this.linesToEdit.push(newIndex);
                     }
 
                     renumberLocally(editor, this.linesToEdit);
