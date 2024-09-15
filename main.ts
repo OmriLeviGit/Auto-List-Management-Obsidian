@@ -3,7 +3,7 @@ import Renumberer from "src/Renumberer";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
 import { getListStart } from "./src/utils";
-
+import SampleSettingTab, { MyPluginSettings, DEFAULT_SETTINGS } from "./src/settings";
 /*
 for the readme:
 how we deal with 0 and 000. (consistent with markdown)
@@ -17,6 +17,8 @@ check what is this.registerEditorExtension()
 confirm RTL support
 deal with numbering such as 0.1 text 0.2 text etc.
 make functions async
+understand why edit changes is called several times and avoid it 
+confirm: lines to not get inserted into the renumberer list several times
 
 TODO: paste
 one transaction with the renumbering
@@ -40,8 +42,8 @@ clone to a new dir and make sure the npm command downloads all dependencies
 update the package.json description, manifest, remove all logs etc, choose a name for the plugin
 https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
-const mutex = new Mutex();
 
+const mutex = new Mutex();
 export default class RenumberList extends Plugin {
     private editor: Editor;
     private isLastActionRenumber = false;
@@ -49,6 +51,7 @@ export default class RenumberList extends Plugin {
     private renumberer: Renumberer;
     private changes: EditorChange[] = [];
     private isProccessing = false;
+    settings: MyPluginSettings;
 
     onload() {
         console.log("loading");
@@ -59,23 +62,30 @@ export default class RenumberList extends Plugin {
 
         this.editor = view.editor;
         this.pasteHandler = new PasteHandler();
-        this.renumberer = new Renumberer(this.changes);
+        this.renumberer = new Renumberer();
 
         console.log("active editor detected");
+
+        this.addSettingTab(new SampleSettingTab(this.app, this));
 
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
                 if (!this.isProccessing) {
                     try {
                         this.isProccessing = true;
-                        mutex.runExclusive(() => {
-                            const { anchor, head } = editor.listSelections()[0];
-                            const currLine = Math.min(anchor.line, head.line);
-                            console.log("\n#editor acquired, to line: ", currLine);
+                        const { anchor, head } = editor.listSelections()[0];
+                        const currLine = Math.min(anchor.line, head.line);
+                        const changes = this.renumberer.renumberBlock(editor, currLine);
+                        this.renumberer.apply(editor, changes);
+                        // this.isProccessing = true;
+                        // mutex.runExclusive(() => {
+                        //     const { anchor, head } = editor.listSelections()[0];
+                        //     const currLine = Math.min(anchor.line, head.line);
+                        //     console.log("\n#editor acquired, to line: ", currLine);
 
-                            this.renumberer.addLines(currLine);
-                            this.renumberer.apply(editor);
-                        });
+                        //     this.renumberer.addLines(currLine);
+                        //     this.renumberer.apply(editor);
+                        // });
                     } finally {
                         this.isProccessing = false;
                     }
@@ -83,37 +93,57 @@ export default class RenumberList extends Plugin {
             })
         );
 
-        this.registerEvent(
-            this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (evt.defaultPrevented) {
-                    return;
-                }
-                evt.preventDefault();
+        // this.registerEvent(
+        //     this.app.workspace.on("editor-change", (editor: Editor) => {
+        //         if (!this.isProccessing) {
+        //             try {
+        //                 this.isProccessing = true;
+        //                 mutex.runExclusive(() => {
+        //                     const { anchor, head } = editor.listSelections()[0];
+        //                     const currLine = Math.min(anchor.line, head.line);
+        //                     console.log("\n#editor acquired, to line: ", currLine);
 
-                mutex.runExclusive(() => {
-                    const textFromClipboard = evt.clipboardData?.getData("text");
+        //                     this.renumberer.addLines(currLine);
+        //                     this.renumberer.apply(editor);
+        //                 });
+        //             } finally {
+        //                 this.isProccessing = false;
+        //             }
+        //         }
+        //     })
+        // );
 
-                    if (!textFromClipboard) {
-                        return;
-                    }
+        // this.registerEvent(
+        //     this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
+        //         if (evt.defaultPrevented) {
+        //             return;
+        //         }
+        //         evt.preventDefault();
 
-                    const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+        //         mutex.runExclusive(() => {
+        //             const textFromClipboard = evt.clipboardData?.getData("text");
 
-                    editor.replaceSelection(textFromClipboard); // paste
+        //             if (!textFromClipboard) {
+        //                 return;
+        //             }
 
-                    this.renumberer.addLines(anchor.line);
+        //             const { anchor, head } = editor.listSelections()[0]; // must be before pasting
 
-                    if (anchor.line !== head.line) {
-                        const newIndex = getListStart(editor, head.line);
-                        // TODO somehow apply the change to work in a single transaction
-                        // const headLine = this.pasteHandler.modifyLineNum(editor, newIndex);
-                        this.renumberer.addLines(newIndex);
-                    }
+        //             editor.replaceSelection(textFromClipboard); // paste
 
-                    this.renumberer.apply(editor);
-                });
-            })
-        );
+        //             this.renumberer.addLines(anchor.line);
+
+        //             if (anchor.line !== head.line) {
+        //                 const newIndex = getListStart(editor, head.line);
+        //                 // TODO somehow apply the change to work in a single transaction
+        //                 // const headLine = this.pasteHandler.modifyLineNum(editor, newIndex);
+        //                 this.renumberer.addLines(newIndex);
+        //             }
+
+        //             this.renumberer.apply(editor);
+        //         });
+        //     })
+        // );
 
         // window.addEventListener("keydown", this.handleUndo.bind(this));
     }
@@ -133,4 +163,12 @@ export default class RenumberList extends Plugin {
     //     console.log("RenumberList plugin unloaded");
     //     window.removeEventListener("keydown", this.handleUndo);
     // }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
 }

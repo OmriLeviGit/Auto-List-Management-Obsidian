@@ -1,15 +1,20 @@
-import { Editor, EditorChange } from "obsidian";
-import { getItemNum, PATTERN } from "./utils";
+import { Editor, EditorChange, EditorTransaction } from "obsidian";
+import { getItemNum, getListStart, PATTERN } from "./utils";
 
 export default class Renumberer {
-    private changes: EditorChange[] = [];
     private linesToProcess: number[] = [];
 
-    constructor(changes: EditorChange[]) {
-        this.changes = changes;
+    constructor() {}
+
+    apply(editor: Editor, changes: EditorChange[]) {
+        editor.transaction({ changes });
+        const hasMadeChanges = changes.length > 0 ? true : false;
+        changes.splice(0, changes.length);
+
+        return hasMadeChanges;
     }
 
-    apply(editor: Editor): boolean {
+    applyLocal(editor: Editor, changes: EditorChange[]): boolean {
         if (this.linesToProcess.length === 0) {
             return false;
         }
@@ -17,22 +22,62 @@ export default class Renumberer {
         // renumber every line in the list
         let currLine: number | undefined;
         while ((currLine = this.linesToProcess.shift()) !== undefined) {
-            this.renumberBlock(editor, currLine);
+            changes.push(...this.renumberLocally(editor, currLine));
         }
 
-        editor.transaction({ changes: this.changes });
-        const hasMadeChanges = this.changes.length > 0 ? true : false;
-        this.changes.splice(0, this.changes.length);
+        editor.transaction({ changes });
+        const hasMadeChanges = changes.length > 0 ? true : false;
+        changes.splice(0, changes.length);
 
         return hasMadeChanges;
     }
 
-    private renumberBlock(editor: Editor, currLine: number) {
+    renumberBlock(editor: Editor, currLine: number, startFrom: number = -1): EditorChange[] {
+        const changes: EditorChange[] = [];
+        const linesInFile = editor.lastLine() + 1;
+
+        let currLineIndex = getListStart(editor, currLine);
+
+        if (currLineIndex < 0) {
+            return changes;
+        }
+
+        let currValue = startFrom !== -1 ? startFrom : getItemNum(editor, currLineIndex);
+
+        // TODO make the comparison string-based, to avoid scientific notations, also need to make it larger than Number
+        while (currLineIndex < linesInFile) {
+            const lineText = editor.getLine(currLineIndex);
+            const match = lineText.match(PATTERN);
+
+            if (match === null) {
+                break;
+            }
+
+            // if a change is required (expected != actual), push it to the changes list
+            if (currValue !== parseInt(match[1])) {
+                const newLineText = lineText.replace(match[0], `${currValue}. `);
+
+                changes.push({
+                    from: { line: currLineIndex, ch: 0 },
+                    to: { line: currLineIndex, ch: lineText.length },
+                    text: newLineText,
+                });
+            }
+
+            currLineIndex++;
+            currValue++;
+        }
+
+        return changes;
+    }
+
+    private renumberLocally(editor: Editor, currLine: number): EditorChange[] {
         const linesInFile = editor.lastLine() + 1;
         const currNum = getItemNum(editor, currLine);
+        const changes: EditorChange[] = [];
 
         if (currNum === -1) {
-            return; // not a part of a numbered list
+            return changes; // not a part of a numbered list
         }
 
         let prevNum = getItemNum(editor, currLine - 1);
@@ -64,7 +109,7 @@ export default class Renumberer {
             if (expectedItemNum !== parseInt(match[1])) {
                 const newLineText = lineText.replace(match[0], `${expectedItemNum}. `);
 
-                this.changes.push({
+                changes.push({
                     from: { line: currLine, ch: 0 },
                     to: { line: currLine, ch: lineText.length },
                     text: newLineText,
@@ -78,7 +123,7 @@ export default class Renumberer {
             expectedItemNum++;
         }
 
-        return;
+        return changes;
     }
 
     addLines(...lines: (number | number[])[]) {
