@@ -1,10 +1,8 @@
-import { Plugin, Editor, EditorChange, MarkdownView } from "obsidian";
+import { App, Plugin, Editor, EditorChange, PluginSettingTab, Setting } from "obsidian";
 import Renumberer from "src/Renumberer";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
-import { getListStart, PATTERN } from "./src/utils";
-import SampleSettingTab, { MyPluginSettings, DEFAULT_SETTINGS } from "./src/settings";
-import { renumberFile } from "src/renumberFile";
+import { PATTERN } from "./src/utils";
 /*
 for the readme:
 how we deal with 0 and 000. (consistent with markdown)
@@ -18,7 +16,7 @@ confirm moving between pages (which changes editors) does not break the listener
 check what is this.registerEditorExtension()
 confirm RTL support
 deal with numbering such as 0.1 text 0.2 text etc.
-make functions async
+make functions async, apply mutex on this.changes
 understand why edit changes is called several times and avoid it 
 confirm: lines to not get inserted into the renumberer list several times
 
@@ -37,7 +35,6 @@ nested numbering: 3 spaces - shift+enter, 4 spaces\tab character - indented (ins
 TODO: core functionalities:
 listener update, from current until line correctly numbered (togglable)
 
-
 TODO:
 clone to a new dir and make sure the npm command downloads all dependencies
 update the package.json description, manifest, remove all logs etc, choose a name for the plugin
@@ -45,6 +42,15 @@ https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 */
 
 const mutex = new Mutex();
+
+interface RenumberListSettings {
+    LiveUpdate: boolean;
+}
+
+const DEFAULT_SETTINGS: RenumberListSettings = {
+    LiveUpdate: false,
+};
+
 export default class RenumberList extends Plugin {
     private editor: Editor;
     private isLastActionRenumber = false;
@@ -52,11 +58,11 @@ export default class RenumberList extends Plugin {
     private renumberer: Renumberer;
     private changes: EditorChange[] = [];
     private isProccessing = false;
-    settings: MyPluginSettings;
+    settings: RenumberListSettings;
 
-    onload() {
+    async onload() {
         console.log("loading");
-        this.loadSettings();
+        await this.loadSettings();
 
         const editor = this.app.workspace.activeEditor?.editor;
         console.log("set editor as: ", editor);
@@ -68,7 +74,7 @@ export default class RenumberList extends Plugin {
         this.pasteHandler = new PasteHandler();
         this.renumberer = new Renumberer();
 
-        this.addSettingTab(new SampleSettingTab(this.app, this));
+        this.addSettingTab(new RenumberSettings(this.app, this));
 
         const renumberBlock = (editor: Editor) => {
             try {
@@ -137,13 +143,11 @@ export default class RenumberList extends Plugin {
         //                 const currLine = Math.min(anchor.line, head.line);
         //                 const {changes} = this.renumberer.renumberBlock(editor, currLine); // TODO renumber locally not block
         //                 this.renumberer.apply(editor, changes);
-
         //                 // this.isProccessing = true;
         //                 // mutex.runExclusive(() => {
         //                 //     const { anchor, head } = editor.listSelections()[0];
         //                 //     const currLine = Math.min(anchor.line, head.line);
         //                 //     console.log("\n#editor acquired, to line: ", currLine);
-
         //                 //     this.renumberer.addLines(currLine);
         //                 //     this.renumberer.apply(editor);
         //                 // });
@@ -231,5 +235,31 @@ export default class RenumberList extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+}
+
+class RenumberSettings extends PluginSettingTab {
+    plugin: RenumberList;
+    settings: RenumberListSettings;
+
+    constructor(app: App, plugin: RenumberList) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
+
+    display(): void {
+        const { containerEl } = this;
+
+        containerEl.empty();
+
+        new Setting(containerEl)
+            .setName("Live update")
+            .setDesc("Renumber as changes are made")
+            .addToggle((toggle) =>
+                toggle.setValue(this.plugin.settings.LiveUpdate).onChange(async (value) => {
+                    this.plugin.settings.LiveUpdate = value;
+                    await this.plugin.saveSettings();
+                })
+            );
     }
 }
