@@ -1,6 +1,11 @@
 import { Editor, EditorChange, EditorTransaction } from "obsidian";
 import { getItemNum, getListStart, PATTERN } from "./utils";
 
+interface PendingChanges {
+    changes: EditorChange[];
+    endIndex: number;
+}
+
 export default class Renumberer {
     private linesToProcess: number[] = [];
 
@@ -8,38 +13,38 @@ export default class Renumberer {
 
     apply(editor: Editor, changes: EditorChange[]) {
         editor.transaction({ changes });
-        const hasMadeChanges = changes.length > 0 ? true : false;
+        const changesApplied = changes.length > 0;
         changes.splice(0, changes.length);
 
-        return hasMadeChanges;
+        return changesApplied;
     }
 
-    applyLocal(editor: Editor, changes: EditorChange[]): boolean {
-        if (this.linesToProcess.length === 0) {
-            return false;
-        }
+    // applyLocal(editor: Editor, changes: EditorChange[]): boolean {
+    //     if (this.linesToProcess.length === 0) {
+    //         return false;
+    //     }
 
-        // renumber every line in the list
-        let currLine: number | undefined;
-        while ((currLine = this.linesToProcess.shift()) !== undefined) {
-            changes.push(...this.renumberLocally(editor, currLine));
-        }
+    //     // renumber every line in the list
+    //     let currLine: number | undefined;
+    //     while ((currLine = this.linesToProcess.shift()) !== undefined) {
+    //         changes.push(...this.renumberLocally(editor, currLine));
+    //     }
 
-        editor.transaction({ changes });
-        const hasMadeChanges = changes.length > 0 ? true : false;
-        changes.splice(0, changes.length);
+    //     editor.transaction({ changes });
+    //     const hasMadeChanges = changes.length > 0 ? true : false;
+    //     changes.splice(0, changes.length);
 
-        return hasMadeChanges;
-    }
+    //     return hasMadeChanges;
+    // }
 
-    renumberBlock(editor: Editor, currLine: number, startFrom: number = -1): EditorChange[] {
+    renumberBlock(editor: Editor, currLine: number, startFrom: number = -1): PendingChanges {
         const changes: EditorChange[] = [];
         const linesInFile = editor.lastLine() + 1;
 
         let currLineIndex = getListStart(editor, currLine);
 
         if (currLineIndex < 0) {
-            return changes;
+            return { changes, endIndex: currLineIndex };
         }
 
         let currValue = startFrom !== -1 ? startFrom : getItemNum(editor, currLineIndex);
@@ -68,7 +73,7 @@ export default class Renumberer {
             currValue++;
         }
 
-        return changes;
+        return { changes, endIndex: currLineIndex - 1 };
     }
 
     private renumberLocally(editor: Editor, currLine: number): EditorChange[] {
