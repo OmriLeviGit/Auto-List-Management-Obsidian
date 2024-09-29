@@ -171,31 +171,29 @@ export default class RenumberList extends Plugin {
                     return;
                 }
                 evt.preventDefault();
-                mutex.runExclusive(() => {
-                    let textFromClipboard = evt.clipboardData?.getData("text");
-                    if (!textFromClipboard) {
-                        return;
-                    }
+                let textFromClipboard = evt.clipboardData?.getData("text");
+                if (!textFromClipboard) {
+                    return;
+                }
 
-                    const { anchor, head } = editor.listSelections()[0]; // must be before pasting
-                    const baseIndex = Math.min(anchor.line, head.line);
+                const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+                const baseIndex = Math.min(anchor.line, head.line);
 
-                    const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
+                const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
 
-                    console.log("clipboard: ", textFromClipboard, "modified: ", modifiedText);
+                console.log("clipboard: ", textFromClipboard, "modified: ", modifiedText);
 
-                    textFromClipboard = modifiedText || textFromClipboard;
+                textFromClipboard = modifiedText || textFromClipboard;
 
-                    editor.replaceSelection(textFromClipboard); // paste
+                editor.replaceSelection(textFromClipboard); // paste
 
-                    this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
+                this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
 
-                    if (newIndex) {
-                        this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
-                    }
+                if (newIndex) {
+                    this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
+                }
 
-                    this.renumberer.apply(editor, this.changes);
-                });
+                this.renumberer.apply(editor, this.changes);
             })
         );
         // window.addEventListener("keydown", this.handleUndo.bind(this));
