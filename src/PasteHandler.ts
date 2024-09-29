@@ -46,12 +46,3 @@ export default class PasteHandler {
         return offset;
     }
 }
-
-/*
-console.log("cursor was at index:", baseIndex);
-console.log("the starting value that is required: ", firstItem);
-console.log("@@@", newText);
-console.log("need to change the value of line: ", offset, "in the copied text, which wil be the new start");
-console.log("new list global start index: ", newIndex);
-console.log("in the new index:", editor.getLine(newIndex));
-*/
