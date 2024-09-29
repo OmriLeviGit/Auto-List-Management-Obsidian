@@ -7,8 +7,6 @@ interface PendingChanges {
 }
 
 export default class Renumberer {
-    private linesToProcess: number[] = [];
-
     constructor() {}
 
     apply(editor: Editor, changes: EditorChange[]) {
@@ -18,24 +16,6 @@ export default class Renumberer {
 
         return changesApplied;
     }
-
-    // applyLocal(editor: Editor, changes: EditorChange[]): boolean {
-    //     if (this.linesToProcess.length === 0) {
-    //         return false;
-    //     }
-
-    //     // renumber every line in the list
-    //     let currLine: number | undefined;
-    //     while ((currLine = this.linesToProcess.shift()) !== undefined) {
-    //         changes.push(...this.renumberLocally(editor, currLine));
-    //     }
-
-    //     editor.transaction({ changes });
-    //     const hasMadeChanges = changes.length > 0 ? true : false;
-    //     changes.splice(0, changes.length);
-
-    //     return hasMadeChanges;
-    // }
 
     renumberBlock(editor: Editor, currLine: number, startFrom: number = -1): PendingChanges {
         const changes: EditorChange[] = [];
@@ -76,13 +56,13 @@ export default class Renumberer {
         return { changes, endIndex: currLineIndex - 1 };
     }
 
-    private renumberLocally(editor: Editor, currLine: number): EditorChange[] {
+    renumberLocally(editor: Editor, currLine: number): PendingChanges {
         const linesInFile = editor.lastLine() + 1;
         const currNum = getItemNum(editor, currLine);
         const changes: EditorChange[] = [];
 
         if (currNum === -1) {
-            return changes; // not a part of a numbered list
+            return { changes, endIndex: currLine }; // not a part of a numbered list
         }
 
         let prevNum = getItemNum(editor, currLine - 1);
@@ -128,17 +108,6 @@ export default class Renumberer {
             expectedItemNum++;
         }
 
-        return changes;
-    }
-
-    addLines(...lines: (number | number[])[]) {
-        const linesToProcess: number[] = lines
-            .flat()
-            .filter((line) => typeof line === "number" && line >= 0) as number[];
-        this.linesToProcess.push(...linesToProcess);
-    }
-
-    getLines() {
-        return this.linesToProcess;
+        return { changes, endIndex: currLine - 1 };
     }
 }

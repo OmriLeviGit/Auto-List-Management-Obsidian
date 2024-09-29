@@ -2,11 +2,11 @@ import { App, Plugin, Editor, EditorChange, PluginSettingTab, Setting } from "ob
 import Renumberer from "src/Renumberer";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
-import { PATTERN } from "./src/utils";
+import { PATTERN, getListStart } from "./src/utils";
 /*
 for the readme:
-how we deal with 0 and 000. (consistent with markdown)
-not adding a renumber to the entire block because the observer is activating every character typed
+confirm how we deal with 0 and 000.
+explain that liveUpdate does not renumber the entire block because the observer is activating every character typed
 does not get activated on regular obsidian renumbering # what did i mean here?
 as of now, listening to undo is not be possible. mention vim.
 write about core functionalities and commands that can be found using ctrl+p
@@ -19,9 +19,7 @@ deal with numbering such as 0.1 text 0.2 text etc.
 make functions async, apply mutex on this.changes
 understand why edit changes is called several times and avoid it 
 confirm: lines to not get inserted into the renumberer list several times
-
-TODO: paste
-one transaction with the renumbering
+use less regex, use .test() over some of the current functions
 
 TODO: undo:
 make sure other plugins do not get triggered twice. it might already be like that.
@@ -82,7 +80,8 @@ export default class RenumberList extends Plugin {
                 const { anchor, head } = editor.listSelections()[0];
                 const currLine = Math.min(anchor.line, head.line);
                 const { changes } = this.renumberer.renumberBlock(editor, currLine);
-                this.renumberer.apply(editor, changes);
+                this.changes.push(...changes);
+                this.renumberer.apply(editor, this.changes);
             } finally {
                 this.isProccessing = false;
             }
@@ -134,43 +133,26 @@ export default class RenumberList extends Plugin {
             editorCallback: (editor: Editor) => renumberBlock(editor),
         });
 
+        if (this.settings.LiveUpdate === false) {
+            return;
+        }
+
+        // set listeners
+
+        // editor listener
+        // TODO not working
         // this.registerEvent(
         //     this.app.workspace.on("editor-change", (editor: Editor) => {
+        //         console.log("detected change");
         //         if (!this.isProccessing) {
         //             try {
         //                 this.isProccessing = true;
         //                 const { anchor, head } = editor.listSelections()[0];
         //                 const currLine = Math.min(anchor.line, head.line);
-        //                 const {changes} = this.renumberer.renumberBlock(editor, currLine); // TODO renumber locally not block
-        //                 this.renumberer.apply(editor, changes);
-        //                 // this.isProccessing = true;
-        //                 // mutex.runExclusive(() => {
-        //                 //     const { anchor, head } = editor.listSelections()[0];
-        //                 //     const currLine = Math.min(anchor.line, head.line);
-        //                 //     console.log("\n#editor acquired, to line: ", currLine);
-        //                 //     this.renumberer.addLines(currLine);
-        //                 //     this.renumberer.apply(editor);
-        //                 // });
-        //             } finally {
-        //                 this.isProccessing = false;
-        //             }
-        //         }
-        //     })
-        // );
-
-        // this.registerEvent(
-        //     this.app.workspace.on("editor-change", (editor: Editor) => {
-        //         if (!this.isProccessing) {
-        //             try {
+        //                 const { changes } = this.renumberer.renumberLocally(editor, currLine);
+        //                 this.changes.push(...changes);
+        //                 this.renumberer.apply(editor, this.changes);
         //                 this.isProccessing = true;
-        //                 mutex.runExclusive(() => {
-        //                     const { anchor, head } = editor.listSelections()[0];
-        //                     const currLine = Math.min(anchor.line, head.line);
-        //                     console.log("\n#editor acquired, to line: ", currLine);
-
-        //                     this.renumberer.addLines(currLine);
-        //                     this.renumberer.apply(editor);
-        //                 });
         //             } finally {
         //                 this.isProccessing = false;
         //             }
@@ -178,41 +160,48 @@ export default class RenumberList extends Plugin {
         //     })
         // );
 
-        // this.registerEvent(
-        //     this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-        //         if (evt.defaultPrevented) {
-        //             return;
-        //         }
-        //         evt.preventDefault();
+        /*
+        to make the paste work, detect and undo twice
+        */
 
-        //         mutex.runExclusive(() => {
-        //             const textFromClipboard = evt.clipboardData?.getData("text");
+        // paste
+        this.registerEvent(
+            this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
+                if (evt.defaultPrevented) {
+                    return;
+                }
+                evt.preventDefault();
+                mutex.runExclusive(() => {
+                    let textFromClipboard = evt.clipboardData?.getData("text");
+                    if (!textFromClipboard) {
+                        return;
+                    }
 
-        //             if (!textFromClipboard) {
-        //                 return;
-        //             }
+                    const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+                    const baseIndex = Math.min(anchor.line, head.line);
 
-        //             const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+                    const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
 
-        //             editor.replaceSelection(textFromClipboard); // paste
+                    console.log("clipboard: ", textFromClipboard, "modified: ", modifiedText);
 
-        //             this.renumberer.addLines(anchor.line);
+                    textFromClipboard = modifiedText || textFromClipboard;
 
-        //             if (anchor.line !== head.line) {
-        //                 const newIndex = getListStart(editor, head.line);
-        //                 // TODO somehow apply the change to work in a single transaction
-        //                 // const headLine = this.pasteHandler.modifyLineNum(editor, newIndex);
-        //                 this.renumberer.addLines(newIndex);
-        //             }
+                    editor.replaceSelection(textFromClipboard); // paste
 
-        //             this.renumberer.apply(editor);
-        //         });
-        //     })
-        // );
+                    this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
 
+                    if (newIndex) {
+                        this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
+                    }
+
+                    this.renumberer.apply(editor, this.changes);
+                });
+            })
+        );
         // window.addEventListener("keydown", this.handleUndo.bind(this));
     }
 
+    // undo
     // // connect to current editor
     // handleUndo(event: KeyboardEvent) {
     //     if ((event.ctrlKey || event.metaKey) && event.key === "z") {
