@@ -100,7 +100,7 @@ export default class Renumberer {
                     text: newLineText,
                 });
             } else if (flag) {
-                break; // ensure changes are made locally, not until the end of the block
+                break; // ensures changes are made locally, not until the end of the block
             }
 
             flag = true;
