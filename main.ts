@@ -2,7 +2,7 @@ import { App, Plugin, Editor, EditorChange, PluginSettingTab, Setting } from "ob
 import Renumberer from "src/Renumberer";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
-import { PATTERN, getListStart } from "./src/utils";
+import { PATTERN } from "./src/utils";
 /*
 for the readme:
 confirm how we deal with 0 and 000.
@@ -140,29 +140,26 @@ export default class RenumberList extends Plugin {
         // set listeners
 
         // editor listener
-        // TODO not working
-        // this.registerEvent(
-        //     this.app.workspace.on("editor-change", (editor: Editor) => {
-        //         console.log("detected change");
-        //         if (!this.isProccessing) {
-        //             try {
-        //                 this.isProccessing = true;
-        //                 const { anchor, head } = editor.listSelections()[0];
-        //                 const currLine = Math.min(anchor.line, head.line);
-        //                 const { changes } = this.renumberer.renumberLocally(editor, currLine);
-        //                 this.changes.push(...changes);
-        //                 this.renumberer.apply(editor, this.changes);
-        //                 this.isProccessing = true;
-        //             } finally {
-        //                 this.isProccessing = false;
-        //             }
-        //         }
-        //     })
-        // );
+        this.registerEvent(
+            this.app.workspace.on("editor-change", (editor: Editor) => {
+                mutex.runExclusive(() => {
+                    console.log("detected change");
+                    if (!this.isProccessing) {
+                        this.isProccessing = true;
 
-        /*
-        to make the paste work, detect and undo twice
-        */
+                        const { anchor, head } = editor.listSelections()[0];
+                        const currLine = Math.min(anchor.line, head.line);
+
+                        this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
+                        this.renumberer.apply(editor, this.changes);
+
+                        //console.log("status: ", res);
+
+                        this.isProccessing = false;
+                    }
+                });
+            })
+        );
 
         // paste
         this.registerEvent(
@@ -171,29 +168,29 @@ export default class RenumberList extends Plugin {
                     return;
                 }
                 evt.preventDefault();
-                let textFromClipboard = evt.clipboardData?.getData("text");
-                if (!textFromClipboard) {
-                    return;
-                }
+                mutex.runExclusive(() => {
+                    let textFromClipboard = evt.clipboardData?.getData("text");
+                    if (!textFromClipboard) {
+                        return;
+                    }
 
-                const { anchor, head } = editor.listSelections()[0]; // must be before pasting
-                const baseIndex = Math.min(anchor.line, head.line);
+                    const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+                    const baseIndex = Math.min(anchor.line, head.line);
 
-                const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
+                    const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
 
-                console.log("clipboard: ", textFromClipboard, "modified: ", modifiedText);
+                    textFromClipboard = modifiedText || textFromClipboard;
 
-                textFromClipboard = modifiedText || textFromClipboard;
+                    editor.replaceSelection(textFromClipboard); // paste
 
-                editor.replaceSelection(textFromClipboard); // paste
+                    this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
 
-                this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
+                    if (newIndex) {
+                        this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
+                    }
 
-                if (newIndex) {
-                    this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
-                }
-
-                this.renumberer.apply(editor, this.changes);
+                    this.renumberer.apply(editor, this.changes);
+                });
             })
         );
         // window.addEventListener("keydown", this.handleUndo.bind(this));
