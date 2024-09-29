@@ -11,6 +11,8 @@ does not get activated on regular obsidian renumbering # what did i mean here?
 as of now, listening to undo is not be possible. mention vim.
 write about core functionalities and commands that can be found using ctrl+p
 
+TODO: reload plugin to apply settings change
+
 TODO: others
 confirm moving between pages (which changes editors) does not break the listener assignments
 check what is this.registerEditorExtension()
@@ -24,6 +26,7 @@ use less regex, use .test() over some of the current functions
 TODO: undo:
 make sure other plugins do not get triggered twice. it might already be like that.
 confirm it works when holding "ctrl z" down.
+should function like a stack, not just the last one
 support vim users
 
 TODO: spaces:
@@ -50,13 +53,15 @@ const DEFAULT_SETTINGS: RenumberListSettings = {
 };
 
 export default class RenumberList extends Plugin {
+    settings: RenumberListSettings;
     private editor: Editor;
-    private isLastActionRenumber = false;
     private pasteHandler: PasteHandler;
     private renumberer: Renumberer;
     private changes: EditorChange[] = [];
+    private twoHistory: boolean[] = [];
     private isProccessing = false;
-    settings: RenumberListSettings;
+    private lastEventWasPaste = false;
+    private lastEventWasUndo = false;
 
     async onload() {
         console.log("loading");
@@ -106,7 +111,7 @@ export default class RenumberList extends Plugin {
                 currLine++;
             }
 
-            this.renumberer.apply(this.editor, this.changes);
+            this.renumberer.apply(editor, this.changes);
         };
 
         this.addCommand({
@@ -137,27 +142,35 @@ export default class RenumberList extends Plugin {
             return;
         }
 
-        // set listeners
-
-        // editor listener
+        // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                mutex.runExclusive(() => {
-                    console.log("detected change");
-                    if (!this.isProccessing) {
-                        this.isProccessing = true;
+                setTimeout(() => {
+                    // if (this.lastEventWasPaste) {
+                    //     this.lastEventWasPaste = false;
+                    //     return;
+                    // }
 
-                        const { anchor, head } = editor.listSelections()[0];
-                        const currLine = Math.min(anchor.line, head.line);
+                    // console.log(this.lastEventWasUndo);
+                    // if (this.lastEventWasUndo) {
+                    //     this.lastEventWasUndo = false;
+                    //     return;
+                    // }
+                    mutex.runExclusive(() => {
+                        console.log("detected change");
+                        if (!this.isProccessing) {
+                            this.isProccessing = true;
 
-                        this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
-                        this.renumberer.apply(editor, this.changes);
+                            const { anchor, head } = editor.listSelections()[0];
+                            const currLine = Math.min(anchor.line, head.line);
 
-                        //console.log("status: ", res);
+                            this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
+                            this.twoHistory.push(this.renumberer.apply(editor, this.changes));
 
-                        this.isProccessing = false;
-                    }
-                });
+                            this.isProccessing = false;
+                        }
+                    });
+                }, 0);
             })
         );
 
@@ -169,6 +182,8 @@ export default class RenumberList extends Plugin {
                 }
                 evt.preventDefault();
                 mutex.runExclusive(() => {
+                    // this.lastEventWasPaste = true;
+
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
                         return;
@@ -189,29 +204,30 @@ export default class RenumberList extends Plugin {
                         this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
                     }
 
-                    this.renumberer.apply(editor, this.changes);
+                    // this.renumberer.apply(editor, this.changes);
                 });
             })
         );
         // window.addEventListener("keydown", this.handleUndo.bind(this));
     }
 
-    // undo
-    // // connect to current editor
+    //undo
     // handleUndo(event: KeyboardEvent) {
-    //     if ((event.ctrlKey || event.metaKey) && event.key === "z") {
-    //         if (this.isLastActionRenumber) {
-    //             console.log("last action: renumber");
-    //             this.editor.undo();
+    //     mutex.runExclusive(() => {
+    //         this.lastEventWasUndo = true;
+    //         console.log(this.twoHistory);
+    //         if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+    //             if (this.twoHistory.pop() === true) {
+    //                 this.editor.undo();
+    //             }
     //         }
-    //         console.log("last action: other");
-    //     }
+    //     });
     // }
 
-    // onunload() {
-    //     console.log("RenumberList plugin unloaded");
-    //     window.removeEventListener("keydown", this.handleUndo);
-    // }
+    onunload() {
+        console.log("RenumberList plugin unloaded");
+        // window.removeEventListener("keydown", this.handleUndo);
+    }
 
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -219,6 +235,14 @@ export default class RenumberList extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    applySettings() {
+        if (this.settings.LiveUpdate) {
+            // Activate live update functionality
+        } else {
+            // Deactivate live update functionality
+        }
     }
 }
 
@@ -238,11 +262,12 @@ class RenumberSettings extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Live update")
-            .setDesc("Renumber as changes are made")
+            .setDesc("Renumber as changes are made (requires a restart")
             .addToggle((toggle) =>
                 toggle.setValue(this.plugin.settings.LiveUpdate).onChange(async (value) => {
                     this.plugin.settings.LiveUpdate = value;
                     await this.plugin.saveSettings();
+                    this.plugin.applySettings();
                 })
             );
     }

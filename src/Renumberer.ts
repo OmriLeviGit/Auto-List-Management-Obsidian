@@ -10,8 +10,10 @@ export default class Renumberer {
     constructor() {}
 
     apply(editor: Editor, changes: EditorChange[]) {
-        editor.transaction({ changes });
         const changesApplied = changes.length > 0;
+        if (changesApplied) {
+            editor.transaction({ changes });
+        }
         changes.splice(0, changes.length);
 
         return changesApplied;
