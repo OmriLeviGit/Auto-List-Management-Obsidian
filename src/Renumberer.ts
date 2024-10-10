@@ -1,4 +1,4 @@
-import { Editor, EditorChange, EditorTransaction } from "obsidian";
+import { Editor, EditorChange } from "obsidian";
 import { getItemNum, getListStart, PATTERN } from "./utils";
 
 interface PendingChanges {

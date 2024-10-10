@@ -3,56 +3,18 @@ import Renumberer from "src/Renumberer";
 import PasteHandler from "./src/PasteHandler";
 import { Mutex } from "async-mutex";
 import { PATTERN } from "./src/utils";
-/*
-for the readme:
-confirm how we deal with 0 and 000.
-explain that liveUpdate does not renumber the entire block because the observer is activating every character typed
-does not get activated on regular obsidian renumbering # what did i mean here?
-as of now, listening to undo is not be possible. mention vim.
-write about core functionalities and commands that can be found using ctrl+p
-
-TODO: reload plugin to apply settings change
-
-TODO: others
-confirm moving between pages (which changes editors) does not break the listener assignments
-check what is this.registerEditorExtension()
-confirm RTL support
-deal with numbering such as 0.1 text 0.2 text etc.
-make functions async, apply mutex on this.changes
-understand why edit changes is called several times and avoid it 
-confirm: lines to not get inserted into the renumberer list several times
-use less regex, use .test() over some of the current functions
-
-TODO: undo:
-make sure other plugins do not get triggered twice. it might already be like that.
-confirm it works when holding "ctrl z" down.
-should function like a stack, not just the last one
-support vim users
-
-TODO: spaces:
-make sure numbers in sequence work with shift-enter which adds two spaces **add to readme
-nested numbering: 3 spaces - shift+enter, 4 spaces\tab character - indented (insert according to settings)
-
-TODO: core functionalities:
-listener update, from current until line correctly numbered (togglable)
-
-TODO:
-clone to a new dir and make sure the npm command downloads all dependencies
-update the package.json description, manifest, remove all logs etc, choose a name for the plugin
-https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
-*/
 
 const mutex = new Mutex();
 
 interface RenumberListSettings {
-    LiveUpdate: boolean;
+    autoUpdate: boolean;
 }
 
 const DEFAULT_SETTINGS: RenumberListSettings = {
-    LiveUpdate: false,
+    autoUpdate: false,
 };
 
-export default class RenumberList extends Plugin {
+export default class AutoRenumbering extends Plugin {
     settings: RenumberListSettings;
     private editor: Editor;
     private pasteHandler: PasteHandler;
@@ -120,7 +82,6 @@ export default class RenumberList extends Plugin {
             editorCallback: (editor: Editor) => renumberFileRange(editor),
         });
 
-        // TODO maybe carry on the item number for the entire selection
         this.addCommand({
             id: "renumber-selection",
             name: "Renumber selection",
@@ -138,7 +99,7 @@ export default class RenumberList extends Plugin {
             editorCallback: (editor: Editor) => renumberBlock(editor),
         });
 
-        if (this.settings.LiveUpdate === false) {
+        if (this.settings.autoUpdate === false) {
             return;
         }
 
@@ -236,21 +197,13 @@ export default class RenumberList extends Plugin {
     async saveSettings() {
         await this.saveData(this.settings);
     }
-
-    applySettings() {
-        if (this.settings.LiveUpdate) {
-            // Activate live update functionality
-        } else {
-            // Deactivate live update functionality
-        }
-    }
 }
 
 class RenumberSettings extends PluginSettingTab {
-    plugin: RenumberList;
+    plugin: AutoRenumbering;
     settings: RenumberListSettings;
 
-    constructor(app: App, plugin: RenumberList) {
+    constructor(app: App, plugin: AutoRenumbering) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -261,13 +214,12 @@ class RenumberSettings extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("Live update")
-            .setDesc("Renumber as changes are made (requires a restart")
+            .setName("Automatically renumber")
+            .setDesc("Renumber as changes are made (requires a restart)")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.settings.LiveUpdate).onChange(async (value) => {
-                    this.plugin.settings.LiveUpdate = value;
+                toggle.setValue(this.plugin.settings.autoUpdate).onChange(async (value) => {
+                    this.plugin.settings.autoUpdate = value;
                     await this.plugin.saveSettings();
-                    this.plugin.applySettings();
                 })
             );
     }
