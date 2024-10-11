@@ -6,11 +6,15 @@ interface PendingChanges {
     endIndex: number;
 }
 
+interface localChanges {}
+
 export default class Renumberer {
     constructor() {}
+    // TODO make the comparison string-based, to avoid scientific notations, also need to make it larger than Number
 
-    apply(editor: Editor, changes: EditorChange[]) {
+    applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
         const changesApplied = changes.length > 0;
+
         if (changesApplied) {
             editor.transaction({ changes });
         }
@@ -19,93 +23,99 @@ export default class Renumberer {
         return changesApplied;
     }
 
-    renumberBlock(editor: Editor, currLine: number, startFrom: number = -1): PendingChanges {
-        const changes: EditorChange[] = [];
-        const linesInFile = editor.lastLine() + 1;
+    renumberListAtCursor = (editor: Editor, changes: EditorChange[]) => {
+        const { anchor, head } = editor.listSelections()[0];
+        const currLine = Math.min(anchor.line, head.line);
+        changes.push(...this.renumberBlockStartingAtLine(editor, currLine).changes);
+        this.applyChangesToEditor(editor, changes);
+    };
 
-        let currLineIndex = getListStart(editor, currLine);
-
-        if (currLineIndex < 0) {
-            return { changes, endIndex: currLineIndex };
+    renumberAllListsInRange = (editor: Editor, changes: EditorChange[], start: number, end: number) => {
+        if (start > end) {
+            return -1;
         }
 
-        let currValue = startFrom !== -1 ? startFrom : getItemNum(editor, currLineIndex);
+        let currLine = start;
+        const lastLine = end;
 
-        // TODO make the comparison string-based, to avoid scientific notations, also need to make it larger than Number
-        while (currLineIndex < linesInFile) {
-            const lineText = editor.getLine(currLineIndex);
-            const match = lineText.match(PATTERN);
-
-            if (match === null) {
-                break;
+        while (currLine < lastLine) {
+            if (PATTERN.test(editor.getLine(currLine))) {
+                const newChanges = this.renumberBlockStartingAtLine(editor, currLine);
+                if (newChanges.endIndex > 0) {
+                    changes.push(...newChanges.changes);
+                    currLine = newChanges.endIndex;
+                }
             }
-
-            // if a change is required (expected != actual), push it to the changes list
-            if (currValue !== parseInt(match[1])) {
-                const newLineText = lineText.replace(match[0], `${currValue}. `);
-
-                changes.push({
-                    from: { line: currLineIndex, ch: 0 },
-                    to: { line: currLineIndex, ch: lineText.length },
-                    text: newLineText,
-                });
-            }
-
-            currLineIndex++;
-            currValue++;
-        }
-
-        return { changes, endIndex: currLineIndex - 1 };
-    }
-
-    renumberLocally(editor: Editor, currLine: number): PendingChanges {
-        const linesInFile = editor.lastLine() + 1;
-        const currNum = getItemNum(editor, currLine);
-        const changes: EditorChange[] = [];
-
-        if (currNum === -1) {
-            return { changes, endIndex: currLine }; // not a part of a numbered list
-        }
-
-        let prevNum = getItemNum(editor, currLine - 1);
-
-        let flag: boolean;
-        let expectedItemNum: number;
-
-        // if it's not the first line in a numbered list, we match the number to the line above and check one extra time
-        if (prevNum !== -1) {
-            flag = false;
-            expectedItemNum = prevNum + 1;
-        } else {
-            flag = true;
-            expectedItemNum = currNum + 1;
             currLine++;
         }
 
-        // TODO make the comparison string-based, to avoid scientific notations, also need to make it larger than Number
+        this.applyChangesToEditor(editor, changes);
+    };
 
-        while (currLine < linesInFile) {
+    renumberBlockStartingAtLine(editor: Editor, currLine: number, listStartsFrom: number = -1): PendingChanges {
+        const changes: EditorChange[] = [];
+        const startIndex = getListStart(editor, currLine);
+
+        if (startIndex < 0) {
+            return { changes, endIndex: startIndex };
+        }
+
+        const expectedItemNum = listStartsFrom !== -1 ? listStartsFrom : getItemNum(editor, startIndex);
+        return this.generateChanges(editor, expectedItemNum, startIndex);
+    }
+
+    renumberLocally(editor: Editor, startIndex: number): PendingChanges {
+        const currNum = getItemNum(editor, startIndex);
+        const changes: EditorChange[] = [];
+
+        if (currNum === -1) {
+            return { changes, endIndex: startIndex }; // not a part of a numbered list
+        }
+
+        const prevNum = getItemNum(editor, startIndex - 1);
+        let expectedItemNum = prevNum + 1;
+        let isFirstLine = false; // if it's not the first line in a numbered list, we match the number to the line above and check one extra time
+
+        if (prevNum === -1) {
+            expectedItemNum = currNum + 1;
+            startIndex++;
+            isFirstLine = true;
+        }
+
+        return this.generateChanges(editor, expectedItemNum, startIndex, true, isFirstLine);
+    }
+
+    generateChanges(
+        editor: Editor,
+        expectedItemNum: number,
+        currLine: number,
+        isLocal = false,
+        isFirstLine = true
+    ): PendingChanges {
+        const changes: EditorChange[] = [];
+        const lastLine = editor.lastLine() + 1;
+
+        while (currLine < lastLine) {
             const lineText = editor.getLine(currLine);
             const match = lineText.match(PATTERN);
 
-            if (match === null) {
+            if (!match) {
                 break;
             }
 
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== parseInt(match[1])) {
                 const newLineText = lineText.replace(match[0], `${expectedItemNum}. `);
-                console.log("text", newLineText, "match: ", match);
                 changes.push({
                     from: { line: currLine, ch: 0 },
                     to: { line: currLine, ch: lineText.length },
                     text: newLineText,
                 });
-            } else if (flag) {
+            } else if (isLocal && !isFirstLine) {
                 break; // ensures changes are made locally, not until the end of the block
             }
 
-            flag = true;
+            isFirstLine = false;
             currLine++;
             expectedItemNum++;
         }

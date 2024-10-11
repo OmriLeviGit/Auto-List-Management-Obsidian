@@ -15,7 +15,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("Automatically renumber")
+            .setName("Automatically renumber numbered lists")
             .setDesc("Renumber as changes are made (requires a reload)")
             .addToggle((toggle) =>
                 toggle.setValue(this.plugin.settings.autoUpdate).onChange(async (value) => {

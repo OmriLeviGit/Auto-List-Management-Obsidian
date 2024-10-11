@@ -12,7 +12,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "2. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        const res = renumberer.apply(editor, changes);
+        const res = renumberer.applyChangesToEditor(editor, changes);
         expect(res).toBe(false);
     });
 
@@ -20,7 +20,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "3. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        const res = renumberer.apply(editor, changes);
+        const res = renumberer.applyChangesToEditor(editor, changes);
         expect(res).not.toBe(false);
     });
 
@@ -28,7 +28,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "3. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -39,7 +39,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "3. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -50,7 +50,7 @@ describe("RenumberLocally tests", () => {
         const content = ["A", "1. a", "3. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["A", "1. a", "2. b"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -61,7 +61,7 @@ describe("RenumberLocally tests", () => {
         const content = ["2. a"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["2. a"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -72,7 +72,7 @@ describe("RenumberLocally tests", () => {
         const content = ["0. a", "2. b"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["0. a", "1. b"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -83,7 +83,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "6. b", "0. c"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "3. c"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -94,7 +94,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "6. b", "0. c"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "3. c"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -105,7 +105,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "1. b", "A", "5. B"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "A", "5. B"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -116,7 +116,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "abc", "1. a"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "abc", "1. a"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -127,7 +127,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", " 6. A"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", " 6. A"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -138,7 +138,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "3. b", "3. c", "5. d"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "3. c", "5. d"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -149,7 +149,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "2. b", "3. c", "5. d"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "3. c", "5. d"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);
@@ -160,7 +160,7 @@ describe("RenumberLocally tests", () => {
         const content = ["1. a", "3. b", "3. c", "5. d"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.apply(editor, changes);
+        renumberer.applyChangesToEditor(editor, changes);
         const expected = ["1. a", "2. b", "3. c", "5. d"];
         for (let i = 0; i < expected.length; i++) {
             expect(editor.getLine(i)).toBe(expected[i]);

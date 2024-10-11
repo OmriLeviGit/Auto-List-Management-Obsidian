@@ -2,8 +2,8 @@ import { Plugin, Editor, EditorChange } from "obsidian";
 import Renumberer from "src/Renumberer";
 import { modifyText } from "./src/pasteFunctions";
 import { Mutex } from "async-mutex";
-import { PATTERN } from "./src/utils";
 import AutoRenumberingSettings from "./src/settings";
+import { registerCommands } from "src/registerCommands";
 
 const mutex = new Mutex();
 
@@ -17,76 +17,19 @@ const DEFAULT_SETTINGS: RenumberListSettings = {
 
 export default class AutoRenumbering extends Plugin {
     settings: RenumberListSettings;
-    private renumberer: Renumberer;
-    private changes: EditorChange[] = [];
-    private isProccessing = false;
-    private blockEditorChange = false; // if the previous action was to undo or paste
+    renumberer: Renumberer;
+    changes: EditorChange[] = [];
+    isProccessing = false;
+    private blockEditorChange = false; // if the previous action was a special key
 
     async onload() {
         await this.loadSettings();
-
-        this.renumberer = new Renumberer();
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
 
-        const renumberBlock = (editor: Editor) => {
-            try {
-                this.isProccessing = true;
-                const { anchor, head } = editor.listSelections()[0];
-                const currLine = Math.min(anchor.line, head.line);
-                const { changes } = this.renumberer.renumberBlock(editor, currLine);
-                this.changes.push(...changes);
-                this.renumberer.apply(editor, this.changes);
-            } finally {
-                this.isProccessing = false;
-            }
-        };
+        this.renumberer = new Renumberer();
 
-        const renumberFileRange = (editor: Editor, start: number = 0, end = editor.lastLine()) => {
-            if (start > end) {
-                return -1;
-            }
+        registerCommands(this);
 
-            let currLine = start;
-            const lastLine = end;
-
-            while (currLine < lastLine) {
-                if (PATTERN.test(editor.getLine(currLine))) {
-                    const newChanges = this.renumberer.renumberBlock(editor, currLine);
-                    if (newChanges.endIndex > 0) {
-                        this.changes.push(...newChanges.changes);
-                        currLine = newChanges.endIndex;
-                    }
-                }
-                currLine++;
-            }
-
-            this.renumberer.apply(editor, this.changes);
-        };
-
-        this.addCommand({
-            id: "renumber-file",
-            name: "Renumber all numbered lists",
-            editorCallback: (editor: Editor) => renumberFileRange(editor),
-        });
-
-        this.addCommand({
-            id: "renumber-selection",
-            name: "Renumber selection",
-            editorCallback: (editor: Editor) => {
-                const { anchor, head } = editor.listSelections()[0];
-                const startLine = Math.min(anchor.line, head.line);
-                const endLine = Math.max(anchor.line, head.line);
-                renumberFileRange(editor, startLine, endLine);
-            },
-        });
-
-        this.addCommand({
-            id: "renumber-block",
-            name: "Renumber current list",
-            editorCallback: (editor: Editor) => renumberBlock(editor),
-        });
-
-        console.log("auto update: ", this.settings.autoUpdate);
         if (this.settings.autoUpdate === false) {
             return;
         }
@@ -100,14 +43,14 @@ export default class AutoRenumbering extends Plugin {
                         console.log("detected change");
 
                         if (this.blockEditorChange) {
-                            return;
+                            return; // do not remove the block to prevent undefined behavior from other threads
                         }
 
                         mutex.runExclusive(() => {
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
                             this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
-                            this.renumberer.apply(editor, this.changes);
+                            this.renumberer.applyChangesToEditor(editor, this.changes);
                         });
                     }, 0);
 
@@ -124,7 +67,7 @@ export default class AutoRenumbering extends Plugin {
                 }
                 evt.preventDefault();
                 mutex.runExclusive(() => {
-                    this.blockEditorChange;
+                    this.blockEditorChange = true;
 
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
@@ -146,24 +89,24 @@ export default class AutoRenumbering extends Plugin {
                         this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
                     }
 
-                    this.renumberer.apply(editor, this.changes);
+                    this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
             })
         );
 
-        window.addEventListener("keydown", this.handleStroke.bind(this));
+        // Keystroke listener
+        window.addEventListener("keydown", this.handleKeystroke.bind(this));
     }
 
-    // undo
-    handleStroke(event: KeyboardEvent) {
+    handleKeystroke(event: KeyboardEvent) {
+        // if special key, dont renumber automatically
         mutex.runExclusive(() => {
             this.blockEditorChange = event.ctrlKey || event.metaKey;
         });
     }
 
     onunload() {
-        console.log("RenumberList plugin unloaded");
-        window.removeEventListener("keydown", this.handleStroke);
+        window.removeEventListener("keydown", this.handleKeystroke);
     }
 
     async loadSettings() {
