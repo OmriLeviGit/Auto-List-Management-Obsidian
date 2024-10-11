@@ -1,8 +1,10 @@
-import { App, Plugin, Editor, EditorChange, PluginSettingTab, Setting } from "obsidian";
+import { Plugin, Editor, EditorChange } from "obsidian";
 import Renumberer from "src/Renumberer";
 import { modifyText } from "./src/pasteFunctions";
 import { Mutex } from "async-mutex";
 import { PATTERN } from "./src/utils";
+import AutoRenumberingSettings from "./src/settings";
+
 const mutex = new Mutex();
 
 interface RenumberListSettings {
@@ -24,7 +26,7 @@ export default class AutoRenumbering extends Plugin {
         await this.loadSettings();
 
         this.renumberer = new Renumberer();
-        this.addSettingTab(new RenumberSettings(this.app, this));
+        this.addSettingTab(new AutoRenumberingSettings(this.app, this));
 
         const renumberBlock = (editor: Editor) => {
             try {
@@ -84,6 +86,7 @@ export default class AutoRenumbering extends Plugin {
             editorCallback: (editor: Editor) => renumberBlock(editor),
         });
 
+        console.log("auto update: ", this.settings.autoUpdate);
         if (this.settings.autoUpdate === false) {
             return;
         }
@@ -107,6 +110,7 @@ export default class AutoRenumbering extends Plugin {
                             this.renumberer.apply(editor, this.changes);
                         });
                     }, 0);
+
                     this.isProccessing = false;
                 }
             })
@@ -146,6 +150,7 @@ export default class AutoRenumbering extends Plugin {
                 });
             })
         );
+
         window.addEventListener("keydown", this.handleStroke.bind(this));
     }
 
@@ -153,7 +158,6 @@ export default class AutoRenumbering extends Plugin {
     handleStroke(event: KeyboardEvent) {
         mutex.runExclusive(() => {
             this.blockEditorChange = event.ctrlKey || event.metaKey;
-            console.log("@: ", this.blockEditorChange);
         });
     }
 
@@ -168,31 +172,5 @@ export default class AutoRenumbering extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
-    }
-}
-
-class RenumberSettings extends PluginSettingTab {
-    plugin: AutoRenumbering;
-    settings: RenumberListSettings;
-
-    constructor(app: App, plugin: AutoRenumbering) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-
-    display(): void {
-        const { containerEl } = this;
-
-        containerEl.empty();
-
-        new Setting(containerEl)
-            .setName("Automatically renumber")
-            .setDesc("Renumber as changes are made (requires a restart)")
-            .addToggle((toggle) =>
-                toggle.setValue(this.plugin.settings.autoUpdate).onChange(async (value) => {
-                    this.plugin.settings.autoUpdate = value;
-                    await this.plugin.saveSettings();
-                })
-            );
     }
 }

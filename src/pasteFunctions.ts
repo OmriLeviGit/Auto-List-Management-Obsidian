@@ -10,8 +10,6 @@ export const modifyText = (editor: Editor, pastedText: string): TextModification
     const lines = pastedText.split("\n");
     const offset = getTextOffset(lines);
 
-    // console.log("anchor", anchor, "head", head, "offset", offset);
-
     if (offset < 0) {
         return undefined;
     }
@@ -27,14 +25,10 @@ export const modifyText = (editor: Editor, pastedText: string): TextModification
         return undefined;
     }
 
-    // console.log("matchFound: ", matchFound[0], "firstitem", firstItem);
-
     lines[offset] = lines[offset].replace(matchFound[0], `${firstItem}. `);
     const modifiedText = lines.join("\n");
 
     const newIndex = baseIndex + offset;
-
-    // console.log("inside new insidex", newIndex, modifiedText);
 
     return { modifiedText, newIndex };
 };
