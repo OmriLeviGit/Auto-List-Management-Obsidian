@@ -1,9 +1,8 @@
 import { App, Plugin, Editor, EditorChange, PluginSettingTab, Setting } from "obsidian";
 import Renumberer from "src/Renumberer";
-import PasteHandler from "./src/PasteHandler";
+import { modifyText } from "./src/pasteFunctions";
 import { Mutex } from "async-mutex";
 import { PATTERN } from "./src/utils";
-
 const mutex = new Mutex();
 
 interface RenumberListSettings {
@@ -16,29 +15,15 @@ const DEFAULT_SETTINGS: RenumberListSettings = {
 
 export default class AutoRenumbering extends Plugin {
     settings: RenumberListSettings;
-    private editor: Editor;
-    private pasteHandler: PasteHandler;
     private renumberer: Renumberer;
     private changes: EditorChange[] = [];
-    private twoHistory: boolean[] = [];
     private isProccessing = false;
-    private lastEventWasPaste = false;
-    private lastEventWasUndo = false;
+    private blockEditorChange = false; // if the previous action was to undo or paste
 
     async onload() {
-        console.log("loading");
         await this.loadSettings();
 
-        const editor = this.app.workspace.activeEditor?.editor;
-        console.log("set editor as: ", editor);
-        if (!editor) {
-            return;
-        }
-
-        this.editor = editor;
-        this.pasteHandler = new PasteHandler();
         this.renumberer = new Renumberer();
-
         this.addSettingTab(new RenumberSettings(this.app, this));
 
         const renumberBlock = (editor: Editor) => {
@@ -106,32 +91,24 @@ export default class AutoRenumbering extends Plugin {
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                setTimeout(() => {
-                    // if (this.lastEventWasPaste) {
-                    //     this.lastEventWasPaste = false;
-                    //     return;
-                    // }
-
-                    // console.log(this.lastEventWasUndo);
-                    // if (this.lastEventWasUndo) {
-                    //     this.lastEventWasUndo = false;
-                    //     return;
-                    // }
-                    mutex.runExclusive(() => {
+                if (!this.isProccessing) {
+                    this.isProccessing = true;
+                    setTimeout(() => {
                         console.log("detected change");
-                        if (!this.isProccessing) {
-                            this.isProccessing = true;
 
+                        if (this.blockEditorChange) {
+                            return;
+                        }
+
+                        mutex.runExclusive(() => {
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
-
                             this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
-                            this.twoHistory.push(this.renumberer.apply(editor, this.changes));
-
-                            this.isProccessing = false;
-                        }
-                    });
-                }, 0);
+                            this.renumberer.apply(editor, this.changes);
+                        });
+                    }, 0);
+                    this.isProccessing = false;
+                }
             })
         );
 
@@ -143,7 +120,7 @@ export default class AutoRenumbering extends Plugin {
                 }
                 evt.preventDefault();
                 mutex.runExclusive(() => {
-                    // this.lastEventWasPaste = true;
+                    this.blockEditorChange;
 
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
@@ -153,7 +130,7 @@ export default class AutoRenumbering extends Plugin {
                     const { anchor, head } = editor.listSelections()[0]; // must be before pasting
                     const baseIndex = Math.min(anchor.line, head.line);
 
-                    const { modifiedText, newIndex } = this.pasteHandler.modifyText(editor, textFromClipboard) || {};
+                    const { modifiedText, newIndex } = modifyText(editor, textFromClipboard) || {};
 
                     textFromClipboard = modifiedText || textFromClipboard;
 
@@ -165,29 +142,24 @@ export default class AutoRenumbering extends Plugin {
                         this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
                     }
 
-                    // this.renumberer.apply(editor, this.changes);
+                    this.renumberer.apply(editor, this.changes);
                 });
             })
         );
-        // window.addEventListener("keydown", this.handleUndo.bind(this));
+        window.addEventListener("keydown", this.handleStroke.bind(this));
     }
 
-    //undo
-    // handleUndo(event: KeyboardEvent) {
-    //     mutex.runExclusive(() => {
-    //         this.lastEventWasUndo = true;
-    //         console.log(this.twoHistory);
-    //         if ((event.ctrlKey || event.metaKey) && event.key === "z") {
-    //             if (this.twoHistory.pop() === true) {
-    //                 this.editor.undo();
-    //             }
-    //         }
-    //     });
-    // }
+    // undo
+    handleStroke(event: KeyboardEvent) {
+        mutex.runExclusive(() => {
+            this.blockEditorChange = event.ctrlKey || event.metaKey;
+            console.log("@: ", this.blockEditorChange);
+        });
+    }
 
     onunload() {
         console.log("RenumberList plugin unloaded");
-        // window.removeEventListener("keydown", this.handleUndo);
+        window.removeEventListener("keydown", this.handleStroke);
     }
 
     async loadSettings() {

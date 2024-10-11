@@ -95,7 +95,7 @@ export default class Renumberer {
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== parseInt(match[1])) {
                 const newLineText = lineText.replace(match[0], `${expectedItemNum}. `);
-
+                console.log("text", newLineText, "match: ", match);
                 changes.push({
                     from: { line: currLine, ch: 0 },
                     to: { line: currLine, ch: lineText.length },
