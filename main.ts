@@ -12,7 +12,7 @@ interface RenumberListSettings {
 }
 
 const DEFAULT_SETTINGS: RenumberListSettings = {
-    autoUpdate: false,
+    autoUpdate: true,
 };
 
 export default class AutoRenumbering extends Plugin {
@@ -20,7 +20,7 @@ export default class AutoRenumbering extends Plugin {
     renumberer: Renumberer;
     changes: EditorChange[] = [];
     isProccessing = false;
-    private blockEditorChange = false; // if the previous action was a special key
+    blockEditorChange = false; // if the previous action was a special key
 
     async onload() {
         await this.loadSettings();
@@ -30,20 +30,19 @@ export default class AutoRenumbering extends Plugin {
 
         registerCommands(this);
 
-        if (this.settings.autoUpdate === false) {
-            return;
-        }
-
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
+                if (this.settings.autoUpdate === false) {
+                    return;
+                }
+
                 if (!this.isProccessing) {
                     this.isProccessing = true;
-                    setTimeout(() => {
-                        console.log("detected change");
 
+                    setTimeout(() => {
                         if (this.blockEditorChange) {
-                            return; // do not remove the block to prevent undefined behavior from other threads
+                            return; // not removing the block immediately prevents adding the same line several times to changes without updating
                         }
 
                         mutex.runExclusive(() => {
@@ -62,6 +61,10 @@ export default class AutoRenumbering extends Plugin {
         // paste
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
+                if (this.settings.autoUpdate === false) {
+                    return;
+                }
+
                 if (evt.defaultPrevented) {
                     return;
                 }
@@ -94,8 +97,7 @@ export default class AutoRenumbering extends Plugin {
             })
         );
 
-        // Keystroke listener
-        window.addEventListener("keydown", this.handleKeystroke.bind(this));
+        window.addEventListener("keydown", this.handleKeystroke.bind(this)); // Keystroke listener
     }
 
     handleKeystroke(event: KeyboardEvent) {
