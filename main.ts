@@ -8,11 +8,11 @@ import { registerCommands } from "src/registerCommands";
 const mutex = new Mutex();
 
 interface RenumberListSettings {
-    autoUpdate: boolean;
+    liveUpdate: boolean;
 }
 
 const DEFAULT_SETTINGS: RenumberListSettings = {
-    autoUpdate: true,
+    liveUpdate: true,
 };
 
 export default class AutoRenumbering extends Plugin {
@@ -20,7 +20,8 @@ export default class AutoRenumbering extends Plugin {
     renumberer: Renumberer;
     changes: EditorChange[] = [];
     isProccessing = false;
-    blockEditorChange = false; // if the previous action was a special key
+    blockChanges = false; // if the previous action was a special key
+    handleKeystrokeBound: (event: KeyboardEvent) => void;
 
     async onload() {
         await this.loadSettings();
@@ -33,7 +34,7 @@ export default class AutoRenumbering extends Plugin {
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                if (this.settings.autoUpdate === false) {
+                if (this.settings.liveUpdate === false) {
                     return;
                 }
 
@@ -41,19 +42,19 @@ export default class AutoRenumbering extends Plugin {
                     this.isProccessing = true;
 
                     setTimeout(() => {
-                        if (this.blockEditorChange) {
-                            return; // not removing the block immediately prevents adding the same line several times to changes without updating
-                        }
-
                         mutex.runExclusive(() => {
+                            if (this.blockChanges) {
+                                return;
+                            }
+
+                            this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
                             this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
                             this.renumberer.applyChangesToEditor(editor, this.changes);
                         });
+                        this.isProccessing = false;
                     }, 0);
-
-                    this.isProccessing = false;
                 }
             })
         );
@@ -61,16 +62,17 @@ export default class AutoRenumbering extends Plugin {
         // paste
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (this.settings.autoUpdate === false) {
+                if (this.settings.liveUpdate === false) {
                     return;
                 }
 
                 if (evt.defaultPrevented) {
                     return;
                 }
+
                 evt.preventDefault();
                 mutex.runExclusive(() => {
-                    this.blockEditorChange = true;
+                    this.blockChanges = true;
 
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
@@ -80,35 +82,39 @@ export default class AutoRenumbering extends Plugin {
                     const { anchor, head } = editor.listSelections()[0]; // must be before pasting
                     const baseIndex = Math.min(anchor.line, head.line);
 
-                    const { modifiedText, newIndex } = modifyText(editor, textFromClipboard) || {};
+                    const countNewlines = (text: string) => {
+                        let count = 0;
+                        for (let char of text) {
+                            if (char === "\n") {
+                                count++;
+                            }
+                        }
+                        return count;
+                    };
 
-                    textFromClipboard = modifiedText || textFromClipboard;
+                    const numOfLines = countNewlines(textFromClipboard);
 
                     editor.replaceSelection(textFromClipboard); // paste
-
-                    this.changes.push(...this.renumberer.renumberLocally(editor, baseIndex).changes);
-
-                    if (newIndex) {
-                        this.changes.push(...this.renumberer.renumberLocally(editor, newIndex).changes);
-                    }
-
+                    this.renumberer.renumberAllListsInRange(editor, this.changes, baseIndex, baseIndex + numOfLines);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
             })
         );
 
-        window.addEventListener("keydown", this.handleKeystroke.bind(this)); // Keystroke listener
+        this.handleKeystrokeBound = this.handleKeystroke.bind(this);
+        window.addEventListener("keydown", this.handleKeystrokeBound); // Keystroke listener
     }
 
     handleKeystroke(event: KeyboardEvent) {
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
-            this.blockEditorChange = event.ctrlKey || event.metaKey || event.altKey;
+            this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
+            // console.log("handlestroke", this.blockChanges);
         });
     }
 
-    onunload() {
-        window.removeEventListener("keydown", this.handleKeystroke);
+    async onunload() {
+        window.removeEventListener("keydown", this.handleKeystrokeBound);
     }
 
     async loadSettings() {

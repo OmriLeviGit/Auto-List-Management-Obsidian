@@ -18,8 +18,8 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Live update")
             .setDesc("Automatically renumber numbered lists as changes are made. Does not support Vim.")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.settings.autoUpdate).onChange(async (value) => {
-                    this.plugin.settings.autoUpdate = value;
+                toggle.setValue(this.plugin.settings.liveUpdate).onChange(async (value) => {
+                    this.plugin.settings.liveUpdate = value;
                     await this.plugin.saveSettings();
                 })
             );
