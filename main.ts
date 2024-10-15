@@ -103,7 +103,7 @@ export default class AutoRenumbering extends Plugin {
     handleKeystroke(event: KeyboardEvent) {
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
-            this.blockEditorChange = event.ctrlKey || event.metaKey;
+            this.blockEditorChange = event.ctrlKey || event.metaKey || event.altKey;
         });
     }
 

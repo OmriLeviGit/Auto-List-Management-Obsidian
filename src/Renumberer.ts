@@ -6,11 +6,8 @@ interface PendingChanges {
     endIndex: number;
 }
 
-interface localChanges {}
-
 export default class Renumberer {
     constructor() {}
-    // TODO make the comparison string-based, to avoid scientific notations, also need to make it larger than Number
 
     applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
         const changesApplied = changes.length > 0;
@@ -30,15 +27,8 @@ export default class Renumberer {
         this.applyChangesToEditor(editor, changes);
     };
 
-    renumberAllListsInRange = (editor: Editor, changes: EditorChange[], start: number, end: number) => {
-        if (start > end) {
-            return -1;
-        }
-
-        let currLine = start;
-        const lastLine = end;
-
-        while (currLine < lastLine) {
+    renumberAllListsInRange = (editor: Editor, changes: EditorChange[], currLine: number, end: number) => {
+        while (currLine < end) {
             if (PATTERN.test(editor.getLine(currLine))) {
                 const newChanges = this.renumberBlockStartingAtLine(editor, currLine);
                 if (newChanges.endIndex > 0) {
@@ -49,20 +39,10 @@ export default class Renumberer {
             currLine++;
         }
 
-        this.applyChangesToEditor(editor, changes);
-    };
-
-    renumberBlockStartingAtLine(editor: Editor, currLine: number, listStartsFrom: number = -1): PendingChanges {
-        const changes: EditorChange[] = [];
-        const startIndex = getListStart(editor, currLine);
-
-        if (startIndex < 0) {
-            return { changes, endIndex: startIndex };
+        if (changes.length > 0) {
+            this.applyChangesToEditor(editor, changes);
         }
-
-        const expectedItemNum = listStartsFrom !== -1 ? listStartsFrom : getItemNum(editor, startIndex);
-        return this.generateChanges(editor, expectedItemNum, startIndex);
-    }
+    };
 
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
         const currNum = getItemNum(editor, startIndex);
@@ -85,7 +65,19 @@ export default class Renumberer {
         return this.generateChanges(editor, expectedItemNum, startIndex, true, isFirstLine);
     }
 
-    generateChanges(
+    private renumberBlockStartingAtLine(editor: Editor, currLine: number, listStartsFrom: number = -1): PendingChanges {
+        const changes: EditorChange[] = [];
+        const startIndex = getListStart(editor, currLine);
+
+        if (startIndex < 0) {
+            return { changes, endIndex: startIndex };
+        }
+
+        const expectedItemNum = listStartsFrom !== -1 ? listStartsFrom : getItemNum(editor, startIndex);
+        return this.generateChanges(editor, expectedItemNum, startIndex);
+    }
+
+    private generateChanges(
         editor: Editor,
         expectedItemNum: number,
         currLine: number,
@@ -94,8 +86,8 @@ export default class Renumberer {
     ): PendingChanges {
         const changes: EditorChange[] = [];
         const lastLine = editor.lastLine() + 1;
-
         while (currLine < lastLine) {
+            console.log("current line: ", currLine);
             const lineText = editor.getLine(currLine);
             const match = lineText.match(PATTERN);
 
@@ -122,4 +114,18 @@ export default class Renumberer {
 
         return { changes, endIndex: currLine - 1 };
     }
+
+    // private findNonSpaceIndex(line: string): number {
+    //     let index = -1;
+    //     const length = line.length;
+
+    //     for (let i = 0; i < length; i++) {
+    //         if (line[i] !== " ") {
+    //             index = i;
+    //             break;
+    //         }
+    //     }
+
+    //     return index;
+    // }
 }
