@@ -40,6 +40,7 @@ export default class AutoRenumbering extends Plugin {
 
                 if (!this.isProccessing) {
                     this.isProccessing = true;
+                    console.log("editor called");
 
                     setTimeout(() => {
                         mutex.runExclusive(() => {

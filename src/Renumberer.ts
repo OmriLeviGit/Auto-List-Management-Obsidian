@@ -1,5 +1,7 @@
 import { Editor, EditorChange } from "obsidian";
-import { getItemNum, getListStart, PATTERN } from "./utils";
+import { getItemNum, getListStart, PATTERN, PATTERNTwo } from "./utils";
+import Stack from "./Stack";
+import { copyFileSync } from "fs";
 
 interface PendingChanges {
     changes: EditorChange[];
@@ -17,7 +19,6 @@ export default class Renumberer {
         }
 
         changes.splice(0, changes.length);
-
         return changesApplied;
     }
 
@@ -82,42 +83,106 @@ export default class Renumberer {
         isLocal = false
     ): PendingChanges {
         const changes: EditorChange[] = [];
-        const lastLine = editor.lastLine() + 1;
-        let firstChange = true;
+        const stack = new Stack(editor, currLine - 1);
 
-        let expectedItemNum = startingValue < 0 ? getItemNum(editor, currLine - 1) : startingValue;
-        if (expectedItemNum < 0) {
-            currLine++;
-            expectedItemNum = getItemNum(editor, currLine - 1);
+        if (startingValue > 0) {
+            stack.setLastValue(startingValue);
         }
+        console.log("stack = ", stack);
 
-        expectedItemNum++;
+        let firstChange = true;
+        const endOfList = editor.lastLine() + 1;
+        //console.log("currLine: ", currLine, "endoflist: ", endOfList);
+        while (currLine < endOfList) {
+            let lastInStack = stack.getLastValue();
 
-        while (currLine < lastLine) {
+            //console.log("lastinstack", lastInStack);
+
+            if (lastInStack === undefined) {
+                console.log("stack = ", stack);
+                console.log("last in stack is undefined");
+                break;
+            }
+
+            let expectedItemNum = lastInStack + 1;
+
             const lineText = editor.getLine(currLine);
-            const match = lineText.match(PATTERN);
+            const match = lineText.match(PATTERNTwo);
 
             if (!match) {
                 break;
             }
 
+            console.log(expectedItemNum, match[1]);
+
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== parseInt(match[1])) {
-                const newLineText = lineText.replace(match[0], `${expectedItemNum}. `);
+                const newLineText = lineText.replace(match[1], `${expectedItemNum}`);
                 changes.push({
                     from: { line: currLine, ch: 0 },
                     to: { line: currLine, ch: lineText.length },
                     text: newLineText,
                 });
+
+                stack.insert(newLineText);
             } else if (isLocal && !firstChange) {
                 break; // ensures changes are made locally, not until the end of the block
+            } else {
+                stack.insert(lineText);
             }
 
+            // TODO insert to stack new changes, requires stack to work without texline but with indices and offsets somehow
             firstChange = false;
             currLine++;
-            expectedItemNum++;
         }
 
+        // console.log("out");
         return { changes, endIndex: currLine - 1 };
     }
+
+    // private generateChanges(
+    //     editor: Editor,
+    //     currLine: number,
+    //     startingValue: number = -1,
+    //     isLocal = false
+    // ): PendingChanges {
+    //     const changes: EditorChange[] = [];
+    //     const lastLine = editor.lastLine() + 1;
+    //     let firstChange = true;
+
+    //     let expectedItemNum = startingValue < 0 ? getItemNum(editor, currLine - 1) : startingValue;
+    //     if (expectedItemNum < 0) {
+    //         currLine++;
+    //         expectedItemNum = getItemNum(editor, currLine - 1);
+    //     }
+
+    //     expectedItemNum++;
+
+    //     while (currLine < lastLine) {
+    //         const lineText = editor.getLine(currLine);
+    //         const match = lineText.match(PATTERN);
+
+    //         if (!match) {
+    //             break;
+    //         }
+
+    //         // if a change is required (expected != actual), push it to the changes list
+    //         if (expectedItemNum !== parseInt(match[1])) {
+    //             const newLineText = lineText.replace(match[0], `${expectedItemNum}. `);
+    //             changes.push({
+    //                 from: { line: currLine, ch: 0 },
+    //                 to: { line: currLine, ch: lineText.length },
+    //                 text: newLineText,
+    //             });
+    //         } else if (isLocal && !firstChange) {
+    //             break; // ensures changes are made locally, not until the end of the block
+    //         }
+
+    //         firstChange = false;
+    //         currLine++;
+    //         expectedItemNum++;
+    //     }
+
+    //     return { changes, endIndex: currLine - 1 };
+    // }
 }

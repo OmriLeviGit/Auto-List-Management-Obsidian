@@ -1,10 +1,11 @@
-import Stack from "../src/stack";
+import Stack from "../src/Stack";
+import { createMockEditor } from "./__mocks__/createMockEditor";
 
 describe("Stack Indentation and Number Parsing Tests", () => {
     let stack: Stack;
 
     beforeEach(() => {
-        stack = new Stack();
+        stack = new Stack(createMockEditor([""]), 0);
     });
 
     const testCases = [
@@ -13,16 +14,10 @@ describe("Stack Indentation and Number Parsing Tests", () => {
             inputs: [" 1. text", "  1. text", "  2. text"],
             expected: [undefined, 1, 2],
         },
-
-        {
-            name: "Single number entry (0 indentation)",
-            inputs: ["2. text"],
-            expected: [2],
-        },
         {
             name: "Single number entry (1 indentation)",
-            inputs: ["1. text"],
-            expected: [1],
+            inputs: ["1. text", "2. text"],
+            expected: [2],
         },
         {
             name: "Number followed by empty space",

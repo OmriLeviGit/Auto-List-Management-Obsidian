@@ -1,6 +1,7 @@
 import { Editor } from "obsidian";
 
 const PATTERN = /^(\d+)\. /;
+const PATTERNTwo = /^\s*(\d+)\. /;
 
 function getItemNum(editor: Editor, lineNum: number): number {
     if (lineNum < 0) {
@@ -29,4 +30,4 @@ function getListStart(editor: Editor, currLineIndex: number): number {
     return prevIndex + 1;
 }
 
-export { getItemNum, getListStart, PATTERN, getNumFromText };
+export { getItemNum, getListStart, PATTERN, getNumFromText, PATTERNTwo };
