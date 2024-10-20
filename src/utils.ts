@@ -10,6 +10,10 @@ function getItemNum(editor: Editor, lineNum: number): number {
     const match = lineText.match(PATTERN);
     return match == undefined ? -1 : parseInt(match[1]);
 }
+function getNumFromText(lineText: string): number {
+    const match = lineText.match(PATTERN);
+    return match == undefined ? -1 : parseInt(match[1]);
+}
 
 function getListStart(editor: Editor, currLineIndex: number): number {
     if (getItemNum(editor, currLineIndex) === -1) {
@@ -25,4 +29,4 @@ function getListStart(editor: Editor, currLineIndex: number): number {
     return prevIndex + 1;
 }
 
-export { getItemNum, getListStart, PATTERN };
+export { getItemNum, getListStart, PATTERN, getNumFromText };

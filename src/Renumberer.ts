@@ -120,18 +120,4 @@ export default class Renumberer {
 
         return { changes, endIndex: currLine - 1 };
     }
-
-    // private findNonSpaceIndex(line: string): number {
-    //     let index = -1;
-    //     const length = line.length;
-
-    //     for (let i = 0; i < length; i++) {
-    //         if (line[i] !== " ") {
-    //             index = i;
-    //             break;
-    //         }
-    //     }
-
-    //     return index;
-    // }
 }
