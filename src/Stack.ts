@@ -3,7 +3,6 @@ import { PATTERN, getNumFromText } from "./utils";
 
 export default class Stack {
     private stack: (number | undefined)[];
-    private lastOffset = 0;
 
     constructor(editor: Editor, currLine: number) {
         this.stack = [];
@@ -16,37 +15,37 @@ export default class Stack {
         let prevIndex = currLine - 1;
         while (prevIndex > 0) {
             const prevOffset = this.findNonSpaceIndex(editor.getLine(prevIndex));
+            console.log("previndex: ", prevIndex, "offset", prevOffset);
             if (prevOffset <= offset) {
                 break;
             }
             prevIndex--;
         }
 
-        for (let i = Math.max(prevIndex, 0); i <= currLine; i++) {
+        for (let i = Math.max(prevIndex, 0); i < currLine; i++) {
             this.insert(editor.getLine(i));
+            console.log(i);
         }
 
         // console.log("offset", offset, "\nprevIndex", prevIndex, "\n");
-
-        this.lastOffset = this.stack.length;
     }
 
     get(): (number | undefined)[] {
         return this.stack;
     }
 
-    getLastValue(): number | undefined {
-        return this.stack[this.lastOffset - 1];
+    peek(): number | undefined {
+        return this.stack[this.stack.length - 1];
     }
 
     setLastValue(value: number) {
-        this.stack[this.lastOffset - 1] = value;
+        this.stack[this.stack.length - 1] = value;
     }
 
     insert(textLine: string) {
         const firstIndex = this.findNonSpaceIndex(textLine);
 
-        this.stack.length = firstIndex;
+        // this.stack.length = firstIndex;
 
         const char = textLine[firstIndex];
         const slicedText = textLine.slice(firstIndex);
@@ -57,14 +56,15 @@ export default class Stack {
 
         if (!PATTERN.test(textLine.slice(firstIndex))) {
             this.stack[firstIndex] = undefined;
+            console.log("@@@ overriden", this.stack);
         } else {
             const res = getNumFromText(slicedText);
-            // console.log("@@@ res", res);
+            console.log("@@@ res", res);
             this.stack[firstIndex] = res;
         }
 
         // console.log("@@@ stack", this.stack);
-        this.lastOffset = firstIndex + 1;
+        // this.stack.length = firstIndex + 1;
         return firstIndex;
     }
 

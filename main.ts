@@ -61,28 +61,30 @@ export default class AutoRenumbering extends Plugin {
         );
 
         // paste
+        /*
+
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
                 if (this.settings.liveUpdate === false) {
                     return;
                 }
-
+                
                 if (evt.defaultPrevented) {
                     return;
                 }
-
+                
                 evt.preventDefault();
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
-
+                    
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
                         return;
                     }
-
+                    
                     const { anchor, head } = editor.listSelections()[0]; // must be before pasting
                     const baseIndex = Math.min(anchor.line, head.line);
-
+                    
                     const countNewlines = (text: string) => {
                         let count = 0;
                         for (let char of text) {
@@ -92,16 +94,17 @@ export default class AutoRenumbering extends Plugin {
                         }
                         return count;
                     };
-
+                    
                     const numOfLines = countNewlines(textFromClipboard);
-
+                    
                     editor.replaceSelection(textFromClipboard); // paste
                     this.renumberer.renumberAllListsInRange(editor, this.changes, baseIndex, baseIndex + numOfLines);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
             })
+            
         );
-
+        */
         this.handleKeystrokeBound = this.handleKeystroke.bind(this);
         window.addEventListener("keydown", this.handleKeystrokeBound); // Keystroke listener
     }

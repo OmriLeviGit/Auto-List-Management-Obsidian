@@ -29,5 +29,11 @@ function getListStart(editor: Editor, currLineIndex: number): number {
     }
     return prevIndex + 1;
 }
+function findNonSpaceIndex(line: string): number {
+    let i = 0;
+    const length = line.length;
+    while (i < length && (line[i] === " " || line[i] === "\t")) i++;
+    return i;
+}
 
-export { getItemNum, getListStart, PATTERN, getNumFromText, PATTERNTwo };
+export { getItemNum, getListStart, PATTERN, getNumFromText, PATTERNTwo, findNonSpaceIndex };
