@@ -1,43 +1,14 @@
-import { getUnpackedSettings } from "http2";
 import { Editor } from "obsidian";
 
 const PATTERN = /^(\d+)\. /;
-const PATTERNTwo = /^\s*(\d+)\. /;
 
-interface RetValue {
+interface LineInfo {
     spaces: number;
     number: number | undefined;
+    textOffset: number | undefined;
 }
 
-function getItemNum(editor: Editor, lineNum: number): number {
-    if (lineNum < 0) {
-        return -1;
-    }
-    const lineText = editor.getLine(lineNum);
-    const match = lineText.match(PATTERN);
-    return match == undefined ? -1 : parseInt(match[1]);
-}
-
-function getNumFromText(lineText: string): number {
-    const match = lineText.match(PATTERN);
-    return match == undefined ? -1 : parseInt(match[1]);
-}
-
-function getListStart(editor: Editor, currLineIndex: number): number {
-    if (getItemNum(editor, currLineIndex) === -1) {
-        return -1;
-    }
-
-    if (currLineIndex == 0) return 0;
-
-    let prevIndex = currLineIndex - 1;
-    while (getItemNum(editor, prevIndex) > 0) {
-        prevIndex--;
-    }
-    return prevIndex + 1;
-}
-
-function getLineInfo(line: string): RetValue {
+function getLineInfo(line: string): LineInfo {
     const length = line.length;
     let i = 0;
 
@@ -48,23 +19,40 @@ function getLineInfo(line: string): RetValue {
     // number indices
     while (i < length && 48 <= line.charCodeAt(i) && line.charCodeAt(i) <= 57) i++; // find number
 
-    //console.log(`i : ${i}, line: ${line}, sliced: ${line.slice(numOfSpaces, i)}`);
+    // console.debug(`i : ${i}, line: ${line}, sliced: ${line.slice(numOfSpaces, i)}`);
 
     // check parsing
-    if (length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
-        return { spaces: numOfSpaces, number: undefined };
+    if (i <= 0 || length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
+        return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
     }
 
     const number = parseInt(line.slice(numOfSpaces, i));
-    return { spaces: numOfSpaces, number };
+
+    if (isNaN(number)) {
+        return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
+    }
+
+    return { spaces: numOfSpaces, number, textOffset: i + 2 };
 }
 
-function findNonSpaceIndex(line: string): number {
-    const length = line.length;
-    let i = 0;
+function getListStart(editor: Editor, currLineIndex: number): number | undefined {
+    if (currLineIndex < 0 || editor.lastLine() < currLineIndex) {
+        return undefined;
+    }
 
-    while (i < length && line[i] === " ") i++; // num of spaces
-    return i;
+    const currInfo = getLineInfo(editor.getLine(currLineIndex));
+    if (currInfo.number === undefined) {
+        return undefined;
+    }
+
+    if (currLineIndex == 0) return 0;
+
+    let prevIndex = currLineIndex - 1;
+    while (0 <= prevIndex && getLineInfo(editor.getLine(prevIndex)).number !== undefined) {
+        prevIndex--;
+    }
+
+    return prevIndex + 1;
 }
 
-export { getItemNum, getListStart, PATTERN, getNumFromText, PATTERNTwo, getLineInfo, findNonSpaceIndex };
+export { getLineInfo, getListStart, PATTERN };

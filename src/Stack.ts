@@ -1,5 +1,5 @@
 import { Editor } from "obsidian";
-import { PATTERN, getNumFromText } from "./utils";
+import { getLineInfo } from "./utils";
 
 export default class Stack {
     private stack: (number | undefined)[];
@@ -43,28 +43,11 @@ export default class Stack {
     }
 
     insert(textLine: string) {
-        const firstIndex = this.findNonSpaceIndex(textLine);
+        const info = getLineInfo(textLine);
+        const firstIndex = info.spaces;
 
-        // this.stack.length = firstIndex;
+        this.stack[firstIndex] = info.number; // undefined means no numbered list in that offset
 
-        const char = textLine[firstIndex];
-        const slicedText = textLine.slice(firstIndex);
-        // console.log("@@@ firstindex", firstIndex);
-        // console.log("@@@ char", char);
-        // console.log("@@@ textline", textLine);
-        // console.log("@@@ sliced", slicedText);
-
-        if (!PATTERN.test(textLine.slice(firstIndex))) {
-            this.stack[firstIndex] = undefined;
-            // console.log("@@@ overriden", this.stack);
-        } else {
-            const res = getNumFromText(slicedText);
-            // console.log("@@@ res", res);
-            this.stack[firstIndex] = res;
-        }
-
-        // console.log("@@@ stack", this.stack);
-        // this.stack.length = firstIndex + 1;
         return firstIndex;
     }
 

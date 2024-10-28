@@ -1,7 +1,9 @@
 import { Editor } from "obsidian";
-import { getItemNum, PATTERN } from "./utils";
+import { PATTERN } from "./utils";
 
 type TextModificationResult = { modifiedText: string; newIndex: number };
+
+const getItemNum = (editor: Editor, num: number) => -1; // TODO remove
 
 export const modifyText = (editor: Editor, pastedText: string): TextModificationResult | undefined => {
     const { anchor, head } = editor.listSelections()[0];

@@ -102,6 +102,17 @@ describe("RenumberLocally tests", () => {
     });
 
     test("Renumber in sequence", () => {
+        const content = ["1. a", "6. b", "8. c"];
+        const editor = createMockEditor(content);
+        const { changes } = renumberer.renumberLocally(editor, 0);
+        renumberer.applyChangesToEditor(editor, changes);
+        const expected = ["1. a", "2. b", "3. c"];
+        for (let i = 0; i < content.length; i++) {
+            expect(editor.getLine(i)).toBe(expected[i]);
+        }
+    });
+
+    test("Renumber in sequence with a zero", () => {
         const content = ["1. a", "6. b", "0. c"];
         const editor = createMockEditor(content);
         const { changes } = renumberer.renumberLocally(editor, 0);
