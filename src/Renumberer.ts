@@ -1,5 +1,5 @@
 import { Editor, EditorChange } from "obsidian";
-import { getItemNum, getListStart, PATTERN, PATTERNTwo, getNumFromText, findNonSpaceIndex } from "./utils";
+import { getItemNum, getListStart, PATTERN, PATTERNTwo, getNumFromText, getLineInfo, findNonSpaceIndex } from "./utils";
 import Stack from "./Stack";
 
 interface PendingChanges {
@@ -59,31 +59,60 @@ export default class Renumberer {
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
         console.log("index", startIndex);
 
-        const currLine = editor.getLine(startIndex);
-        const spaceIndex = findNonSpaceIndex(currLine);
-        const currNum = getNumFromText(currLine.slice(spaceIndex));
+        const { spaces: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
 
-        if (currNum < 0) {
+        console.log("spaces: ", currSpaces, "number: ", currNumber);
+
+        // check if current line is part of a numbered list
+        console.log("start index: ", startIndex, "last", editor.lastLine());
+        if (currNumber === undefined || startIndex === editor.lastLine()) {
             return { changes: [], endIndex: startIndex }; // not a part of a numbered list
         }
 
+        console.log("valid");
+        // edge case for the first line
         if (startIndex <= 0) {
+            return this.generateChanges(editor, startIndex + 1, -1, true);
+        }
+
+        const { spaces: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
+
+        // Adjust startIndex based on previous line info
+        if (!prevNumber || prevSpaces < currSpaces) {
             startIndex++;
-        } else {
-            const prevLine = editor.getLine(startIndex - 1);
-            const prevSpaceIndex = findNonSpaceIndex(prevLine);
-            const prevNum = getNumFromText(prevLine.slice(prevSpaceIndex));
-
-            const shouldIncrementStartIndex = prevSpaceIndex < spaceIndex || prevNum < 0;
-
-            if (shouldIncrementStartIndex) {
-                startIndex++;
-                console.log("inside con");
-            }
         }
 
         return this.generateChanges(editor, startIndex, -1, true);
     }
+
+    // renumberLocally2(editor: Editor, startIndex: number): PendingChanges {
+    //     //console.log("index", startIndex);
+
+    //     const currLine = editor.getLine(startIndex);
+    //     const spaceIndex = findNonSpaceIndex(currLine);
+    //     const currNum = getNumFromText(currLine.slice(spaceIndex));
+
+    //     if (currNum < 0) {
+    //         return { changes: [], endIndex: startIndex }; // not a part of a numbered list
+    //     }
+
+    //     if (startIndex <= 0) {
+    //         startIndex++;
+    //     } else {
+    //         const prevLine = editor.getLine(startIndex - 1);
+    //         const prevSpaceIndex = findNonSpaceIndex(prevLine);
+    //         const prevNum = getNumFromText(prevLine.slice(prevSpaceIndex));
+
+    //         const shouldIncrementStartIndex = prevSpaceIndex < spaceIndex || prevNum < 0;
+
+    //         if (shouldIncrementStartIndex) {
+    //             startIndex++;
+    //             console.log("inside con");
+    //         }
+    //     }
+
+    //     return this.generateChanges(editor, startIndex, -1, true);
+    // }
 
     private generateChanges(
         editor: Editor,
@@ -93,8 +122,9 @@ export default class Renumberer {
     ): PendingChanges {
         const changes: EditorChange[] = [];
         let stack = new Stack(editor, currLine);
+        console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
-        console.log("currLine", currLine);
+        //console.log("currLine", currLine);
 
         if (startingValue > 0) {
             stack.setLastValue(startingValue);
@@ -113,13 +143,13 @@ export default class Renumberer {
 
             console.log(lineText);
             let lastInStack = stack.get()[spaceIndex];
-            console.log("spaceindex", spaceIndex);
+            //console.log("spaceindex", spaceIndex);
 
             // console.log("lastinstack", lastInStack);
             // console.log("stack = ", stack.get());
 
             if (lastInStack === undefined) {
-                console.log("Error: last in stack is **undefined**\nstack = ", stack.get());
+                //console.log("Error: last in stack is **undefined**\nstack = ", stack.get());
                 firstChange = false;
                 currLine++;
                 break;

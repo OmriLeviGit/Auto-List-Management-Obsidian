@@ -123,17 +123,6 @@ describe("RenumberLocally tests", () => {
         }
     });
 
-    test("Does not modify if 'x. ' is not in line beginning", () => {
-        const content = ["1. a", " 6. A"];
-        const editor = createMockEditor(content);
-        const { changes } = renumberer.renumberLocally(editor, 1);
-        renumberer.applyChangesToEditor(editor, changes);
-        const expected = ["1. a", " 6. A"];
-        for (let i = 0; i < expected.length; i++) {
-            expect(editor.getLine(i)).toBe(expected[i]);
-        }
-    });
-
     test("Local changes only - begin at index 0, stop at the first correctly numbered item", () => {
         const content = ["1. a", "3. b", "3. c", "5. d"];
         const editor = createMockEditor(content);

@@ -15,7 +15,7 @@ export default class Stack {
         let prevIndex = currLine - 1;
         while (prevIndex > 0) {
             const prevOffset = this.findNonSpaceIndex(editor.getLine(prevIndex));
-            console.log("previndex: ", prevIndex, "offset", prevOffset);
+            // console.log("previndex: ", prevIndex, "offset", prevOffset);
             if (prevOffset <= offset) {
                 break;
             }
@@ -56,10 +56,10 @@ export default class Stack {
 
         if (!PATTERN.test(textLine.slice(firstIndex))) {
             this.stack[firstIndex] = undefined;
-            console.log("@@@ overriden", this.stack);
+            // console.log("@@@ overriden", this.stack);
         } else {
             const res = getNumFromText(slicedText);
-            console.log("@@@ res", res);
+            // console.log("@@@ res", res);
             this.stack[firstIndex] = res;
         }
 
