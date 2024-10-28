@@ -62,17 +62,18 @@ export default class Renumberer {
         const { spaces: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
 
         console.log("spaces: ", currSpaces, "number: ", currNumber);
+        console.log("start index: ", startIndex, "last", editor.lastLine());
 
         // check if current line is part of a numbered list
-        console.log("start index: ", startIndex, "last", editor.lastLine());
-        if (currNumber === undefined || startIndex === editor.lastLine()) {
+        if (currNumber === undefined) {
             return { changes: [], endIndex: startIndex }; // not a part of a numbered list
         }
 
-        console.log("valid");
         // edge case for the first line
         if (startIndex <= 0) {
-            return this.generateChanges(editor, startIndex + 1, -1, true);
+            return startIndex === editor.lastLine()
+                ? { changes: [], endIndex: startIndex }
+                : this.generateChanges(editor, startIndex + 1, -1, true);
         }
 
         const { spaces: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
@@ -84,35 +85,6 @@ export default class Renumberer {
 
         return this.generateChanges(editor, startIndex, -1, true);
     }
-
-    // renumberLocally2(editor: Editor, startIndex: number): PendingChanges {
-    //     //console.log("index", startIndex);
-
-    //     const currLine = editor.getLine(startIndex);
-    //     const spaceIndex = findNonSpaceIndex(currLine);
-    //     const currNum = getNumFromText(currLine.slice(spaceIndex));
-
-    //     if (currNum < 0) {
-    //         return { changes: [], endIndex: startIndex }; // not a part of a numbered list
-    //     }
-
-    //     if (startIndex <= 0) {
-    //         startIndex++;
-    //     } else {
-    //         const prevLine = editor.getLine(startIndex - 1);
-    //         const prevSpaceIndex = findNonSpaceIndex(prevLine);
-    //         const prevNum = getNumFromText(prevLine.slice(prevSpaceIndex));
-
-    //         const shouldIncrementStartIndex = prevSpaceIndex < spaceIndex || prevNum < 0;
-
-    //         if (shouldIncrementStartIndex) {
-    //             startIndex++;
-    //             console.log("inside con");
-    //         }
-    //     }
-
-    //     return this.generateChanges(editor, startIndex, -1, true);
-    // }
 
     private generateChanges(
         editor: Editor,

@@ -58,6 +58,7 @@ function getLineInfo(line: string): RetValue {
     const number = parseInt(line.slice(numOfSpaces, i));
     return { spaces: numOfSpaces, number };
 }
+
 function findNonSpaceIndex(line: string): number {
     const length = line.length;
     let i = 0;
@@ -65,4 +66,5 @@ function findNonSpaceIndex(line: string): number {
     while (i < length && line[i] === " ") i++; // num of spaces
     return i;
 }
+
 export { getItemNum, getListStart, PATTERN, getNumFromText, PATTERNTwo, getLineInfo, findNonSpaceIndex };
