@@ -53,6 +53,7 @@ export default class IndentTracker {
     private findNonSpaceIndex(line: string): number {
         let i = 0;
         const length = line.length;
+
         while (i < length && (line[i] === " " || line[i] === "\t")) i++;
         return i;
     }

@@ -111,6 +111,11 @@ describe("IndentTracker tests", () => {
             ],
             expected: [13, undefined, undefined, undefined, 11],
         },
+        {
+            name: "Tab character should equal more than one space",
+            inputs: ["1. text", "\t1. text"],
+            expected: [1, undefined, undefined, 1],
+        },
     ];
 
     testCases.forEach(({ name, inputs, expected }) => {

@@ -1,6 +1,5 @@
 import { Editor } from "obsidian";
-
-export const TAB_SIZE = 4;
+//import { DEFAULT_SETTINGS } from "../main";
 
 interface LineInfo {
     spaces: number;
@@ -14,18 +13,20 @@ function getLineInfo(line: string): LineInfo {
 
     // num of spaces
     while (i < length && (line[i] === " " || line[i] === "\t")) {
-        i += line[i] === " " ? 1 : TAB_SIZE;
+        // console.debug("linevalue: ", line[i].charCodeAt(0));
+        i += line[i] === " " ? 1 : 1;
+        // i += line[i] === " " ? 1 : DEFAULT_SETTINGS.indentSize; // TODO bring it back
     }
 
     const numOfSpaces = i;
 
     // number indices
     while (i < length && "0".charCodeAt(0) <= line.charCodeAt(i) && line.charCodeAt(i) <= "9".charCodeAt(0)) i++;
-
     // check parsing for ". "
-    if (i <= 0 || length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
+    if (i <= 0 || length <= i + 1 || !(line[i] === "." && line[i + 1] === " ")) {
         return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
     }
+
     console.debug(
         `i: ${i}, text line: "${line}", number detected: ${line.slice(numOfSpaces, i)}, textOffset: ${i + 2}`
     );

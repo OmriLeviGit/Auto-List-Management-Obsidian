@@ -1,6 +1,6 @@
 import { Editor } from "obsidian";
-import { getLineInfo } from "./utils";
-import { getLastListIndex } from "./utils";
+import { getLineInfo, getLastListIndex } from "./utils";
+import { DEFAULT_SETTINGS } from "../main";
 
 interface PastingRange {
     baseIndex: number;
@@ -11,13 +11,13 @@ interface TextModification {
     numOfLines: number;
 }
 
-function handlePaste(editor: Editor, textFromClipboard: string, smartPaste: boolean): PastingRange {
+function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
 
     let numOfLines: number;
 
-    if (smartPaste) {
+    if (DEFAULT_SETTINGS.smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);
         const info = getLineInfo(line);
@@ -65,7 +65,7 @@ function modifyText(pastedText: string, newNumber: number): TextModification {
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");
 
-    console.debug("modifiedText:", modifiedText);
+    // console.debug("modifiedText:", modifiedText);
 
     return { modifiedText, numOfLines: lines.length };
 }

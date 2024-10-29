@@ -94,7 +94,7 @@ export default class Renumberer {
                 textOffset: textIndex,
             } = getLineInfo(editor.getLine(currLine));
 
-            console.debug(`line: ${currLine}, spaces: ${numOfSpaces}, curr num: ${currNum}, text index: ${textIndex}`);
+            // console.debug(`line: ${currLine}, spaces: ${numOfSpaces}, curr num: ${currNum}, text index: ${textIndex}`);
 
             if (currNum === undefined) {
                 break;

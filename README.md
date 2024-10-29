@@ -14,7 +14,7 @@ Automatically updates numbered lists to maintain sequential order, eliminating t
     Automatically renumbers lists in real time as edits are made, maintaining accurate keeping sequencing.
 
 -   **Pasting**:
-    Maintains correct sequencing when pasting numbered content. When live update is on, an optional _smart-pasting_ feature can be activated to maintain consistency with the original list sequencing.
+    Maintains correct sequencing when pasting numbered content. When live update is enabled, an optional smart-pasting feature can be activated to keep the sequencing consistent with the original numbered list.
 
 -   **Special Key Handling**:
     Temporarily disables the live update when special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) are pressed during editing, enabling actions such as undo without triggering unnecessary renumbering.

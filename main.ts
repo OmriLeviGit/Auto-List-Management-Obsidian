@@ -10,11 +10,13 @@ const mutex = new Mutex();
 interface RenumberListSettings {
     liveUpdate: boolean;
     smartPaste: boolean;
+    indentSize: number;
 }
 
-const DEFAULT_SETTINGS: RenumberListSettings = {
+export const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: true,
     smartPaste: true,
+    indentSize: 4,
 };
 
 export default class AutoRenumbering extends Plugin {
@@ -66,7 +68,9 @@ export default class AutoRenumbering extends Plugin {
                     return;
                 }
 
-                if (evt.defaultPrevented) {
+                const clipboardContent = evt.clipboardData?.getData("text");
+
+                if (evt.defaultPrevented || !clipboardContent) {
                     return;
                 }
 
@@ -74,13 +78,7 @@ export default class AutoRenumbering extends Plugin {
 
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
-
-                    const textFromClipboard = evt.clipboardData?.getData("text");
-                    if (!textFromClipboard) {
-                        return;
-                    }
-
-                    const { baseIndex, offset } = handlePaste(editor, textFromClipboard, this.settings.smartPaste);
+                    const { baseIndex, offset } = handlePaste(editor, clipboardContent);
                     this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
