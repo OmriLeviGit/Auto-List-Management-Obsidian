@@ -1,6 +1,7 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import Renumberer from "../src/Renumberer";
-describe("RenumberLocally tests", () => {
+
+describe("generateChanges", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
@@ -93,6 +94,40 @@ describe("RenumberLocally tests", () => {
             expected: ["1. a", "abc", "1. a"],
         },
         {
+            name: "Renumering stops at text",
+            content: ["1. a", "3. b", "text", "1. a", "3. b"],
+            startIndex: 0,
+            expected: ["1. a", "2. b", "text", "1. a", "3. b"],
+            expectedResult: undefined,
+        },
+    ];
+
+    testCases.forEach(({ name, content, startIndex, expected, expectedResult }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            const { changes } = renumberer.renumberLocally(editor, startIndex);
+            const res = renumberer.applyChangesToEditor(editor, changes);
+
+            if (expectedResult !== undefined) {
+                expect(res).toBe(expectedResult);
+            } else {
+                expected.forEach((line, i) => {
+                    expect(editor.getLine(i)).toBe(line);
+                });
+            }
+        });
+    });
+});
+
+describe("generateChanges - local changes only", () => {
+    let renumberer: Renumberer;
+
+    beforeEach(() => {
+        renumberer = new Renumberer();
+    });
+
+    const testCases = [
+        {
             name: "Local changes only - begin at index 0, stop at the first correctly numbered item",
             content: ["1. a", "3. b", "3. c", "5. d"],
             startIndex: 0,
@@ -112,19 +147,62 @@ describe("RenumberLocally tests", () => {
         },
     ];
 
-    testCases.forEach(({ name, content, startIndex, expected, expectedResult }) => {
+    testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
             const { changes } = renumberer.renumberLocally(editor, startIndex);
             const res = renumberer.applyChangesToEditor(editor, changes);
 
-            if (expectedResult !== undefined) {
-                expect(res).toBe(expectedResult);
-            } else {
-                expected.forEach((line, i) => {
-                    expect(editor.getLine(i)).toBe(line);
-                });
-            }
+            expected.forEach((line, i) => {
+                expect(editor.getLine(i)).toBe(line);
+            });
+        });
+    });
+});
+
+describe("generate changes with stack", () => {
+    let renumberer: Renumberer;
+
+    beforeEach(() => {
+        renumberer = new Renumberer();
+    });
+
+    const testCases = [
+        {
+            name: "Renumber the same indent",
+            content: ["1. a", "1. b", " 10. c", "4. d"],
+            startIndex: 0,
+            expected: ["1. a", "2. b", " 10. c", "3. d"],
+        },
+        {
+            name: "Should not renumber lines with greater indents",
+            content: ["1. a", " 1. b"],
+            startIndex: 0,
+            expected: ["1. a", " 1. b"],
+        },
+        {
+            name: "Should not renumber lines with lesser indents",
+            content: [" 1. a", "1. b"],
+            startIndex: 0,
+            expected: [" 1. a", "1. b"],
+        },
+        {
+            name: "Renumbering stops ",
+            content: [" 1. a", "1. b"],
+            startIndex: 0,
+            expected: [" 1. a", "1. b"],
+        },
+    ];
+
+    testCases.forEach(({ name, content, startIndex, expected }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            const { changes } = renumberer.renumberLocally(editor, startIndex);
+            const res = renumberer.applyChangesToEditor(editor, changes);
+
+            expected.forEach((line, i) => {
+                expect(editor.getLine(i)).toBe(line);
+            });
         });
     });
 });

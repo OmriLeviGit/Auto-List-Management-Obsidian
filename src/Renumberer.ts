@@ -105,31 +105,23 @@ export default class Renumberer {
 
             const {
                 spaces: numOfSpaces,
-                number: currNumber,
+                number: currNum,
                 textOffset: textIndex,
             } = getLineInfo(editor.getLine(currLine));
-            console.debug(
-                `Line ${currLine}: numOfSpaces = ${numOfSpaces}, currNumber = ${currNumber}, textIndex = ${textIndex}`
-            );
 
-            let lastInStack = stack.get()[numOfSpaces];
+            console.debug(`line: ${currLine}, spaces: ${numOfSpaces}, curr num: ${currNum}, text index: ${textIndex}`);
 
-            if (lastInStack === undefined) {
-                console.debug("Error: last in stack is **undefined**\nstack = ", stack.get());
-                firstChange = false;
-                currLine++;
+            if (currNum === undefined) {
                 break;
             }
 
-            let expectedItemNum = lastInStack + 1;
+            const previousNum = stack.get()[numOfSpaces];
+            const expectedItemNum = previousNum === undefined ? undefined : previousNum + 1;
+            const isValidIndent = numOfSpaces <= stack.get().length;
 
-            if (currNumber === undefined) {
-                stack.insert(text);
-            } else {
-                const isValidIndent = numOfSpaces <= stack.get().length;
-
-                // if a change is required (expected != actual), push it to the changes list
-                if (expectedItemNum !== currNumber && isValidIndent) {
+            // if a change is required (expected != actual), push it to the changes list
+            if (expectedItemNum !== undefined) {
+                if (expectedItemNum !== currNum && isValidIndent) {
                     const newText = text.slice(0, numOfSpaces) + expectedItemNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
@@ -142,6 +134,8 @@ export default class Renumberer {
                 } else {
                     stack.insert(text);
                 }
+            } else {
+                stack.insert(text);
             }
 
             firstChange = false;

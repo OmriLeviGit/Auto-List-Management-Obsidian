@@ -23,7 +23,7 @@ function getLineInfo(line: string): LineInfo {
     // number indices
     while (i < length && "0".charCodeAt(0) <= line.charCodeAt(i) && line.charCodeAt(i) <= "9".charCodeAt(0)) i++;
 
-    console.debug(`i : ${i}, line: ${line}, sliced: ${line.slice(numOfSpaces, i)}`);
+    console.debug(`i: ${i}, text line: "${line}", number detected: ${line.slice(numOfSpaces, i)}`);
 
     // check parsing for ". "
     if (i <= 0 || length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
