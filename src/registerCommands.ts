@@ -26,7 +26,7 @@ export function registerCommands(plugin: AutoRenumbering) {
 
     plugin.addCommand({
         id: "renumber-block-at-cursor",
-        name: "Renumber the numbered list at cursor location",
+        name: "Renumber at current cursor position",
         editorCallback: (editor: Editor) => {
             plugin.isProccessing = true;
             plugin.renumberer.listAtCursor(editor, plugin.changes);

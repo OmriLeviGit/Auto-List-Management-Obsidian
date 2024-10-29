@@ -3,7 +3,7 @@
     "name": "Auto Renumbering",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Automatically renumber numebred lists after making changes",
+    "description": "Automatically renumber numbered lists after making changes",
     "author": "Omri Levi",
     "isDesktopOnly": true
 }

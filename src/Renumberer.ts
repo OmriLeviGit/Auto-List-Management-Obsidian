@@ -67,7 +67,7 @@ export default class Renumberer {
 
         const { spaces: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
 
-        // Adjust startIndex based on previous line info
+        // adjust startIndex based on previous line info
         if (!prevNumber || prevSpaces < currSpaces) {
             startIndex++;
         }
