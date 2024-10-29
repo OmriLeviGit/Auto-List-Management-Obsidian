@@ -160,7 +160,7 @@ describe("generateChanges - local changes only", () => {
     });
 });
 
-describe("generate changes with stack", () => {
+describe("generate changes with the IndentTracker", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {

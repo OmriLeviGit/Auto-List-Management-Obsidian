@@ -1,8 +1,9 @@
 import { Editor } from "obsidian";
 import { getLineInfo } from "./utils";
 
-export default class Stack {
+export default class IndentTracker {
     private stack: (number | undefined)[];
+    private lastStackIndex: number;
 
     constructor(editor: Editor, currLine: number) {
         this.stack = [];
@@ -24,6 +25,7 @@ export default class Stack {
             this.insert(editor.getLine(i));
         }
 
+        this.lastStackIndex = this.stack.length - 1;
         console.debug("stack after creation: ", this.stack);
     }
 
@@ -31,23 +33,21 @@ export default class Stack {
         return this.stack;
     }
 
-    peek(): number | undefined {
-        return this.stack[this.stack.length - 1];
-    }
-
     setLastValue(value: number) {
-        this.stack[this.stack.length - 1] = value;
+        if (this.lastStackIndex > 0) {
+            this.stack[this.lastStackIndex] = value;
+        } else {
+            console.debug("the stack is empty");
+        }
     }
 
     insert(textLine: string) {
         const info = getLineInfo(textLine);
-        const firstIndex = info.spaces;
+        this.lastStackIndex = info.spaces;
 
-        this.stack[firstIndex] = info.number; // undefined means no numbered list in that offset
-        this.stack.length = firstIndex + 1;
-        console.debug("stack after insertion: ", this.stack);
-
-        return firstIndex;
+        this.stack[this.lastStackIndex] = info.number; // undefined means no numbered list in that offset
+        this.stack.length = this.lastStackIndex + 1;
+        console.debug("stack after insertion: ", this.stack, "last index: ", this.lastStackIndex);
     }
 
     private findNonSpaceIndex(line: string): number {

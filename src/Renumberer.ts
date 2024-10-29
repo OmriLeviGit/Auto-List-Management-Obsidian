@@ -1,6 +1,6 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo } from "./utils";
-import Stack from "./Stack";
+import IndentTracker from "./IndentTracker";
 
 interface PendingChanges {
     changes: EditorChange[];
@@ -10,24 +10,14 @@ interface PendingChanges {
 export default class Renumberer {
     constructor() {}
 
-    applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
-        const changesApplied = changes.length > 0;
-
-        if (changesApplied) {
-            editor.transaction({ changes });
-        }
-        changes.splice(0, changes.length);
-        return changesApplied;
-    }
-
-    renumberListAtCursor = (editor: Editor, changes: EditorChange[]) => {
+    listAtCursor = (editor: Editor, changes: EditorChange[]) => {
         const { anchor, head } = editor.listSelections()[0];
         const currLine = Math.min(anchor.line, head.line);
         changes.push(...this.renumberBlock(editor, currLine).changes);
         this.applyChangesToEditor(editor, changes);
     };
 
-    renumberAllListsInRange = (editor: Editor, changes: EditorChange[], currLine: number, end: number) => {
+    allListsInRange = (editor: Editor, changes: EditorChange[], currLine: number, end: number) => {
         while (currLine <= end) {
             const line = editor.getLine(currLine);
             if (line) {
@@ -92,10 +82,10 @@ export default class Renumberer {
         isLocal = false
     ): PendingChanges {
         const changes: EditorChange[] = [];
-        let stack = new Stack(editor, currLine);
+        let indentTracker = new IndentTracker(editor, currLine);
 
         if (startingValue > 0) {
-            stack.setLastValue(startingValue);
+            indentTracker.setLastValue(startingValue);
         }
 
         let firstChange = true;
@@ -115,9 +105,9 @@ export default class Renumberer {
                 break;
             }
 
-            const previousNum = stack.get()[numOfSpaces];
+            const previousNum = indentTracker.get()[numOfSpaces];
             const expectedItemNum = previousNum === undefined ? undefined : previousNum + 1;
-            const isValidIndent = numOfSpaces <= stack.get().length;
+            const isValidIndent = numOfSpaces <= indentTracker.get().length;
 
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== undefined) {
@@ -128,14 +118,14 @@ export default class Renumberer {
                         to: { line: currLine, ch: text.length },
                         text: newText,
                     });
-                    stack.insert(newText);
+                    indentTracker.insert(newText);
                 } else if (isLocal && !firstChange) {
                     break; // ensures changes are made locally, not until the end of the block
                 } else {
-                    stack.insert(text);
+                    indentTracker.insert(text);
                 }
             } else {
-                stack.insert(text);
+                indentTracker.insert(text);
             }
 
             firstChange = false;
@@ -143,5 +133,15 @@ export default class Renumberer {
         }
 
         return { changes, endIndex: currLine - 1 };
+    }
+
+    applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
+        const changesApplied = changes.length > 0;
+
+        if (changesApplied) {
+            editor.transaction({ changes });
+        }
+        changes.splice(0, changes.length);
+        return changesApplied;
     }
 }

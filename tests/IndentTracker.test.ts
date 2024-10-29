@@ -1,11 +1,11 @@
-import Stack from "../src/Stack";
+import IndentTracker from "../src/IndentTracker";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-describe("Stack Indentation and Number Parsing Tests", () => {
-    let stack: Stack;
+describe("IndentTracker tests", () => {
+    let indentTracker: IndentTracker;
 
     beforeEach(() => {
-        stack = new Stack(createMockEditor([""]), 0);
+        indentTracker = new IndentTracker(createMockEditor([""]), 0);
     });
 
     const testCases = [
@@ -31,7 +31,7 @@ describe("Stack Indentation and Number Parsing Tests", () => {
         },
         {
             name: "Two lines with offset space",
-            inputs: ["1. text", " 1. test", " text"],
+            inputs: ["1. text", " 1. text", " text"],
             expected: [1, undefined],
         },
         {
@@ -99,8 +99,8 @@ describe("Stack Indentation and Number Parsing Tests", () => {
 
     testCases.forEach(({ name, inputs, expected }) => {
         test(name, () => {
-            inputs.forEach((input) => stack.insert(input));
-            expect(stack.get()).toEqual(expected);
+            inputs.forEach((input) => indentTracker.insert(input));
+            expect(indentTracker.get()).toEqual(expected);
         });
     });
 });

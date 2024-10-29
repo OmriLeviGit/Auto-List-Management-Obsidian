@@ -25,11 +25,9 @@ export default class AutoRenumbering extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.addSettingTab(new AutoRenumberingSettings(this.app, this));
-
-        this.renumberer = new Renumberer();
-
         registerCommands(this);
+        this.addSettingTab(new AutoRenumberingSettings(this.app, this));
+        this.renumberer = new Renumberer();
 
         // editor change
         this.registerEvent(
