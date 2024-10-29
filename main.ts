@@ -1,18 +1,21 @@
 import { Plugin, Editor, EditorChange } from "obsidian";
 import Renumberer from "src/Renumberer";
-import { modifyText } from "./src/pasteFunctions";
+import { modifyText, countNewlines, handlePaste } from "./src/pasteHandler";
 import { Mutex } from "async-mutex";
 import AutoRenumberingSettings from "./src/settings";
 import { registerCommands } from "src/registerCommands";
+import { getLineInfo } from "src/utils";
 
 const mutex = new Mutex();
 
 interface RenumberListSettings {
     liveUpdate: boolean;
+    smartPaste: boolean;
 }
 
 const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: true,
+    smartPaste: true,
 };
 
 export default class AutoRenumbering extends Plugin {
@@ -59,50 +62,59 @@ export default class AutoRenumbering extends Plugin {
         );
 
         // paste
-        /*
-
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
+                console.log("paste is called");
                 if (this.settings.liveUpdate === false) {
                     return;
                 }
-                
+
                 if (evt.defaultPrevented) {
                     return;
                 }
-                
+
                 evt.preventDefault();
+
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
-                    
+
                     let textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
                         return;
                     }
-                    
-                    const { anchor, head } = editor.listSelections()[0]; // must be before pasting
+                    const { baseIndex, offset } = handlePaste(editor, textFromClipboard, this.settings.smartPaste);
+                    /*
+                    const { anchor, head } = editor.listSelections()[0];
                     const baseIndex = Math.min(anchor.line, head.line);
-                    
-                    const countNewlines = (text: string) => {
-                        let count = 0;
-                        for (let char of text) {
-                            if (char === "\n") {
-                                count++;
-                            }
+
+                    let numOfLines: number;
+
+                    if (this.settings.smartPaste) {
+                        const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
+                        const line = editor.getLine(afterPasteIndex);
+                        const info = getLineInfo(line);
+
+                        if (info.number !== undefined) {
+                            const retval = modifyText(textFromClipboard, info.number);
+                            textFromClipboard = retval.modifiedText ?? textFromClipboard;
+                            numOfLines = retval.numOfLines;
+                        } else {
+                            numOfLines = countNewlines(textFromClipboard);
                         }
-                        return count;
-                    };
-                    
-                    const numOfLines = countNewlines(textFromClipboard);
-                    
+                    } else {
+                        numOfLines = countNewlines(textFromClipboard);
+                    }
+
+                    const lastIndex = baseIndex + numOfLines;
+                    // console.debug("base: ", baseIndex, "last:", lastIndex);
                     editor.replaceSelection(textFromClipboard); // paste
-                    this.renumberer.renumberAllListsInRange(editor, this.changes, baseIndex, baseIndex + numOfLines);
+                    */
+                    this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
             })
-            
         );
-        */
+
         this.handleKeystrokeBound = this.handleKeystroke.bind(this);
         window.addEventListener("keydown", this.handleKeystrokeBound); // Keystroke listener
     }

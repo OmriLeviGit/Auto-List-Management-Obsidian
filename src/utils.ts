@@ -23,12 +23,13 @@ function getLineInfo(line: string): LineInfo {
     // number indices
     while (i < length && "0".charCodeAt(0) <= line.charCodeAt(i) && line.charCodeAt(i) <= "9".charCodeAt(0)) i++;
 
-    console.debug(`i: ${i}, text line: "${line}", number detected: ${line.slice(numOfSpaces, i)}`);
-
     // check parsing for ". "
     if (i <= 0 || length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
         return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
     }
+    console.debug(
+        `i: ${i}, text line: "${line}", number detected: ${line.slice(numOfSpaces, i)}, textOffset: ${i + 2}`
+    );
 
     const number = parseInt(line.slice(numOfSpaces, i));
 
@@ -59,4 +60,17 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
     return prevIndex + 1;
 }
 
-export { getLineInfo, getListStart, PATTERN };
+// index of the first item in the last numbered list
+function getLastListIndex(lines: string[]): number | undefined {
+    let index: number | undefined = undefined;
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const info = getLineInfo(lines[i]);
+        if (info.number === undefined) {
+            break;
+        }
+        index = i;
+    }
+    return index;
+}
+
+export { getLineInfo, getListStart, getLastListIndex };

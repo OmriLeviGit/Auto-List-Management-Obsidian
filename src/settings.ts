@@ -23,5 +23,12 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 })
             );
+
+        new Setting(containerEl).setName("Smart paste").addToggle((toggle) =>
+            toggle.setValue(this.plugin.settings.smartPaste).onChange(async (value) => {
+                this.plugin.settings.smartPaste = value;
+                await this.plugin.saveSettings();
+            })
+        );
     }
 }

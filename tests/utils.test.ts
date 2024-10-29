@@ -1,5 +1,5 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { getLineInfo, getListStart } from "../src/utils";
+import { getLineInfo, getListStart, getLastListIndex } from "../src/utils";
 
 describe("getLineInfo tests", () => {
     const testCases = [
@@ -88,6 +88,48 @@ describe("getListStart tests", () => {
             const editor = createMockEditor(content);
             const result = getListStart(editor, index);
             expect(result).toBe(expected);
+        });
+    });
+});
+
+describe("getLastListIndex tests", () => {
+    const testCases = [
+        {
+            name: "Does not end in numbered list",
+            content: ["1. b", "c"],
+            expectedResult: undefined,
+        },
+        {
+            name: "Numbered lines at the end",
+            content: ["a", "b", "1. c", "2. d"],
+            expectedResult: 2,
+        },
+        {
+            name: "Interrupted numbered list at the end",
+            content: ["a", "1. b", "2. c", "d", "3. e"],
+            expectedResult: 4,
+        },
+        {
+            name: "Single number",
+            content: ["1. a"],
+            expectedResult: 0,
+        },
+        {
+            name: "Single non number",
+            content: ["a"],
+            expectedResult: undefined,
+        },
+        {
+            name: "Empty string",
+            content: [""],
+            expectedResult: undefined,
+        },
+    ];
+
+    testCases.forEach(({ name, content, expectedResult }) => {
+        test(name, () => {
+            const res = getLastListIndex(content);
+            expect(res).toBe(expectedResult);
         });
     });
 });

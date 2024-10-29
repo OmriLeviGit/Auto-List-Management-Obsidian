@@ -107,10 +107,11 @@ export default class Renumberer {
 
             const previousNum = indentTracker.get()[numOfSpaces];
             const expectedItemNum = previousNum === undefined ? undefined : previousNum + 1;
-            const isValidIndent = numOfSpaces <= indentTracker.get().length;
 
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== undefined) {
+                const isValidIndent = numOfSpaces <= indentTracker.get().length;
+
                 if (expectedItemNum !== currNum && isValidIndent) {
                     const newText = text.slice(0, numOfSpaces) + expectedItemNum + ". " + text.slice(textIndex);
                     changes.push({
