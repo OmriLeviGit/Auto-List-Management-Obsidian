@@ -7,7 +7,6 @@ export default class Stack {
     constructor(editor: Editor, currLine: number) {
         this.stack = [];
 
-        // console.log("curr line inside stack", currLine);
         if (currLine < 0) return;
 
         const offset = this.findNonSpaceIndex(editor.getLine(currLine));
@@ -15,7 +14,6 @@ export default class Stack {
         let prevIndex = currLine - 1;
         while (prevIndex > 0) {
             const prevOffset = this.findNonSpaceIndex(editor.getLine(prevIndex));
-            // console.log("previndex: ", prevIndex, "offset", prevOffset);
             if (prevOffset <= offset) {
                 break;
             }
@@ -24,10 +22,9 @@ export default class Stack {
 
         for (let i = Math.max(prevIndex, 0); i < currLine; i++) {
             this.insert(editor.getLine(i));
-            console.log(i);
         }
 
-        // console.log("offset", offset, "\nprevIndex", prevIndex, "\n");
+        console.debug("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {
@@ -47,6 +44,8 @@ export default class Stack {
         const firstIndex = info.spaces;
 
         this.stack[firstIndex] = info.number; // undefined means no numbered list in that offset
+        this.stack.length = firstIndex + 1;
+        console.debug("stack after insertion: ", this.stack);
 
         return firstIndex;
     }

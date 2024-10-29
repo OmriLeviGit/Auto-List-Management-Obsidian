@@ -8,7 +8,7 @@ export const createMockEditor = (initialContent: string[]) => {
                 throw new Error("trying to access a negative line");
             }
             if (content.length <= line) {
-                console.log(`getLine error - content: ${content}, line: ${line}`);
+                console.debug(`getLine error - content: ${content}, line: ${line}`);
                 throw new Error("getLine: trying to access lines outside the file");
             }
             return content[line];

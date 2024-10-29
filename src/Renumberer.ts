@@ -61,12 +61,7 @@ export default class Renumberer {
     }
 
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
-        // console.log("index", startIndex);
-
         const { spaces: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
-
-        // console.log("spaces: ", currSpaces, "number: ", currNumber);
-        // console.log("start index: ", startIndex, "last", editor.lastLine());
 
         // check if current line is part of a numbered list
         if (currNumber === undefined) {
@@ -106,7 +101,6 @@ export default class Renumberer {
         let firstChange = true;
         const endOfList = editor.lastLine() + 1;
         while (currLine < endOfList) {
-            // let lastInStack = stack.peek();
             const text = editor.getLine(currLine);
 
             const {
@@ -114,14 +108,14 @@ export default class Renumberer {
                 number: currNumber,
                 textOffset: textIndex,
             } = getLineInfo(editor.getLine(currLine));
-            console.log(
+            console.debug(
                 `Line ${currLine}: numOfSpaces = ${numOfSpaces}, currNumber = ${currNumber}, textIndex = ${textIndex}`
             );
 
             let lastInStack = stack.get()[numOfSpaces];
 
             if (lastInStack === undefined) {
-                console.log("Error: last in stack is **undefined**\nstack = ", stack.get());
+                console.debug("Error: last in stack is **undefined**\nstack = ", stack.get());
                 firstChange = false;
                 currLine++;
                 break;
@@ -150,12 +144,10 @@ export default class Renumberer {
                 }
             }
 
-            // TODO insert to stack new changes, requires stack to work without texline but with indices and offsets somehow
             firstChange = false;
             currLine++;
         }
 
-        // console.log("out");
         return { changes, endIndex: currLine - 1 };
     }
 }

@@ -1,6 +1,7 @@
 import { Editor } from "obsidian";
 
 const PATTERN = /^(\d+)\. /;
+export const TAB_SIZE = 4;
 
 interface LineInfo {
     spaces: number;
@@ -13,15 +14,18 @@ function getLineInfo(line: string): LineInfo {
     let i = 0;
 
     // num of spaces
-    while (i < length && line[i] === " ") i++;
+    while (i < length && (line[i] === " " || line[i] === "\t")) {
+        i += line[i] === " " ? 1 : TAB_SIZE;
+    }
+
     const numOfSpaces = i;
 
     // number indices
-    while (i < length && 48 <= line.charCodeAt(i) && line.charCodeAt(i) <= 57) i++; // find number
+    while (i < length && "0".charCodeAt(0) <= line.charCodeAt(i) && line.charCodeAt(i) <= "9".charCodeAt(0)) i++;
 
-    // console.debug(`i : ${i}, line: ${line}, sliced: ${line.slice(numOfSpaces, i)}`);
+    console.debug(`i : ${i}, line: ${line}, sliced: ${line.slice(numOfSpaces, i)}`);
 
-    // check parsing
+    // check parsing for ". "
     if (i <= 0 || length <= i + 1 || !(line[i] === "." || line[i + 1] === " ")) {
         return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
     }
