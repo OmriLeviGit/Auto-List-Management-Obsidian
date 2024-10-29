@@ -41,7 +41,6 @@ export default class AutoRenumbering extends Plugin {
 
                 if (!this.isProccessing) {
                     this.isProccessing = true;
-                    console.log("editor called");
 
                     setTimeout(() => {
                         mutex.runExclusive(() => {
@@ -64,7 +63,6 @@ export default class AutoRenumbering extends Plugin {
         // paste
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                console.log("paste is called");
                 if (this.settings.liveUpdate === false) {
                     return;
                 }
@@ -82,33 +80,8 @@ export default class AutoRenumbering extends Plugin {
                     if (!textFromClipboard) {
                         return;
                     }
+
                     const { baseIndex, offset } = handlePaste(editor, textFromClipboard, this.settings.smartPaste);
-                    /*
-                    const { anchor, head } = editor.listSelections()[0];
-                    const baseIndex = Math.min(anchor.line, head.line);
-
-                    let numOfLines: number;
-
-                    if (this.settings.smartPaste) {
-                        const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
-                        const line = editor.getLine(afterPasteIndex);
-                        const info = getLineInfo(line);
-
-                        if (info.number !== undefined) {
-                            const retval = modifyText(textFromClipboard, info.number);
-                            textFromClipboard = retval.modifiedText ?? textFromClipboard;
-                            numOfLines = retval.numOfLines;
-                        } else {
-                            numOfLines = countNewlines(textFromClipboard);
-                        }
-                    } else {
-                        numOfLines = countNewlines(textFromClipboard);
-                    }
-
-                    const lastIndex = baseIndex + numOfLines;
-                    // console.debug("base: ", baseIndex, "last:", lastIndex);
-                    editor.replaceSelection(textFromClipboard); // paste
-                    */
                     this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
@@ -123,7 +96,7 @@ export default class AutoRenumbering extends Plugin {
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
             this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
-            // console.log("handlestroke", this.blockChanges);
+            // console.debug("handlestroke", this.blockChanges);
         });
     }
 

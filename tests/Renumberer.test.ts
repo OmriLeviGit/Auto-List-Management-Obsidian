@@ -160,7 +160,7 @@ describe("generateChanges - local changes only", () => {
     });
 });
 
-describe("generate changes with the IndentTracker", () => {
+describe("Generate changes with the IndentTracker", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
@@ -174,6 +174,19 @@ describe("generate changes with the IndentTracker", () => {
             startIndex: 0,
             expected: ["1. a", "2. b", " 10. c", "3. d"],
         },
+        {
+            name: "Renumber the same indent",
+            content: ["1. a", "1. b", " 10. c", "4. d"],
+            startIndex: 0,
+            expected: ["1. a", "2. b", " 10. c", "3. d"],
+        },
+        {
+            name: "Detect changes across indent",
+            content: ["1. a", " 10. b", " 11. c", "4. d"],
+            expected: ["1. a", " 10. b", " 11. c", "2. d"],
+            startIndex: 0,
+        },
+
         {
             name: "Should not renumber lines with greater indents",
             content: ["1. a", " 1. b"],

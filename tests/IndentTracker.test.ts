@@ -95,6 +95,22 @@ describe("IndentTracker tests", () => {
             ],
             expected: [3, undefined, undefined, undefined, 1],
         },
+        {
+            name: "Multiple entries with repeated indentation, multiple digits",
+            inputs: [
+                "11. text",
+                " 10. text",
+                "12. text",
+                "    11. text",
+                "    12. text",
+                "   13. text",
+                "13. text",
+                " 11. text",
+                " text",
+                "    11. text",
+            ],
+            expected: [13, undefined, undefined, undefined, 11],
+        },
     ];
 
     testCases.forEach(({ name, inputs, expected }) => {

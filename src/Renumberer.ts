@@ -120,7 +120,7 @@ export default class Renumberer {
                         text: newText,
                     });
                     indentTracker.insert(newText);
-                } else if (isLocal && !firstChange) {
+                } else if (isLocal && !firstChange && numOfSpaces === 0) {
                     break; // ensures changes are made locally, not until the end of the block
                 } else {
                     indentTracker.insert(text);

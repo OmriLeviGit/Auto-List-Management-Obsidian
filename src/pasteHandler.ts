@@ -11,13 +11,13 @@ interface TextModification {
     numOfLines: number;
 }
 
-function handlePaste(editor: Editor, textFromClipboard: string, smartPaste: boolean) {
+function handlePaste(editor: Editor, textFromClipboard: string, smartPaste: boolean): PastingRange {
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
 
     let numOfLines: number;
 
-    if (this.settings.smartPaste) {
+    if (smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);
         const info = getLineInfo(line);
