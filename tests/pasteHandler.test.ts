@@ -27,7 +27,7 @@ describe("modifyText tests", () => {
             expectedResult: "2. single line",
         },
         {
-            name: "Modify with leading spaces", //TODO define behavior
+            name: "Modify with leading spaces",
             content: "   1. indented line\n2. another line",
             newNumber: 3,
             expectedResult: "   3. indented line\n2. another line",

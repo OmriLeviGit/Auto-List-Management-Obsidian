@@ -1,10 +1,9 @@
 import { Plugin, Editor, EditorChange } from "obsidian";
 import Renumberer from "src/Renumberer";
-import { modifyText, countNewlines, handlePaste } from "./src/pasteHandler";
+import { handlePaste } from "./src/pasteHandler";
 import { Mutex } from "async-mutex";
 import AutoRenumberingSettings from "./src/settings";
 import { registerCommands } from "src/registerCommands";
-import { getLineInfo } from "src/utils";
 
 const mutex = new Mutex();
 
@@ -76,7 +75,7 @@ export default class AutoRenumbering extends Plugin {
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
 
-                    let textFromClipboard = evt.clipboardData?.getData("text");
+                    const textFromClipboard = evt.clipboardData?.getData("text");
                     if (!textFromClipboard) {
                         return;
                     }

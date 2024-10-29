@@ -21,7 +21,7 @@ export default class Renumberer {
         while (currLine <= end) {
             const line = editor.getLine(currLine);
             if (line) {
-                const { spaces, number } = getLineInfo(line);
+                const { number } = getLineInfo(line);
                 if (number) {
                     const newChanges = this.renumberBlock(editor, currLine);
 
@@ -75,14 +75,9 @@ export default class Renumberer {
         return this.generateChanges(editor, startIndex, -1, true);
     }
 
-    private generateChanges(
-        editor: Editor,
-        currLine: number,
-        startingValue: number = -1,
-        isLocal = false
-    ): PendingChanges {
+    private generateChanges(editor: Editor, currLine: number, startingValue = -1, isLocal = false): PendingChanges {
         const changes: EditorChange[] = [];
-        let indentTracker = new IndentTracker(editor, currLine);
+        const indentTracker = new IndentTracker(editor, currLine);
 
         if (startingValue > 0) {
             indentTracker.setLastValue(startingValue);

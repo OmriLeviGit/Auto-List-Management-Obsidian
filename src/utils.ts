@@ -1,6 +1,5 @@
 import { Editor } from "obsidian";
 
-const PATTERN = /^(\d+)\. /;
 export const TAB_SIZE = 4;
 
 interface LineInfo {

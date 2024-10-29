@@ -1,6 +1,6 @@
 import { Editor, EditorTransaction } from "obsidian";
 export const createMockEditor = (initialContent: string[]) => {
-    let content = [...initialContent];
+    const content = [...initialContent];
 
     const editor = {
         getLine: jest.fn().mockImplementation((line: number): string => {

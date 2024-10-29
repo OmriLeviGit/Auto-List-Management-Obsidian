@@ -151,7 +151,7 @@ describe("generateChanges - local changes only", () => {
         test(name, () => {
             const editor = createMockEditor(content);
             const { changes } = renumberer.renumberLocally(editor, startIndex);
-            const res = renumberer.applyChangesToEditor(editor, changes);
+            renumberer.applyChangesToEditor(editor, changes);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);
@@ -211,7 +211,7 @@ describe("Generate changes with the IndentTracker", () => {
         test(name, () => {
             const editor = createMockEditor(content);
             const { changes } = renumberer.renumberLocally(editor, startIndex);
-            const res = renumberer.applyChangesToEditor(editor, changes);
+            renumberer.applyChangesToEditor(editor, changes);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);

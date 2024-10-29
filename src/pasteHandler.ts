@@ -41,7 +41,7 @@ function handlePaste(editor: Editor, textFromClipboard: string, smartPaste: bool
 
 function countNewlines(text: string) {
     let count = 0;
-    for (let char of text) {
+    for (const char of text) {
         if (char === "\n") {
             count++;
         }
