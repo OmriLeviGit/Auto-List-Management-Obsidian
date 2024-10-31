@@ -200,10 +200,16 @@ describe("Generate changes with the IndentTracker", () => {
             expected: [" 1. a", "1. b"],
         },
         {
-            name: "Renumbering stops ",
+            name: "Renumbering stops",
             content: [" 1. a", "1. b"],
             startIndex: 0,
             expected: [" 1. a", "1. b"],
+        },
+        {
+            name: "Renumbering stops treats spaces and tabs differently",
+            content: [" 1. a", "\t1. b"],
+            startIndex: 0,
+            expected: [" 1. a", "\t1. b"],
         },
     ];
 

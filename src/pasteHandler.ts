@@ -1,6 +1,7 @@
 import { Editor } from "obsidian";
+import AutoRenumbering from "../main";
+
 import { getLineInfo, getLastListIndex } from "./utils";
-import { DEFAULT_SETTINGS } from "../main";
 
 interface PastingRange {
     baseIndex: number;
@@ -17,7 +18,8 @@ function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
 
     let numOfLines: number;
 
-    if (DEFAULT_SETTINGS.smartPaste) {
+    const smartPaste = true;
+    if (smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);
         const info = getLineInfo(line);
@@ -60,7 +62,7 @@ function modifyText(pastedText: string, newNumber: number): TextModification {
     const targetLine = lines[lineIndex];
     const info = getLineInfo(targetLine);
 
-    const newLine = targetLine.slice(0, info.spaces) + newNumber + ". " + targetLine.slice(info.textOffset);
+    const newLine = targetLine.slice(0, info.numOfSpaceChars) + newNumber + ". " + targetLine.slice(info.textOffset);
 
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");

@@ -2,22 +2,10 @@ import { Plugin, Editor, EditorChange } from "obsidian";
 import Renumberer from "src/Renumberer";
 import { handlePaste } from "./src/pasteHandler";
 import { Mutex } from "async-mutex";
-import AutoRenumberingSettings from "./src/settings";
+import AutoRenumberingSettings, { DEFAULT_SETTINGS, RenumberListSettings } from "./src/settings";
 import { registerCommands } from "src/registerCommands";
 
 const mutex = new Mutex();
-
-interface RenumberListSettings {
-    liveUpdate: boolean;
-    smartPaste: boolean;
-    indentSize: number;
-}
-
-export const DEFAULT_SETTINGS: RenumberListSettings = {
-    liveUpdate: true,
-    smartPaste: true,
-    indentSize: 4,
-};
 
 export default class AutoRenumbering extends Plugin {
     settings: RenumberListSettings;

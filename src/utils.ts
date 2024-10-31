@@ -1,43 +1,51 @@
 import { Editor } from "obsidian";
 //import { DEFAULT_SETTINGS } from "../main";
 
+// have the line info both hold index for spaces and total number of spaces in the editor for the stack
+const SETTINGSINDENTSIZE = 4;
+
 interface LineInfo {
-    spaces: number;
+    numOfSpaceChars: number;
+    spaceIndent: number;
     number: number | undefined;
     textOffset: number | undefined;
 }
 
 function getLineInfo(line: string): LineInfo {
     const length = line.length;
-    let i = 0;
+    let index = 0;
+    let numOfSpaceIndents = 0;
 
     // num of spaces
-    while (i < length && (line[i] === " " || line[i] === "\t")) {
+    while (index < length && (line[index] === " " || line[index] === "\t")) {
         // console.debug("linevalue: ", line[i].charCodeAt(0));
-        i += line[i] === " " ? 1 : 1;
-        // i += line[i] === " " ? 1 : DEFAULT_SETTINGS.indentSize; // TODO bring it back
+        numOfSpaceIndents += line[index] === " " ? 1 : SETTINGSINDENTSIZE;
+        index++;
     }
 
-    const numOfSpaces = i;
+    const numOfSpaceChars = index;
 
     // number indices
-    while (i < length && "0".charCodeAt(0) <= line.charCodeAt(i) && line.charCodeAt(i) <= "9".charCodeAt(0)) i++;
+    while (index < length && "0".charCodeAt(0) <= line.charCodeAt(index) && line.charCodeAt(index) <= "9".charCodeAt(0))
+        index++;
     // check parsing for ". "
-    if (i <= 0 || length <= i + 1 || !(line[i] === "." && line[i + 1] === " ")) {
-        return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
+    if (line[index] !== "." || line[index + 1] !== " ") {
+        return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number: undefined, textOffset: undefined };
     }
 
     console.debug(
-        `i: ${i}, text line: "${line}", number detected: ${line.slice(numOfSpaces, i)}, textOffset: ${i + 2}`
+        `i: ${index}, text line: "${line}", number detected: ${line.slice(numOfSpaceChars, index)}, textOffset: ${
+            index + 2
+        }`
     );
 
-    const number = parseInt(line.slice(numOfSpaces, i));
+    const number = parseInt(line.slice(numOfSpaceChars, index));
 
     if (isNaN(number)) {
-        return { spaces: numOfSpaces, number: undefined, textOffset: undefined };
+        return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number: undefined, textOffset: undefined };
     }
 
-    return { spaces: numOfSpaces, number, textOffset: i + 2 };
+    return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textOffset: index + 2 };
 }
 
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {

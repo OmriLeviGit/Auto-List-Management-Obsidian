@@ -10,11 +10,11 @@ export default class IndentTracker {
 
         if (currLine < 0) return;
 
-        const offset = this.findNonSpaceIndex(editor.getLine(currLine));
+        const offset = getLineInfo(editor.getLine(currLine)).spaceIndent;
 
         let prevIndex = currLine - 1;
         while (prevIndex > 0) {
-            const prevOffset = this.findNonSpaceIndex(editor.getLine(prevIndex));
+            const prevOffset = getLineInfo(editor.getLine(currLine)).spaceIndent;
             if (prevOffset <= offset) {
                 break;
             }
@@ -26,7 +26,7 @@ export default class IndentTracker {
         }
 
         this.lastStackIndex = this.stack.length - 1;
-        console.debug("stack after creation: ", this.stack);
+        //console.debug("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {
@@ -37,24 +37,16 @@ export default class IndentTracker {
         if (this.lastStackIndex > 0) {
             this.stack[this.lastStackIndex] = value;
         } else {
-            console.debug("the stack is empty");
+            //console.debug("the stack is empty");
         }
     }
 
     insert(textLine: string) {
         const info = getLineInfo(textLine);
-        this.lastStackIndex = info.spaces;
+        this.lastStackIndex = info.spaceIndent;
 
         this.stack[this.lastStackIndex] = info.number; // undefined means no numbered list in that offset
         this.stack.length = this.lastStackIndex + 1;
-        console.debug("stack after insertion: ", this.stack, "last index: ", this.lastStackIndex);
-    }
-
-    private findNonSpaceIndex(line: string): number {
-        let i = 0;
-        const length = line.length;
-
-        while (i < length && (line[i] === " " || line[i] === "\t")) i++;
-        return i;
+        //console.debug("stack after insertion: ", this.stack, "last index: ", this.lastStackIndex);
     }
 }

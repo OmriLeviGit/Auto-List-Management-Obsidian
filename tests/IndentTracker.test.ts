@@ -112,9 +112,24 @@ describe("IndentTracker tests", () => {
             expected: [13, undefined, undefined, undefined, 11],
         },
         {
-            name: "Tab character should equal more than one space",
+            name: "Tab character indentation",
             inputs: ["1. text", "\t1. text"],
-            expected: [1, undefined, undefined, 1],
+            expected: [1, undefined, undefined, undefined, 1],
+        },
+        {
+            name: "Tab character with two space indentation",
+            inputs: ["12. text", "  \t12. text"],
+            expected: [12, undefined, undefined, undefined, undefined, undefined, 12],
+        },
+        {
+            name: "Two tab characters with a space indentation",
+            inputs: ["12. text", " \t\t12. text"],
+            expected: [12, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 12],
+        },
+        {
+            name: "Update with tabs",
+            inputs: ["12. text", "\t12. text", "\t1. text"],
+            expected: [12, undefined, undefined, undefined, 1],
         },
     ];
 

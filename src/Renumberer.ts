@@ -51,7 +51,7 @@ export default class Renumberer {
     }
 
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
-        const { spaces: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
+        const { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
 
         // check if current line is part of a numbered list
         if (currNumber === undefined) {
@@ -65,7 +65,7 @@ export default class Renumberer {
                 : this.generateChanges(editor, startIndex + 1, -1, true);
         }
 
-        const { spaces: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
+        const { numOfSpaceChars: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
 
         // adjust startIndex based on previous line info
         if (!prevNumber || prevSpaces < currSpaces) {
@@ -88,34 +88,30 @@ export default class Renumberer {
         while (currLine < endOfList) {
             const text = editor.getLine(currLine);
 
-            const {
-                spaces: numOfSpaces,
-                number: currNum,
-                textOffset: textIndex,
-            } = getLineInfo(editor.getLine(currLine));
+            const { spaceIndent, number: currNum, textOffset: textIndex } = getLineInfo(editor.getLine(currLine));
 
-            // console.debug(`line: ${currLine}, spaces: ${numOfSpaces}, curr num: ${currNum}, text index: ${textIndex}`);
+            // console.debug(`line: ${currLine}, spaceChars: ${numOfSpaceChars}, curr num: ${currNum}, text index: ${textIndex}`);
 
             if (currNum === undefined) {
                 break;
             }
 
-            const previousNum = indentTracker.get()[numOfSpaces];
+            const previousNum = indentTracker.get()[spaceIndent];
             const expectedItemNum = previousNum === undefined ? undefined : previousNum + 1;
 
             // if a change is required (expected != actual), push it to the changes list
             if (expectedItemNum !== undefined) {
-                const isValidIndent = numOfSpaces <= indentTracker.get().length;
+                const isValidIndent = spaceIndent <= indentTracker.get().length;
 
                 if (expectedItemNum !== currNum && isValidIndent) {
-                    const newText = text.slice(0, numOfSpaces) + expectedItemNum + ". " + text.slice(textIndex);
+                    const newText = text.slice(0, spaceIndent) + expectedItemNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
                         text: newText,
                     });
                     indentTracker.insert(newText);
-                } else if (isLocal && !firstChange && numOfSpaces === 0) {
+                } else if (isLocal && !firstChange && spaceIndent === 0) {
                     break; // ensures changes are made locally, not until the end of the block
                 } else {
                     indentTracker.insert(text);
