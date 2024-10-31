@@ -6,47 +6,47 @@ describe("getLineInfo tests", () => {
         {
             name: "single digit line",
             input: "1. text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 1, textOffset: 3 },
+            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 1, textIndex: 3 },
         },
         {
             name: "multiple digits line",
             input: "123. text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 123, textOffset: 5 },
+            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 123, textIndex: 5 },
         },
         {
             name: "no digits line",
             input: ". text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textOffset: undefined },
+            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
         },
         {
             name: "line with leading spaces",
             input: "  1. test",
-            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: 1, textOffset: 5 },
+            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: 1, textIndex: 5 },
         },
         {
             name: "line with leading tab",
             input: "\t1. test",
-            expected: { numOfSpaceChars: 1, spaceIndent: 4, number: 1, textOffset: 4 },
+            expected: { numOfSpaceChars: 1, spaceIndent: 4, number: 1, textIndex: 4 },
         },
         {
             name: "line with leading two spaces and a tab",
             input: "  \t12. test",
-            expected: { numOfSpaceChars: 3, spaceIndent: 6, number: 12, textOffset: 7 },
+            expected: { numOfSpaceChars: 3, spaceIndent: 6, number: 12, textIndex: 7 },
         },
         {
             name: "line with leading space and two tab",
             input: " \t\t12. test",
-            expected: { numOfSpaceChars: 3, spaceIndent: 9, number: 12, textOffset: 7 },
+            expected: { numOfSpaceChars: 3, spaceIndent: 9, number: 12, textIndex: 7 },
         },
         {
             name: "line without number and with trailing numOfSpaceChars",
             input: "  . text   ",
-            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: undefined, textOffset: undefined },
+            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: undefined, textIndex: undefined },
         },
         {
             name: "line with invalid format",
             input: "A text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textOffset: undefined },
+            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
         },
     ];
 

@@ -90,7 +90,7 @@ export default class Renumberer {
         while (currLine < endOfList) {
             const text = editor.getLine(currLine);
 
-            const { spaceIndent, number: currNum, textOffset: textIndex } = getLineInfo(editor.getLine(currLine));
+            const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
             // console.debug(
             //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
@@ -106,8 +106,6 @@ export default class Renumberer {
                 break;
             }
 
-            //console.log(" tracker", indentTracker);
-
             const previousNum = indentTracker.get()[spaceIndent];
             const expectedNum = previousNum === undefined ? undefined : previousNum + 1;
             let newText = text;
@@ -117,7 +115,7 @@ export default class Renumberer {
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
 
                 if (expectedNum !== currNum && isValidIndent) {
-                    newText = text.slice(0, spaceIndent) + expectedNum + ". " + text.slice(textIndex);
+                    newText = text.slice(0, numOfSpaceChars) + expectedNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
@@ -129,6 +127,7 @@ export default class Renumberer {
             }
 
             indentTracker.insert(newText);
+            // console.log(" tracker", indentTracker);
 
             prevSpaceIndent = spaceIndent;
             firstChange = false;

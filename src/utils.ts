@@ -8,7 +8,7 @@ interface LineInfo {
     numOfSpaceChars: number;
     spaceIndent: number;
     number: number | undefined;
-    textOffset: number | undefined;
+    textIndex: number | undefined;
 }
 
 function getLineInfo(line: string): LineInfo {
@@ -34,7 +34,7 @@ function getLineInfo(line: string): LineInfo {
             numOfSpaceChars: numOfSpaceChars,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
-            textOffset: undefined,
+            textIndex: undefined,
         };
     }
 
@@ -51,11 +51,11 @@ function getLineInfo(line: string): LineInfo {
             numOfSpaceChars: numOfSpaceChars,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
-            textOffset: undefined,
+            textIndex: undefined,
         };
     }
 
-    return { numOfSpaceChars: numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textOffset: index + 2 };
+    return { numOfSpaceChars: numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
 }
 
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {

@@ -183,8 +183,8 @@ describe("Generate changes with the IndentTracker", () => {
         },
         {
             name: "Renumbering treats spaces and tabs spaces that are tab-length the same",
-            content: ["1. text", "    1. a", "\t1. b", "    1. c"],
-            expected: ["1. text", "    1. a", "\t2. b", "    3. c"],
+            content: ["1. text", "    5. a", "\t8. b", "    1. c"],
+            expected: ["1. text", "    5. a", "\t6. b", "    7. c"],
             startIndex: 0,
         },
     ];

@@ -62,7 +62,7 @@ function modifyText(pastedText: string, newNumber: number): TextModification {
     const targetLine = lines[lineIndex];
     const info = getLineInfo(targetLine);
 
-    const newLine = targetLine.slice(0, info.numOfSpaceChars) + newNumber + ". " + targetLine.slice(info.textOffset);
+    const newLine = targetLine.slice(0, info.numOfSpaceChars) + newNumber + ". " + targetLine.slice(info.textIndex);
 
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");
