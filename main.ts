@@ -6,16 +6,18 @@ import AutoRenumberingSettings, { DEFAULT_SETTINGS, RenumberListSettings } from 
 import { registerCommands } from "src/registerCommands";
 
 const mutex = new Mutex();
+export let pluginInstance: AutoRenumbering;
 
 export default class AutoRenumbering extends Plugin {
-    settings: RenumberListSettings;
-    renumberer: Renumberer;
-    changes: EditorChange[] = [];
-    isProccessing = false;
-    blockChanges = false; // if the previous action was a special key
-    handleKeystrokeBound: (event: KeyboardEvent) => void;
+    private settings: RenumberListSettings;
+    private renumberer: Renumberer;
+    private changes: EditorChange[] = [];
+    private isProccessing = false;
+    private blockChanges = false; // if the previous action was a special key
+    private handleKeystrokeBound: (event: KeyboardEvent) => void;
 
     async onload() {
+        pluginInstance = this;
         await this.loadSettings();
         registerCommands(this);
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
@@ -24,6 +26,7 @@ export default class AutoRenumbering extends Plugin {
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
+                console.log("settings: ", this.settings);
                 if (this.settings.liveUpdate === false) {
                     return;
                 }
@@ -95,5 +98,21 @@ export default class AutoRenumbering extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    getSettings() {
+        return this.settings;
+    }
+
+    setLiveUpdate(value: boolean) {
+        this.settings.liveUpdate = value;
+    }
+
+    setSmartPaste(value: boolean) {
+        this.settings.smartPaste = value;
+    }
+
+    setIndentSize(size: number) {
+        this.settings.indentSize = size;
     }
 }

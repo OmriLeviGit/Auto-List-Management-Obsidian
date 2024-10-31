@@ -1,8 +1,7 @@
 import { Editor } from "obsidian";
-//import { DEFAULT_SETTINGS } from "../main";
+import { pluginInstance } from "main";
 
 // have the line info both hold index for spaces and total number of spaces in the editor for the stack
-const SETTINGSINDENTSIZE = 4;
 
 interface LineInfo {
     numOfSpaceChars: number;
@@ -19,7 +18,7 @@ function getLineInfo(line: string): LineInfo {
     // num of spaces
     while (index < length && (line[index] === " " || line[index] === "\t")) {
         // console.debug("linevalue: ", line[i].charCodeAt(0));
-        numOfSpaceIndents += line[index] === " " ? 1 : SETTINGSINDENTSIZE;
+        numOfSpaceIndents += line[index] === " " ? 1 : pluginInstance.getSettings().indentSize;
         index++;
     }
 

@@ -1,6 +1,5 @@
 import { Editor } from "obsidian";
-import AutoRenumbering from "../main";
-
+import { pluginInstance } from "main";
 import { getLineInfo, getLastListIndex } from "./utils";
 
 interface PastingRange {
@@ -18,7 +17,7 @@ function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
 
     let numOfLines: number;
 
-    const smartPaste = true;
+    const smartPaste = pluginInstance.getSettings().smartPaste;
     if (smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);
