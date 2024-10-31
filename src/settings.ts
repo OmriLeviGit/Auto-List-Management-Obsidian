@@ -57,14 +57,15 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setDesc(
                 "Should be set to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size."
             )
-            .addSlider((slider) =>
+            .addSlider((slider) => {
                 slider
                     .setValue(this.plugin.settings.indentSize)
                     .setLimits(2, 8, 1)
+                    .setDynamicTooltip()
                     .onChange(async (value) => {
                         this.plugin.settings.indentSize = value;
                         await this.plugin.saveSettings();
-                    })
-            );
+                    });
+            });
     }
 }
