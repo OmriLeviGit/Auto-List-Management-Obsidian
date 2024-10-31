@@ -1,7 +1,16 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import { getLineInfo, getListStart, getLastListIndex } from "../src/utils";
 
+import { pluginInstance, DEFAULT_SETTINGS } from "main";
+
+jest.mock("main");
+
 describe("getLineInfo tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
+    });
+
     const testCases = [
         {
             name: "single digit line",
@@ -59,6 +68,11 @@ describe("getLineInfo tests", () => {
 });
 
 describe("getListStart tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
+    });
+
     const testCases = [
         {
             name: "start of a list",
@@ -108,6 +122,11 @@ describe("getListStart tests", () => {
 });
 
 describe("getLastListIndex tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
+    });
+
     const testCases = [
         {
             name: "Does not end in numbered list",

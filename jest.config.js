@@ -4,6 +4,7 @@ module.exports = {
     testEnvironment: "node",
     moduleNameMapper: {
         "^src/(.*)$": "<rootDir>/src/$1",
+        "^main$": "<rootDir>/tests/__mocks__/main.ts",
     },
     transform: {
         "^.+\\.tsx?$": ["ts-jest", {}],

@@ -1,6 +1,13 @@
 import { modifyText } from "src/pasteHandler";
+import { pluginInstance, DEFAULT_SETTINGS } from "main";
+
+jest.mock("main");
 
 describe("modifyText tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
+    });
     const testCases = [
         {
             name: "Modify the first numbered line",

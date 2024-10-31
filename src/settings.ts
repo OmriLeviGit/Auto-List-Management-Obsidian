@@ -1,17 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import AutoRenumbering, { pluginInstance } from "../main";
-
-export interface RenumberListSettings {
-    liveUpdate: boolean;
-    smartPaste: boolean;
-    indentSize: number;
-}
-
-export const DEFAULT_SETTINGS: RenumberListSettings = {
-    liveUpdate: true,
-    smartPaste: true,
-    indentSize: 4,
-};
+import AutoRenumbering from "../main";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;

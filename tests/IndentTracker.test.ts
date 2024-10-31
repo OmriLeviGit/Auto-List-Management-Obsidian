@@ -1,10 +1,16 @@
 import IndentTracker from "../src/IndentTracker";
 import { createMockEditor } from "./__mocks__/createMockEditor";
+import { pluginInstance, DEFAULT_SETTINGS } from "main";
+
+jest.mock("main");
 
 describe("IndentTracker tests", () => {
     let indentTracker: IndentTracker;
 
     beforeEach(() => {
+        jest.clearAllMocks();
+
+        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
         indentTracker = new IndentTracker(createMockEditor([""]), 0);
     });
 
