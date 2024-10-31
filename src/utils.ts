@@ -30,22 +30,32 @@ function getLineInfo(line: string): LineInfo {
         index++;
     // check parsing for ". "
     if (line[index] !== "." || line[index + 1] !== " ") {
-        return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number: undefined, textOffset: undefined };
+        return {
+            numOfSpaceChars: numOfSpaceChars,
+            spaceIndent: numOfSpaceIndents,
+            number: undefined,
+            textOffset: undefined,
+        };
     }
 
-    console.debug(
-        `i: ${index}, text line: "${line}", number detected: ${line.slice(numOfSpaceChars, index)}, textOffset: ${
-            index + 2
-        }`
-    );
+    // console.debug(
+    //     `i: ${index}, text line: "${line}", number detected: ${line.slice(numOfSpaceChars, index)}, textOffset: ${
+    //         index + 2
+    //     }`
+    // );
 
     const number = parseInt(line.slice(numOfSpaceChars, index));
 
     if (isNaN(number)) {
-        return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number: undefined, textOffset: undefined };
+        return {
+            numOfSpaceChars: numOfSpaceChars,
+            spaceIndent: numOfSpaceIndents,
+            number: undefined,
+            textOffset: undefined,
+        };
     }
 
-    return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textOffset: index + 2 };
+    return { numOfSpaceChars: numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textOffset: index + 2 };
 }
 
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {

@@ -84,42 +84,53 @@ export default class Renumberer {
         }
 
         let firstChange = true;
+        let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
+
         const endOfList = editor.lastLine() + 1;
         while (currLine < endOfList) {
             const text = editor.getLine(currLine);
 
             const { spaceIndent, number: currNum, textOffset: textIndex } = getLineInfo(editor.getLine(currLine));
 
-            // console.debug(`line: ${currLine}, spaceChars: ${numOfSpaceChars}, curr num: ${currNum}, text index: ${textIndex}`);
+            // console.debug(
+            //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
+            // );
 
+            // make sure indented text does not stop the search
             if (currNum === undefined) {
+                if (prevSpaceIndent < spaceIndent) {
+                    firstChange = false;
+                    currLine++;
+                    continue;
+                }
                 break;
             }
 
+            //console.log(" tracker", indentTracker);
+
             const previousNum = indentTracker.get()[spaceIndent];
-            const expectedItemNum = previousNum === undefined ? undefined : previousNum + 1;
+            const expectedNum = previousNum === undefined ? undefined : previousNum + 1;
+            let newText = text;
 
             // if a change is required (expected != actual), push it to the changes list
-            if (expectedItemNum !== undefined) {
+            if (expectedNum !== undefined) {
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
 
-                if (expectedItemNum !== currNum && isValidIndent) {
-                    const newText = text.slice(0, spaceIndent) + expectedItemNum + ". " + text.slice(textIndex);
+                if (expectedNum !== currNum && isValidIndent) {
+                    newText = text.slice(0, spaceIndent) + expectedNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
                         text: newText,
                     });
-                    indentTracker.insert(newText);
                 } else if (isLocal && !firstChange && spaceIndent === 0) {
                     break; // ensures changes are made locally, not until the end of the block
-                } else {
-                    indentTracker.insert(text);
                 }
-            } else {
-                indentTracker.insert(text);
             }
 
+            indentTracker.insert(newText);
+
+            prevSpaceIndent = spaceIndent;
             firstChange = false;
             currLine++;
         }

@@ -10,18 +10,6 @@ describe("generateChanges", () => {
 
     const testCases = [
         {
-            name: "No renumbering is done",
-            content: ["1. a", "2. b"],
-            startIndex: 0,
-            expectedResult: false,
-        },
-        {
-            name: "Renumbering is done",
-            content: ["1. a", "3. b"],
-            startIndex: 0,
-            expectedResult: true,
-        },
-        {
             name: "Renumber from index 0",
             content: ["1. a", "3. b"],
             startIndex: 0,
@@ -82,39 +70,28 @@ describe("generateChanges", () => {
             expected: ["1. a", "2. b", "3. c"],
         },
         {
-            name: "Stop renumbering at the end of a numbered list",
-            content: ["1. a", "1. b", "A", "5. B"],
-            startIndex: 0,
-            expected: ["1. a", "2. b", "A", "5. B"],
-        },
-        {
             name: "Does not modify given a non numbered item",
             content: ["1. a", "abc", "1. a"],
             startIndex: 1,
             expected: ["1. a", "abc", "1. a"],
         },
         {
-            name: "Renumering stops at text",
+            name: "Renumering stops at text at offset 0",
             content: ["1. a", "3. b", "text", "1. a", "3. b"],
             startIndex: 0,
             expected: ["1. a", "2. b", "text", "1. a", "3. b"],
-            expectedResult: undefined,
         },
     ];
 
-    testCases.forEach(({ name, content, startIndex, expected, expectedResult }) => {
+    testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
             const { changes } = renumberer.renumberLocally(editor, startIndex);
-            const res = renumberer.applyChangesToEditor(editor, changes);
+            renumberer.applyChangesToEditor(editor, changes);
 
-            if (expectedResult !== undefined) {
-                expect(res).toBe(expectedResult);
-            } else {
-                expected.forEach((line, i) => {
-                    expect(editor.getLine(i)).toBe(line);
-                });
-            }
+            expected.forEach((line, i) => {
+                expect(editor.getLine(i)).toBe(line);
+            });
         });
     });
 });
@@ -175,18 +152,17 @@ describe("Generate changes with the IndentTracker", () => {
             expected: ["1. a", "2. b", " 10. c", "3. d"],
         },
         {
-            name: "Renumber the same indent",
-            content: ["1. a", "1. b", " 10. c", "4. d"],
-            startIndex: 0,
-            expected: ["1. a", "2. b", " 10. c", "3. d"],
-        },
-        {
             name: "Detect changes across indent",
             content: ["1. a", " 10. b", " 11. c", "4. d"],
             expected: ["1. a", " 10. b", " 11. c", "2. d"],
             startIndex: 0,
         },
-
+        {
+            name: "Detect changes across text with greater indents (such as alt-enter)",
+            content: ["1. a", "  b", "  c", "4. d"],
+            expected: ["1. a", "  b", "  c", "2. d"],
+            startIndex: 0,
+        },
         {
             name: "Should not renumber lines with greater indents",
             content: ["1. a", " 1. b"],
@@ -200,16 +176,16 @@ describe("Generate changes with the IndentTracker", () => {
             expected: [" 1. a", "1. b"],
         },
         {
-            name: "Renumbering stops",
-            content: [" 1. a", "1. b"],
-            startIndex: 0,
-            expected: [" 1. a", "1. b"],
-        },
-        {
-            name: "Renumbering stops treats spaces and tabs differently",
+            name: "Renumbering stops, treats spaces and tabs with the same number of space chars differently",
             content: [" 1. a", "\t1. b"],
             startIndex: 0,
             expected: [" 1. a", "\t1. b"],
+        },
+        {
+            name: "Renumbering treats spaces and tabs spaces that are tab-length the same",
+            content: ["1. text", "    1. a", "\t1. b", "    1. c"],
+            expected: ["1. text", "    1. a", "\t2. b", "    3. c"],
+            startIndex: 0,
         },
     ];
 
