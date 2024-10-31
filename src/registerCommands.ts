@@ -3,11 +3,11 @@ import { Editor } from "obsidian";
 
 export function registerCommands(plugin: AutoRenumbering) {
     plugin.addCommand({
-        id: "renumber-file",
-        name: "Renumber all numbered lists in file",
+        id: "renumber-note",
+        name: "Renumber all numbered lists in note",
         editorCallback: (editor: Editor) => {
-            plugin.renumberer.allListsInRange(editor, plugin.changes, 0, editor.lastLine());
-            plugin.renumberer.applyChangesToEditor(editor, plugin.changes);
+            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), 0, editor.lastLine());
+            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
         },
     });
 
@@ -19,19 +19,19 @@ export function registerCommands(plugin: AutoRenumbering) {
             const startLine = Math.min(anchor.line, head.line);
             const endLine = Math.max(anchor.line, head.line);
 
-            plugin.renumberer.allListsInRange(editor, plugin.changes, startLine, endLine);
-            plugin.renumberer.applyChangesToEditor(editor, plugin.changes);
+            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), startLine, endLine);
+            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
         },
     });
 
     plugin.addCommand({
         id: "renumber-block-at-cursor",
-        name: "Renumber at current cursor position",
+        name: "Renumber at cursor position",
         editorCallback: (editor: Editor) => {
-            plugin.isProccessing = true;
-            plugin.renumberer.listAtCursor(editor, plugin.changes);
-            plugin.renumberer.applyChangesToEditor(editor, plugin.changes);
-            plugin.isProccessing = false;
+            plugin.setIsProcessing(true);
+            plugin.getRenumberer().listAtCursor(editor, plugin.getChanges());
+            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
+            plugin.setIsProcessing(false);
         },
     });
 }

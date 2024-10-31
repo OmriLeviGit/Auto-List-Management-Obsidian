@@ -1,24 +1,25 @@
 import { Editor } from "obsidian";
-import AutoRenumbering from "../main";
-
+import { pluginInstance } from "main";
 import { getLineInfo, getLastListIndex } from "./utils";
 
 interface PastingRange {
     baseIndex: number;
     offset: number;
 }
+
 interface TextModification {
     modifiedText: string | undefined;
     numOfLines: number;
 }
 
+// ensures numbered lists in pasted text are numbered correctly
 function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
 
     let numOfLines: number;
 
-    const smartPaste = true;
+    const smartPaste = pluginInstance.getSettings().smartPaste;
     if (smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);
@@ -51,8 +52,9 @@ function countNewlines(text: string) {
     return count;
 }
 
-function modifyText(pastedText: string, newNumber: number): TextModification {
-    const lines = pastedText.split("\n");
+// changes the first item of the last numbered list in text to newNumber
+function modifyText(text: string, newNumber: number): TextModification {
+    const lines = text.split("\n");
     const lineIndex = getLastListIndex(lines);
 
     if (lineIndex === undefined) {

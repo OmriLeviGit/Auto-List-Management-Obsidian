@@ -8,14 +8,15 @@ export const createMockEditor = (initialContent: string[]) => {
                 throw new Error("trying to access a negative line");
             }
             if (content.length <= line) {
-                console.debug(`getLine error - content: ${content}, line: ${line}`);
-                throw new Error("getLine: trying to access lines outside the file");
+                console.error(`getLine error - content: ${content}, line: ${line}`);
+                throw new Error("getLine: trying to access lines outside the note");
             }
             return content[line];
         }),
         setLine: jest.fn().mockImplementation((n: number, text: string) => {
             if (n < 0 || content.length <= n) {
-                throw new Error("setLine: trying to set lines outside the file");
+                console.error(`setLine error - content: ${content}, index: ${n}`);
+                throw new Error("setLine: trying to set lines outside the note");
             }
             content[n] = text;
         }),

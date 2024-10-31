@@ -1,8 +1,5 @@
 import { Editor } from "obsidian";
-//import { DEFAULT_SETTINGS } from "../main";
-
-// have the line info both hold index for spaces and total number of spaces in the editor for the stack
-const SETTINGSINDENTSIZE = 4;
+import { pluginInstance } from "main";
 
 interface LineInfo {
     numOfSpaceChars: number;
@@ -11,6 +8,7 @@ interface LineInfo {
     textIndex: number | undefined;
 }
 
+// extract information from a line of text
 function getLineInfo(line: string): LineInfo {
     const length = line.length;
     let index = 0;
@@ -19,7 +17,7 @@ function getLineInfo(line: string): LineInfo {
     // num of spaces
     while (index < length && (line[index] === " " || line[index] === "\t")) {
         // console.debug("linevalue: ", line[i].charCodeAt(0));
-        numOfSpaceIndents += line[index] === " " ? 1 : SETTINGSINDENTSIZE;
+        numOfSpaceIndents += line[index] === " " ? 1 : pluginInstance.getSettings().indentSize;
         index++;
     }
 
@@ -55,9 +53,10 @@ function getLineInfo(line: string): LineInfo {
         };
     }
 
-    return { numOfSpaceChars: numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
+    return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
 }
 
+// gets the index of the first item in a numbered list
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {
     if (currLineIndex < 0 || editor.lastLine() < currLineIndex) {
         return undefined;

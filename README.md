@@ -1,4 +1,4 @@
-# Auto Renumbering Plugin for Obsidian
+# Automatic Renumbering Plugin for Obsidian
 
 Automatically updates numbered lists to maintain sequential order, eliminating the need for manual adjustments. The plugin also supports nested lists and offers several commands for users who prefer manual control.
 
@@ -6,7 +6,7 @@ Automatically updates numbered lists to maintain sequential order, eliminating t
 
 1. Download and install from the Obsidian plugin directory.
 2. Enable the plugin in **Settings > Community plugins**.
-3. In the plugin's settings, match the tab size to the one in the editor's settings (4 by default). This can be found at **Options > Editor > Tab indent size**.
+3. In the plugin's settings, match the tab size to the one in the editor's settings (4 by default). This can be found at **Options → Editor → Tab indent size**.
 
 ## Features
 
@@ -24,9 +24,9 @@ Automatically updates numbered lists to maintain sequential order, eliminating t
 
 ### Commands (Ctrl + P)
 
--   **Renumber at current cursor position**: Renumbers the list at the position of the cursor.
+-   **Renumber at cursor position**: Renumbers the list at the position of the cursor.
 -   **Renumber all selected numbered lists**: Renumbers all lists within your selected text.
--   **Renumber all numbered lists in file**: Renumbers every numbered list in the current note.
+-   **Renumber all numbered lists in note**: Renumbers every numbered list in the active note.
 
 ## Performance
 

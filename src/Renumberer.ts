@@ -7,9 +7,11 @@ interface PendingChanges {
     endIndex: number | undefined;
 }
 
+// responsible for all renumbering actions
 export default class Renumberer {
     constructor() {}
 
+    // renumbers the list at cursor location from start to end
     listAtCursor = (editor: Editor, changes: EditorChange[]) => {
         const { anchor, head } = editor.listSelections()[0];
         const currLine = Math.min(anchor.line, head.line);
@@ -17,6 +19,7 @@ export default class Renumberer {
         this.applyChangesToEditor(editor, changes);
     };
 
+    // renumbers all numbered lists in specified range
     allListsInRange = (editor: Editor, changes: EditorChange[], currLine: number, end: number) => {
         while (currLine <= end) {
             const line = editor.getLine(currLine);
@@ -40,6 +43,7 @@ export default class Renumberer {
         }
     };
 
+    // updates a numbered list from start to end
     private renumberBlock(editor: Editor, currLine: number): PendingChanges {
         const startIndex = getListStart(editor, currLine);
 
@@ -50,6 +54,7 @@ export default class Renumberer {
         return this.generateChanges(editor, startIndex);
     }
 
+    // updates a numbered list from the current line, to the first correctly number line.
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
         const { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
 
@@ -62,7 +67,7 @@ export default class Renumberer {
         if (startIndex <= 0) {
             return startIndex === editor.lastLine()
                 ? { changes: [], endIndex: startIndex }
-                : this.generateChanges(editor, startIndex + 1, -1, true);
+                : this.generateChanges(editor, startIndex + 1, true);
         }
 
         const { numOfSpaceChars: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
@@ -72,16 +77,13 @@ export default class Renumberer {
             startIndex++;
         }
 
-        return this.generateChanges(editor, startIndex, -1, true);
+        return this.generateChanges(editor, startIndex, true);
     }
 
-    private generateChanges(editor: Editor, currLine: number, startingValue = -1, isLocal = false): PendingChanges {
+    // performs the calculation itself
+    private generateChanges(editor: Editor, currLine: number, isLocal = false): PendingChanges {
         const changes: EditorChange[] = [];
         const indentTracker = new IndentTracker(editor, currLine);
-
-        if (startingValue > 0) {
-            indentTracker.setLastValue(startingValue);
-        }
 
         let firstChange = true;
         let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
@@ -90,7 +92,7 @@ export default class Renumberer {
         while (currLine < endOfList) {
             const text = editor.getLine(currLine);
 
-            const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
+            const { spaceIndent, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
             // console.debug(
             //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
@@ -115,7 +117,7 @@ export default class Renumberer {
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
 
                 if (expectedNum !== currNum && isValidIndent) {
-                    newText = text.slice(0, numOfSpaceChars) + expectedNum + ". " + text.slice(textIndex);
+                    newText = text.slice(0, spaceIndent) + expectedNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
@@ -127,7 +129,6 @@ export default class Renumberer {
             }
 
             indentTracker.insert(newText);
-            // console.log(" tracker", indentTracker);
 
             prevSpaceIndent = spaceIndent;
             firstChange = false;

@@ -1,10 +1,12 @@
 import { Editor } from "obsidian";
 import { getLineInfo } from "./utils";
 
+// keeps track of the previous number in numbered list for each offset
 export default class IndentTracker {
     private stack: (number | undefined)[];
     private lastStackIndex: number;
 
+    // builds the stack from the beginning of a numbered list, to the current line
     constructor(editor: Editor, currLine: number) {
         this.stack = [];
 
@@ -33,14 +35,7 @@ export default class IndentTracker {
         return this.stack;
     }
 
-    setLastValue(value: number) {
-        if (this.lastStackIndex > 0) {
-            this.stack[this.lastStackIndex] = value;
-        } else {
-            //console.debug("the stack is empty");
-        }
-    }
-
+    // inserts a line to the stack, ensuring its the last one each time. items in higher indices do not affect lower ones.
     insert(textLine: string) {
         const info = getLineInfo(textLine);
         this.lastStackIndex = info.spaceIndent;

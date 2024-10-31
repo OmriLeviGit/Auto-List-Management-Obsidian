@@ -1,9 +1,9 @@
 {
-    "id": "auto-renumbering",
-    "name": "Auto Renumbering",
+    "id": "automatic-renumbering",
+    "name": "Automatic Renumbering",
     "author": "Omri Levi",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Automatically renumber numbered lists after making changes",
+    "description": "Automatically update numbered lists after making changes",
     "isDesktopOnly": true
 }

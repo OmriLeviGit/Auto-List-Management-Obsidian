@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import AutoRenumbering from "../main";
+import AutoRenumbering, { pluginInstance } from "../main";
 
 export interface RenumberListSettings {
     liveUpdate: boolean;
@@ -25,13 +25,12 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         const { containerEl } = this;
 
         containerEl.empty();
-
         new Setting(containerEl)
             .setName("Live update")
-            .setDesc("Automatically renumber numbered lists as changes are made. Does not support Vim.")
+            .setDesc("Automatically update numbered lists as changes are made. Does not support Vim.")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.settings.liveUpdate).onChange(async (value) => {
-                    this.plugin.settings.liveUpdate = value;
+                toggle.setValue(this.plugin.getSettings().liveUpdate).onChange(async (value) => {
+                    this.plugin.setLiveUpdate(value);
                     await this.plugin.saveSettings();
                     smartPasteToggleEl.style.opacity = value ? "1" : "0.5";
                     smartPasteToggleEl.style.pointerEvents = value ? "auto" : "none";
@@ -42,28 +41,28 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Smart paste")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.settings.smartPaste).onChange(async (value) => {
-                    this.plugin.settings.smartPaste = value;
+                toggle.setValue(this.plugin.getSettings().smartPaste).onChange(async (value) => {
+                    this.plugin.setSmartPaste(value);
                     await this.plugin.saveSettings();
                 })
             );
 
         const smartPasteToggleEl = smartPasteSetting.settingEl;
-        smartPasteToggleEl.style.opacity = this.plugin.settings.liveUpdate ? "1" : "0.5";
-        smartPasteToggleEl.style.pointerEvents = this.plugin.settings.liveUpdate ? "auto" : "none";
+        smartPasteToggleEl.style.opacity = this.plugin.getSettings().liveUpdate ? "1" : "0.5";
+        smartPasteToggleEl.style.pointerEvents = this.plugin.getSettings().liveUpdate ? "auto" : "none";
 
         new Setting(containerEl)
             .setName("Tab indent size")
             .setDesc(
-                "Should be set to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size."
+                "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size."
             )
             .addSlider((slider) => {
                 slider
-                    .setValue(this.plugin.settings.indentSize)
+                    .setValue(this.plugin.getSettings().indentSize)
                     .setLimits(2, 8, 1)
                     .setDynamicTooltip()
                     .onChange(async (value) => {
-                        this.plugin.settings.indentSize = value;
+                        this.plugin.setIndentSize(value);
                         await this.plugin.saveSettings();
                     });
             });
