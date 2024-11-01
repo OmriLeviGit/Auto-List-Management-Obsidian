@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import AutoRenumbering, { pluginInstance } from "../main";
+import AutoRenumbering from "../main";
+import "../main.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;
@@ -20,8 +21,8 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                 toggle.setValue(this.plugin.getSettings().liveUpdate).onChange(async (value) => {
                     this.plugin.setLiveUpdate(value);
                     await this.plugin.saveSettings();
-                    smartPasteToggleEl.style.opacity = value ? "1" : "0.5";
-                    smartPasteToggleEl.style.pointerEvents = value ? "auto" : "none";
+                    smartPasteToggleEl.classList.toggle("smart-paste-toggle", value);
+                    smartPasteToggleEl.classList.toggle("smart-paste-toggle-disabled", !value);
                 })
             );
 
@@ -36,8 +37,8 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             );
 
         const smartPasteToggleEl = smartPasteSetting.settingEl;
-        smartPasteToggleEl.style.opacity = this.plugin.getSettings().liveUpdate ? "1" : "0.5";
-        smartPasteToggleEl.style.pointerEvents = this.plugin.getSettings().liveUpdate ? "auto" : "none";
+        const isLiveUpdateEnabled = this.plugin.getSettings().liveUpdate;
+        smartPasteToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
 
         new Setting(containerEl)
             .setName("Tab indent size")

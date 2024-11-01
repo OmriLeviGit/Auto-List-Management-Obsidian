@@ -56,10 +56,16 @@ export default class Renumberer {
 
     // updates a numbered list from the current line, to the first correctly number line.
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
-        const { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
+        let { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
 
-        // check if current line is part of a numbered list
+        // if current line is not part of a numbered list, try the following one
         if (currNumber === undefined) {
+            startIndex++;
+            ({ numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex)));
+        }
+
+        if (currNumber === undefined) {
+            startIndex++;
             return { changes: [], endIndex: startIndex }; // not a part of a numbered list
         }
 

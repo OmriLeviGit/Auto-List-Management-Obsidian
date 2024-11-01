@@ -214,6 +214,12 @@ describe("Generate changes with the IndentTracker", () => {
             expected: ["1. text", "    5. a", "\t6. b", "    7. c"],
             startIndex: 0,
         },
+        {
+            name: "Local renumbering - stops on lower indents",
+            content: ["1. text", "  3. a", "  3. b", "  3. c", "5. text"],
+            expected: ["1. text", "  3. a", "  4. b", "  5. c", "5. text"],
+            startIndex: 2,
+        },
     ];
 
     testCases.forEach(({ name, content, startIndex, expected }) => {

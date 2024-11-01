@@ -1,40 +1,50 @@
 # Automatic Renumbering Plugin for Obsidian
 
-Automatically updates numbered lists to maintain sequential order, eliminating the need for manual adjustments. The plugin also supports nested lists and offers several commands for users who prefer manual control.
+The Automatic Renumbering plugin helps keep your numbered lists in sequential order automatically, which is particularly useful for users who frequently work with structured documents. It features live updates, smart pasting, and manual control options.
 
-## Installation
+## Installation Steps
 
-1. Download and install from the Obsidian plugin directory.
-2. Enable the plugin in **Settings > Community plugins**.
-3. In the plugin's settings, match the tab size to the one in the editor's settings (4 by default). This can be found at **Options → Editor → Tab indent size**.
+To get started with the Automatic Renumbering Plugin, follow these steps:
+
+1. Download the latest release files and place them into a folder.
+2. Move that folder into Obsidian's **plugins** folder. You can find this folder by opening Obsidian and navigating to **Options → Community plugins**, where you'll see a **folder** and a **refresh** buttons next to the **Installed plugins** heading.
+
+    > **Note:** If the **Installed plugins** heading isn’t visible, this may be because this is your first plugin. Downloading any other community plugin will give you access to this section and the associated buttons.
+
+3. Click the **refresh** button and enable the plugin.
+4. Adjust the **tab size** in the plugin’s in the settings to match your editor’s settings (found under **Options → Editor → Tab indent size**).
 
 ## Features
 
--   **Live Update**:
-    Automatically renumbers lists in real time as edits are made, maintaining accurate keeping sequencing.
+-   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments.
 
--   **Pasting**:
-    Maintains correct sequencing when pasting numbered content. When live update is enabled, an optional smart-pasting feature can be activated to keep the sequencing consistent with the original numbered list.
+-   **Pasting**: Ensures correct sequencing when pasting numbered content. When live update is enabled, an optional smart pasting feature can be enabled to keep the sequencing consistent with the original numbered list.
 
--   **Special Key Handling**:
-    Temporarily disables the live update when special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) are pressed during editing, enabling actions such as undo without triggering unnecessary renumbering.
+-   **Special Key Handling**: Temporarily disables the live update when special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) are pressed during editing, enabling actions such as undo without triggering unnecessary renumbering.
 
--   **Live Update Disabled**:
-    The live update feature can be disabled. Renumbering can be manually triggered through the available commands, allowing for greater control over when updates are applied.
+-   **Manual Control**: Offers commands for manual renumbering if you prefer to manage updates yourself.
 
-### Commands (Ctrl + P)
+<br>
+<br>
 
--   **Renumber at cursor position**: Renumbers the list at the position of the cursor.
--   **Renumber all selected numbered lists**: Renumbers all lists within your selected text.
--   **Renumber all numbered lists in note**: Renumbers every numbered list in the active note.
+![Regular paste](resources/regular_paste.gif)
+![Smart paste](resources/smart_paste.gif)
+
+> Regular paste (left) | Smart paste (right).
+
+## Commands
+
+You can view the available commands by pressing `Ctrl + P`.
+
+-   **Renumber at Cursor**: This command will renumber the list starting from the current cursor position, allowing you to make quick adjustments as needed.
+-   **Renumber Selected Lists**: If you highlight multiple numbered lists, this command renumbers all of them at once.
+-   **Renumber Entire Note**: For a comprehensive update, this command renumbers every numbered list in your active note, ensuring complete consistency.
 
 ## Performance
 
-The live update feature renumbers lists _locally_, adjusting the current line based on the previous line until it reaches the first correctly numbered line. This approach minimizes unnecessary calculations.
+The live update feature renumbers lists locally, adjusting the current line based on the previous line until it reaches the first correctly numbered line, which minimizes unnecessary calculations.
 In addition, the plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
 
 ## Limitations
 
--   **Vim Mode**: It is important to note that the plugin does not support automatic renumbering in Vim mode. However, renumbering commands can still be triggered while using Vim.
-
--   **Tab Size**: As far as i can tell, the number of spaces represented by a tab character cannot be accessed by plugins and must be specified manually. This is required in order to ensure correct nested numbering.
+The plugin does not support automatic renumbering in Vim mode, but you can still trigger renumbering commands manually. Additionally, it requires manual specification of tab sizes for correct nested numbering, as automatic detection is not available.
