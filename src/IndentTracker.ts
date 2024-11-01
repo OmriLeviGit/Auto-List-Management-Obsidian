@@ -17,11 +17,17 @@ export default class IndentTracker {
         let prevSpaceOffset: number | undefined = undefined;
         for (; prevIndex >= 0; prevIndex--) {
             prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
-            if (prevSpaceOffset === currSpaceOffset) {
+            if (prevSpaceOffset <= currSpaceOffset) {
                 break;
             }
         }
         console.log("prev", prevIndex);
+
+        // all preceeding lines are indented further than currLine
+        if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
+            return;
+        }
+
         for (let i = Math.max(prevIndex, 0); i < currLine; i++) {
             this.insert(editor.getLine(i));
         }
@@ -29,33 +35,6 @@ export default class IndentTracker {
         this.lastStackIndex = this.stack.length - 1;
         console.debug("stack after creation: ", this.stack);
     }
-    // constructor(editor: Editor, currLine: number) {
-    //     this.stack = [];
-
-    //     if (currLine < 0) return;
-    //     const currSpaceOffset = getLineInfo(editor.getLine(currLine)).spaceIndent;
-
-    //     let prevIndex = currLine - 1;
-    //     console.log("line: ", editor.getLine(currLine), "line number", currLine, "currspaceoffset", currSpaceOffset);
-    //     while (prevIndex > 0) {
-    //         let prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
-    //         console.log("prevline", editor.getLine(prevIndex), "prev space offset", prevSpaceOffset);
-    //         if (prevSpaceOffset <= currSpaceOffset) {
-    //             break;
-    //         }
-    //         prevIndex--;
-    //     }
-
-    //     console.log("out with prevIndex: ", prevIndex);
-
-    //     for (let i = Math.max(prevIndex, 0); i < currLine; i++) {
-    //         this.insert(editor.getLine(i));
-    //         console.log("inserted: ", editor.getLine(i));
-    //     }
-
-    //     this.lastStackIndex = this.stack.length - 1;
-    //     console.debug("stack after creation: ", this.stack);
-    // }
 
     get(): (number | undefined)[] {
         return this.stack;
