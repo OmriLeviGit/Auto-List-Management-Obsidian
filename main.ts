@@ -41,7 +41,7 @@ export default class AutoRenumbering extends Plugin {
                 if (this.settings.liveUpdate === false) {
                     return;
                 }
-
+                console.log("editor called");
                 if (!this.isProccessing) {
                     this.isProccessing = true;
 
