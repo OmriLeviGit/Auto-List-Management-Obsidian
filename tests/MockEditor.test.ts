@@ -14,11 +14,7 @@ describe("Mock editor tests", () => {
     });
 
     test("getLine throws error for negative index", () => {
-        expect(() => mockEditor.getLine(-1)).toThrow("trying to access a negative line");
-    });
-
-    test("getLine throws error for out-of-bounds index", () => {
-        expect(() => mockEditor.getLine(3)).toThrow("trying to access lines outside the note");
+        expect(() => mockEditor.getLine(-1)).toThrow("getLine: index is out of bound");
     });
 
     test("setLine sets a line correctly", () => {
@@ -26,12 +22,8 @@ describe("Mock editor tests", () => {
         expect(mockEditor.getLine(0)).toBe("Modified line");
     });
 
-    test("setLine throws error for negative index", () => {
-        expect(() => mockEditor.setLine(-1, "Modified line")).toThrow("trying to set lines outside the note");
-    });
-
     test("setLine throws error for out-of-bounds index", () => {
-        expect(() => mockEditor.setLine(3, "Modified line")).toThrow("trying to set lines outside the note");
+        expect(() => mockEditor.setLine(3, "Modified line")).toThrow("setLine: index is out of bound");
     });
 
     test("transaction", () => {

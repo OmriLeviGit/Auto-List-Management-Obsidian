@@ -179,6 +179,12 @@ describe("Generate changes with the IndentTracker", () => {
             startIndex: 3,
         },
         {
+            name: "Detect indented changes across text backwards",
+            content: ["1. a", " 10. b", "   text", " 4. c"],
+            expected: ["1. a", " 10. b", "   text", " 11. c"],
+            startIndex: 3,
+        },
+        {
             name: "Detect changes across text with greater indents (such as alt-enter)",
             content: ["1. a", "  b", "  c", "4. d"],
             expected: ["1. a", "  b", "  c", "2. d"],

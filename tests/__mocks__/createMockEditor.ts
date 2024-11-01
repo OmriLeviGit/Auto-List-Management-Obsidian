@@ -3,20 +3,15 @@ export const createMockEditor = (initialContent: string[]) => {
     const content = [...initialContent];
 
     const editor = {
-        getLine: jest.fn().mockImplementation((line: number): string => {
-            if (line < 0) {
-                throw new Error("trying to access a negative line");
+        getLine: jest.fn().mockImplementation((n: number): string => {
+            if (n < 0 || content.length <= n) {
+                throw new Error("getLine: index is out of bound");
             }
-            if (content.length <= line) {
-                console.error(`getLine error - content: ${content}, line: ${line}`);
-                throw new Error("getLine: trying to access lines outside the note");
-            }
-            return content[line];
+            return content[n];
         }),
         setLine: jest.fn().mockImplementation((n: number, text: string) => {
             if (n < 0 || content.length <= n) {
-                console.error(`setLine error - content: ${content}, index: ${n}`);
-                throw new Error("setLine: trying to set lines outside the note");
+                throw new Error("setLine: index is out of bound");
             }
             content[n] = text;
         }),
