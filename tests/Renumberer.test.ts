@@ -168,14 +168,14 @@ describe("Generate changes with the IndentTracker", () => {
         },
         {
             name: "Detect changes across indent backwards",
-            content: ["1. a", " 10. b", " 13. c", "4. d", "5. e"],
+            content: ["1. a", " 10. b", " 11. c", "4. d", "5. e"],
             expected: ["1. a", " 10. b", " 11. c", "2. d", "3. e"],
             startIndex: 3,
         },
         {
             name: "Detect changes across indent backwards as last item",
             content: ["1. a", " 10. b", " 11. c", "4. d"],
-            expected: ["1. a", " 10. b", " 13. c", "2. d"],
+            expected: ["1. a", " 10. b", " 11. c", "2. d"],
             startIndex: 3,
         },
         {

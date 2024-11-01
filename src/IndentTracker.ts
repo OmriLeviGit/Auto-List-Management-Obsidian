@@ -21,7 +21,6 @@ export default class IndentTracker {
                 break;
             }
         }
-        console.log("prev", prevIndex);
 
         // all preceeding lines are indented further than currLine
         if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
@@ -33,7 +32,7 @@ export default class IndentTracker {
         }
 
         this.lastStackIndex = this.stack.length - 1;
-        console.debug("stack after creation: ", this.stack);
+        // console.debug("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {

@@ -83,8 +83,6 @@ export default class Renumberer {
     private generateChanges(editor: Editor, currLine: number, isLocal = false): PendingChanges {
         const changes: EditorChange[] = [];
         const indentTracker = new IndentTracker(editor, currLine);
-        console.log("tracker: ", indentTracker.get());
-        const originalIndent = getLineInfo(editor.getLine(currLine)).spaceIndent;
 
         let firstChange = true;
         let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
@@ -94,10 +92,10 @@ export default class Renumberer {
 
             const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
-            console.log(
-                `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
-            );
-            console.log("tracker: ", indentTracker.get());
+            // console.debug("tracker: ", indentTracker.get());
+            // console.debug(
+            //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
+            // );
 
             // make sure indented text does not stop the search
             if (currNum === undefined) {
@@ -107,30 +105,24 @@ export default class Renumberer {
 
                     continue;
                 }
-                console.log("broke 1");
                 break;
             }
 
             const previousNum = indentTracker.get()[spaceIndent];
             const expectedNum = previousNum === undefined ? undefined : previousNum + 1;
 
-            console.log("expected num", expectedNum);
             let newText = text;
             // if a change is required (expected != actual), push it to the changes list
             if (expectedNum !== undefined) {
-                console.log(`orig: ${originalIndent}, space: ${spaceIndent}, tracklen: ${indentTracker.get().length}`);
-                // const isValidIndent = originalIndent <= spaceIndent && spaceIndent <= indentTracker.get().length;
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
                 if (expectedNum !== currNum && isValidIndent) {
                     newText = text.slice(0, numOfSpaceChars) + expectedNum + ". " + text.slice(textIndex);
-                    console.log("change is made, new line is", newText);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
                         text: newText,
                     });
                 } else if (isLocal && !firstChange && spaceIndent === 0) {
-                    console.log("broke 2");
                     break; // ensures changes are made locally, not until the end of the block
                 }
             }
@@ -140,7 +132,6 @@ export default class Renumberer {
             prevSpaceIndent = spaceIndent;
             firstChange = false;
         }
-        console.log("chnages: ", changes);
 
         return { changes, endIndex: currLine - 1 };
     }
