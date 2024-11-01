@@ -156,15 +156,27 @@ describe("Generate changes with the IndentTracker", () => {
     const testCases = [
         {
             name: "Renumber the same indent",
-            content: ["1. a", "1. b", " 10. c", "4. d"],
+            content: ["1. a", "3. b", " 10. c", "4. d"],
             startIndex: 0,
             expected: ["1. a", "2. b", " 10. c", "3. d"],
         },
         {
-            name: "Detect changes across indent",
-            content: ["1. a", " 10. b", " 11. c", "4. d"],
+            name: "Detect changes across indent forwards",
+            content: ["1. a", " 10. b", " 13. c", "4. d"],
             expected: ["1. a", " 10. b", " 11. c", "2. d"],
             startIndex: 0,
+        },
+        {
+            name: "Detect changes across indent backwards",
+            content: ["1. a", " 10. b", " 13. c", "4. d", "5. e"],
+            expected: ["1. a", " 10. b", " 11. c", "2. d", "3. e"],
+            startIndex: 3,
+        },
+        {
+            name: "Detect changes across indent backwards as last item",
+            content: ["1. a", " 10. b", " 11. c", "4. d"],
+            expected: ["1. a", " 10. b", " 13. c", "2. d"],
+            startIndex: 3,
         },
         {
             name: "Detect changes across text with greater indents (such as alt-enter)",

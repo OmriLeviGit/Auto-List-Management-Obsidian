@@ -89,7 +89,7 @@ export default class Renumberer {
         let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
 
         const endOfList = editor.lastLine() + 1;
-        while (currLine < endOfList) {
+        for (; currLine < endOfList; currLine++) {
             const text = editor.getLine(currLine);
 
             const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
@@ -102,7 +102,6 @@ export default class Renumberer {
             if (currNum === undefined) {
                 if (prevSpaceIndent < spaceIndent) {
                     firstChange = false;
-                    currLine++;
                     continue;
                 }
                 break;
@@ -132,7 +131,6 @@ export default class Renumberer {
 
             prevSpaceIndent = spaceIndent;
             firstChange = false;
-            currLine++;
         }
 
         return { changes, endIndex: currLine - 1 };

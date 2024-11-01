@@ -22,13 +22,13 @@ export default class IndentTracker {
             }
             prevIndex--;
         }
-
+        console.log("prev", prevIndex);
         for (let i = Math.max(prevIndex, 0); i < currLine; i++) {
             this.insert(editor.getLine(i));
         }
 
         this.lastStackIndex = this.stack.length - 1;
-        //console.debug("stack after creation: ", this.stack);
+        console.debug("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {
