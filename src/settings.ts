@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
-import "../main.css";
+import "./styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;
