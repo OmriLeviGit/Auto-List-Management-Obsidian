@@ -41,7 +41,7 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
-                            this.changes.push(...this.renumberer.renumberLocally.bind(editor, currLine).changes);
+                            this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
                             this.renumberer.applyChangesToEditor(editor, this.changes);
                         });
                         this.isProccessing = false;
@@ -67,7 +67,7 @@ export default class AutoRenumbering extends Plugin {
 
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
-                    const { baseIndex, offset } = handlePaste.bind(this, editor, clipboardContent);
+                    const { baseIndex, offset } = handlePaste(editor, clipboardContent);
                     this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });

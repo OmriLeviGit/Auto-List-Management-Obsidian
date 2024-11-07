@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
-import "./styles.css";
 import SettingsManager from "./SettingsManager";
+import "./styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;
@@ -10,6 +10,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
     constructor(app: App, plugin: AutoRenumbering) {
         super(app, plugin);
         this.plugin = plugin;
+        this.settingsManager = SettingsManager.getInstance();
     }
 
     display(): void {
