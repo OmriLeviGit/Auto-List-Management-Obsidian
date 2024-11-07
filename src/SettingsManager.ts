@@ -13,9 +13,9 @@ export const DEFAULT_SETTINGS: RenumberListSettings = {
 // a singleton for the settings
 export default class SettingsManager {
     private static instance: SettingsManager;
-    settings: RenumberListSettings;
+    private settings: RenumberListSettings;
 
-    constructor() {
+    private constructor() {
         this.settings = DEFAULT_SETTINGS;
     }
 
