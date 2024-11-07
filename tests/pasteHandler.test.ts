@@ -1,12 +1,10 @@
-import { modifyText } from "src/pasteHandler";
-import { pluginInstance, DEFAULT_SETTINGS } from "main";
+import "./__mocks__/main";
 
-jest.mock("main");
+import { modifyText } from "src/pasteHandler";
 
 describe("modifyText tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
     const testCases = [
         {

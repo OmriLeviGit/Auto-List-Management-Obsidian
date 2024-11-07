@@ -1,14 +1,11 @@
+import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
+
 import { getLineInfo, getListStart, getLastListIndex } from "../src/utils";
-
-import { pluginInstance, DEFAULT_SETTINGS } from "main";
-
-jest.mock("main");
 
 describe("getLineInfo tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [
@@ -70,7 +67,6 @@ describe("getLineInfo tests", () => {
 describe("getListStart tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [
@@ -124,7 +120,6 @@ describe("getListStart tests", () => {
 describe("getLastListIndex tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [

@@ -1,8 +1,7 @@
+import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import Renumberer from "../src/Renumberer";
-import { pluginInstance, DEFAULT_SETTINGS } from "main";
 
-jest.mock("main");
+import Renumberer from "../src/Renumberer";
 
 describe("generateChanges", () => {
     let renumberer: Renumberer;
@@ -10,7 +9,6 @@ describe("generateChanges", () => {
     beforeEach(() => {
         renumberer = new Renumberer();
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [
@@ -107,7 +105,6 @@ describe("generateChanges - local changes only", () => {
     beforeEach(() => {
         renumberer = new Renumberer();
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [
@@ -150,7 +147,6 @@ describe("Generate changes with the IndentTracker", () => {
     beforeEach(() => {
         renumberer = new Renumberer();
         jest.clearAllMocks();
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [

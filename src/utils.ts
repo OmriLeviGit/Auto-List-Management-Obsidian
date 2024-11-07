@@ -1,5 +1,5 @@
 import { Editor } from "obsidian";
-import { pluginInstance } from "main";
+import SettingsManager from "./SettingsManager";
 
 interface LineInfo {
     numOfSpaceChars: number;
@@ -14,10 +14,14 @@ function getLineInfo(line: string): LineInfo {
     let index = 0;
     let numOfSpaceIndents = 0;
 
+    const settingsManager = SettingsManager.getInstance();
+    const sett = settingsManager.getSettings();
+    const indentSize = sett.indentSize;
+
     // num of spaces
     while (index < length && (line[index] === " " || line[index] === "\t")) {
         // console.debug("linevalue: ", line[i].charCodeAt(0));
-        numOfSpaceIndents += line[index] === " " ? 1 : pluginInstance.getSettings().indentSize;
+        numOfSpaceIndents += line[index] === " " ? 1 : indentSize;
         index++;
     }
 

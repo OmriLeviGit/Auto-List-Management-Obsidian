@@ -1,8 +1,7 @@
-import IndentTracker from "../src/IndentTracker";
+import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { pluginInstance, DEFAULT_SETTINGS } from "main";
 
-jest.mock("main");
+import IndentTracker from "../src/IndentTracker";
 
 describe("IndentTracker tests", () => {
     let indentTracker: IndentTracker;
@@ -10,7 +9,6 @@ describe("IndentTracker tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
         indentTracker = new IndentTracker(createMockEditor([""]), 0);
     });
 
@@ -150,8 +148,6 @@ describe("IndentTracker tests", () => {
 describe("IndentTracker creation tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-
-        (pluginInstance.getSettings as jest.Mock).mockReturnValue(DEFAULT_SETTINGS);
     });
 
     const testCases = [
@@ -186,13 +182,13 @@ describe("IndentTracker creation tests", () => {
             expected: [undefined, 2],
         },
         {
-            name: "ascending", // TODO definition: stop at the first same or lower
+            name: "ascending", // definition: stop at the first same or lower
             content: ["1. text", " 2. text", "  3. text"],
             index: 2,
             expected: [undefined, 2],
         },
         {
-            name: "Decending", // TODO not defined
+            name: "Decending",
             content: ["  1. text", " 2. text", "3. text"],
             index: 2,
             expected: [],

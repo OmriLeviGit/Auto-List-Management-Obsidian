@@ -1,44 +1,32 @@
 import { Plugin, Editor, EditorChange } from "obsidian";
-import Renumberer from "src/Renumberer";
-import { handlePaste } from "./src/pasteHandler";
 import { Mutex } from "async-mutex";
-import AutoRenumberingSettings from "./src/settings";
+import { handlePaste } from "./src/pasteHandler";
 import { registerCommands } from "src/registerCommands";
+import Renumberer from "src/Renumberer";
+import AutoRenumberingSettings from "./src/SettingsTab";
+import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 
 const mutex = new Mutex();
-export let pluginInstance: AutoRenumbering;
-
-export interface RenumberListSettings {
-    liveUpdate: boolean;
-    smartPaste: boolean;
-    indentSize: number;
-}
-
-export const DEFAULT_SETTINGS: RenumberListSettings = {
-    liveUpdate: true,
-    smartPaste: true,
-    indentSize: 4,
-};
 
 export default class AutoRenumbering extends Plugin {
-    private settings: RenumberListSettings;
     private renumberer: Renumberer;
+    private settingsManager: SettingsManager;
     private changes: EditorChange[] = [];
     private isProccessing = false;
     private blockChanges = false; // if the previous action was a special key
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
 
     async onload() {
-        pluginInstance = this;
         await this.loadSettings();
         registerCommands(this);
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
         this.renumberer = new Renumberer();
+        this.settingsManager = SettingsManager.getInstance();
 
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                if (this.settings.liveUpdate === false) {
+                if (this.settingsManager.getSettings().liveUpdate === false) {
                     return;
                 }
                 if (!this.isProccessing) {
@@ -53,7 +41,7 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
-                            this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
+                            this.changes.push(...this.renumberer.renumberLocally.bind(editor, currLine).changes);
                             this.renumberer.applyChangesToEditor(editor, this.changes);
                         });
                         this.isProccessing = false;
@@ -65,7 +53,7 @@ export default class AutoRenumbering extends Plugin {
         // paste
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (this.settings.liveUpdate === false) {
+                if (this.settingsManager.getSettings().liveUpdate === false) {
                     return;
                 }
 
@@ -79,7 +67,7 @@ export default class AutoRenumbering extends Plugin {
 
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
-                    const { baseIndex, offset } = handlePaste(editor, clipboardContent);
+                    const { baseIndex, offset } = handlePaste.bind(this, editor, clipboardContent);
                     this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
                     this.renumberer.applyChangesToEditor(editor, this.changes);
                 });
@@ -103,15 +91,13 @@ export default class AutoRenumbering extends Plugin {
     }
 
     async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        const settingsManager = SettingsManager.getInstance();
+        settingsManager.setSettings(Object.assign({}, DEFAULT_SETTINGS, await this.loadData()));
     }
 
     async saveSettings() {
-        await this.saveData(this.settings);
-    }
-
-    getSettings() {
-        return this.settings;
+        const settingsManager = SettingsManager.getInstance();
+        await this.saveData(settingsManager.getSettings());
     }
 
     getRenumberer() {
@@ -128,17 +114,5 @@ export default class AutoRenumbering extends Plugin {
 
     setIsProcessing(value: boolean) {
         this.isProccessing = value;
-    }
-
-    setLiveUpdate(value: boolean) {
-        this.settings.liveUpdate = value;
-    }
-
-    setSmartPaste(value: boolean) {
-        this.settings.smartPaste = value;
-    }
-
-    setIndentSize(size: number) {
-        this.settings.indentSize = size;
     }
 }

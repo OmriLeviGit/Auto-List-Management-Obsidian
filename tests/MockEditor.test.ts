@@ -1,5 +1,7 @@
-import { EditorChange } from "obsidian";
+import "./__mocks__/main";
 import { createMockEditor, MockEditor } from "./__mocks__/createMockEditor";
+
+import { EditorChange } from "obsidian";
 
 describe("Mock editor tests", () => {
     const content = ["First line", "Second line", "Third line"];

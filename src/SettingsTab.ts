@@ -1,9 +1,11 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
 import "./styles.css";
+import SettingsManager from "./SettingsManager";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;
+    settingsManager: SettingsManager;
 
     constructor(app: App, plugin: AutoRenumbering) {
         super(app, plugin);
@@ -18,8 +20,9 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Live update")
             .setDesc("Automatically update numbered lists as changes are made. Does not support Vim.")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.getSettings().liveUpdate).onChange(async (value) => {
-                    this.plugin.setLiveUpdate(value);
+                toggle.setValue(this.settingsManager.getSettings().liveUpdate).onChange(async (value) => {
+                    this.settingsManager.setLiveUpdate(value);
+
                     await this.plugin.saveSettings();
                     smartPasteToggleEl.classList.toggle("smart-paste-toggle", value);
                     smartPasteToggleEl.classList.toggle("smart-paste-toggle-disabled", !value);
@@ -30,14 +33,14 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Smart paste")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.plugin.getSettings().smartPaste).onChange(async (value) => {
-                    this.plugin.setSmartPaste(value);
+                toggle.setValue(this.settingsManager.getSettings().smartPaste).onChange(async (value) => {
+                    this.settingsManager.setSmartPaste(value);
                     await this.plugin.saveSettings();
                 })
             );
 
         const smartPasteToggleEl = smartPasteSetting.settingEl;
-        const isLiveUpdateEnabled = this.plugin.getSettings().liveUpdate;
+        const isLiveUpdateEnabled = this.settingsManager.getSettings().liveUpdate;
         smartPasteToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
 
         new Setting(containerEl)
@@ -47,11 +50,11 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             )
             .addSlider((slider) => {
                 slider
-                    .setValue(this.plugin.getSettings().indentSize)
+                    .setValue(this.settingsManager.getSettings().indentSize)
                     .setLimits(2, 8, 1)
                     .setDynamicTooltip()
                     .onChange(async (value) => {
-                        this.plugin.setIndentSize(value);
+                        this.settingsManager.setIndentSize(value);
                         await this.plugin.saveSettings();
                     });
             });
