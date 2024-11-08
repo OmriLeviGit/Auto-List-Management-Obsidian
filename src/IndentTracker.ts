@@ -32,6 +32,7 @@ export default class IndentTracker {
         }
 
         this.lastStackIndex = this.stack.length - 1;
+
         // console.debug("stack after creation: ", this.stack);
     }
 

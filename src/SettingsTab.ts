@@ -45,6 +45,16 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         smartPasteToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
 
         new Setting(containerEl)
+            .setName("Start numbering from 1")
+            .setDesc("The first item of every numbered list is 1.")
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.getSettings().startsFromOne).onChange(async (value) => {
+                    this.settingsManager.setStartsFromOne(value);
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
             .setName("Tab indent size")
             .setDesc(
                 "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size."

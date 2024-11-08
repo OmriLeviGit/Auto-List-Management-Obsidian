@@ -1,12 +1,14 @@
 export interface RenumberListSettings {
     liveUpdate: boolean;
     smartPaste: boolean;
+    startsFromOne: boolean;
     indentSize: number;
 }
 
 export const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: true,
     smartPaste: true,
+    startsFromOne: true,
     indentSize: 4,
 };
 
@@ -43,6 +45,9 @@ export default class SettingsManager {
         this.settings.smartPaste = value;
     }
 
+    public setStartsFromOne(value: boolean): void {
+        this.settings.startsFromOne = value;
+    }
     public setIndentSize(value: number): void {
         this.settings.indentSize = value;
     }
