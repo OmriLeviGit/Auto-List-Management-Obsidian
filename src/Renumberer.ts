@@ -1,5 +1,5 @@
 import { Editor, EditorChange } from "obsidian";
-import { getListStart, getLineInfo } from "./utils";
+import { getListStart, getLineInfo, LineInfo } from "./utils";
 import IndentTracker from "./IndentTracker";
 
 interface PendingChanges {
@@ -56,15 +56,18 @@ export default class Renumberer {
 
     // updates a numbered list from the current line, to the first correctly number line.
     renumberLocally(editor: Editor, startIndex: number): PendingChanges {
-        let { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
+        // let { numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex));
+        let currInfo = getLineInfo(editor.getLine(startIndex));
+        let prevInfo: LineInfo | undefined = undefined;
 
-        // if current line is not part of a numbered list, try the following one
-        if (currNumber === undefined) {
+        // if current line is not part of a numbered list, try the following one (triggers when deleting lines)
+        if (currInfo.number === undefined) {
             startIndex++;
-            ({ numOfSpaceChars: currSpaces, number: currNumber } = getLineInfo(editor.getLine(startIndex)));
+            prevInfo = currInfo;
+            currInfo = getLineInfo(editor.getLine(startIndex));
         }
 
-        if (currNumber === undefined) {
+        if (currInfo.number === undefined) {
             startIndex++;
             return { changes: [], endIndex: startIndex }; // not a part of a numbered list
         }
@@ -76,9 +79,8 @@ export default class Renumberer {
                 : this.generateChanges(editor, startIndex + 1, true);
         }
 
-        const { numOfSpaceChars: prevSpaces, number: prevNumber } = getLineInfo(editor.getLine(startIndex - 1));
         // adjust startIndex based on previous line info
-        if (!prevNumber && prevSpaces < currSpaces) {
+        if (prevInfo !== undefined && !prevInfo.number && prevInfo.numOfSpaceChars < currInfo.numOfSpaceChars) {
             startIndex++;
         }
 

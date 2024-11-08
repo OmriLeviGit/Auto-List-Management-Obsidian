@@ -3,17 +3,19 @@ import { Editor } from "obsidian";
 
 export function registerCommands(plugin: AutoRenumbering) {
     plugin.addCommand({
-        id: "renumber-note",
-        name: "Renumber all numbered lists in note",
+        id: "1-cursor",
+        name: "At cursor position",
         editorCallback: (editor: Editor) => {
-            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), 0, editor.lastLine());
+            plugin.setIsProcessing(true);
+            plugin.getRenumberer().listAtCursor(editor, plugin.getChanges());
             plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
+            plugin.setIsProcessing(false);
         },
     });
 
     plugin.addCommand({
-        id: "renumber-selection",
-        name: "Renumber all selected numbered lists",
+        id: "2-selection",
+        name: "All selected numbered lists",
         editorCallback: (editor: Editor) => {
             const { anchor, head } = editor.listSelections()[0];
             const startLine = Math.min(anchor.line, head.line);
@@ -25,13 +27,11 @@ export function registerCommands(plugin: AutoRenumbering) {
     });
 
     plugin.addCommand({
-        id: "renumber-block-at-cursor",
-        name: "Renumber at cursor position",
+        id: "3-note",
+        name: "All numbered lists in the entire note",
         editorCallback: (editor: Editor) => {
-            plugin.setIsProcessing(true);
-            plugin.getRenumberer().listAtCursor(editor, plugin.getChanges());
+            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), 0, editor.lastLine());
             plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
-            plugin.setIsProcessing(false);
         },
     });
 }

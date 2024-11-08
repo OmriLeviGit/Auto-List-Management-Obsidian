@@ -4,6 +4,6 @@
     "author": "Omri Levi",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Updates numbered lists automatically to keep them in sequential order. Features live updates, smart pasting, and manual control options for easy editing.",
+    "description": "Updates numbered lists automatically to keep them in sequential order. Offers both live updating and manual control options, and supports nested lists.",
     "isDesktopOnly": true
 }

@@ -19,7 +19,7 @@ function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
 
     let numOfLines: number;
 
-    const settingsManager = new SettingsManager();
+    const settingsManager = SettingsManager.getInstance();
 
     const smartPaste = settingsManager.getSettings().smartPaste;
     if (smartPaste) {

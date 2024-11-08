@@ -1,7 +1,7 @@
 import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
 
-interface LineInfo {
+export interface LineInfo {
     numOfSpaceChars: number;
     spaceIndent: number;
     number: number | undefined;
