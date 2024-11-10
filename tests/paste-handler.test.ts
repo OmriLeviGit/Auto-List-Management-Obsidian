@@ -1,6 +1,6 @@
 import "./__mocks__/main";
 
-import { modifyText } from "src/pasteHandler";
+import { modifyText } from "src/paste-handler";
 
 describe("modifyText tests", () => {
     beforeEach(() => {

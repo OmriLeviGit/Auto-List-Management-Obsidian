@@ -1,9 +1,4 @@
-export interface RenumberListSettings {
-    liveUpdate: boolean;
-    smartPaste: boolean;
-    startsFromOne: boolean;
-    indentSize: number;
-}
+import { RenumberListSettings } from "./types";
 
 export const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: true,

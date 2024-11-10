@@ -1,13 +1,14 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
+import { dynamicStartStrategy } from "src/renumbering/renumbering-strategies";
 
-import Renumberer from "../src/Renumberer";
+import Renumberer from "../src/renumbering/Renumberer";
 
 describe("generateChanges", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer();
+        renumberer = new Renumberer(new dynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -89,7 +90,7 @@ describe("generateChanges", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumberLocally(editor, startIndex);
+            const { changes } = renumberer.renumber(editor, startIndex);
             renumberer.applyChangesToEditor(editor, changes);
 
             expected.forEach((line, i) => {
@@ -103,7 +104,7 @@ describe("generateChanges - local changes only", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer();
+        renumberer = new Renumberer(new dynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -131,7 +132,7 @@ describe("generateChanges - local changes only", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumberLocally(editor, startIndex);
+            const { changes } = renumberer.renumber(editor, startIndex);
             renumberer.applyChangesToEditor(editor, changes);
 
             expected.forEach((line, i) => {
@@ -145,7 +146,7 @@ describe("Generate changes with the IndentTracker", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer();
+        renumberer = new Renumberer(new dynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -221,7 +222,7 @@ describe("Generate changes with the IndentTracker", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumberLocally(editor, startIndex);
+            const { changes } = renumberer.renumber(editor, startIndex);
             renumberer.applyChangesToEditor(editor, changes);
 
             expected.forEach((line, i) => {

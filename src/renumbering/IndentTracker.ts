@@ -1,5 +1,6 @@
 import { Editor } from "obsidian";
-import { getLineInfo, getPrevItemIndex, isFirstInNumberedList } from "./utils";
+import { getLineInfo, getPrevItemIndex, isFirstInNumberedList } from "../utils";
+import SettingsManager from "../SettingsManager";
 
 // keeps track of the previous number in numbered list for each offset
 export default class IndentTracker {
@@ -11,6 +12,7 @@ export default class IndentTracker {
         this.stack = [];
 
         const prevIndex = getPrevItemIndex(editor, currLine);
+
         if (prevIndex === undefined) {
             return;
         }
@@ -21,11 +23,15 @@ export default class IndentTracker {
 
         this.lastStackIndex = this.stack.length - 1;
 
-        // if (isFirstInNumberedList(editor, prevIndex)) {
-        //     this.stack[getLineInfo(editor.getLine(prevIndex)).spaceIndent] = 1;
-        // }
+        const instance = SettingsManager.getInstance();
 
-        // console.log("stack after creation: ", this.stack);
+        if (instance.getSettings().startsFromOne) {
+            if (isFirstInNumberedList(editor, prevIndex)) {
+                this.stack[getLineInfo(editor.getLine(prevIndex)).spaceIndent] = 1;
+            }
+        }
+
+        console.log("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {

@@ -1,7 +1,7 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList } from "../src/utils";
+import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList } from "src/utils";
 
 describe("getLineInfo tests", () => {
     beforeEach(() => {

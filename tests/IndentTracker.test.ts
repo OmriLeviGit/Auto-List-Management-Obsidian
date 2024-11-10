@@ -1,7 +1,7 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import IndentTracker from "../src/IndentTracker";
+import IndentTracker from "../src/renumbering/IndentTracker";
 
 describe("IndentTracker tests", () => {
     let indentTracker: IndentTracker;

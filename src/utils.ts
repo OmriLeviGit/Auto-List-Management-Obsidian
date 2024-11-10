@@ -1,12 +1,6 @@
 import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
-
-export interface LineInfo {
-    spaceCharsNum: number;
-    spaceIndent: number;
-    number: number | undefined;
-    textIndex: number | undefined;
-}
+import { LineInfo } from "./types";
 
 // extract information from a line of text
 function getLineInfo(line: string): LineInfo {
