@@ -1,5 +1,5 @@
 import { Editor, EditorChange } from "obsidian";
-import { getListStart, getLineInfo, LineInfo } from "./utils";
+import { getListStart, getLineInfo, LineInfo, isFirstInNumberedList } from "./utils";
 import IndentTracker from "./IndentTracker";
 
 interface PendingChanges {
@@ -79,7 +79,7 @@ export default class Renumberer {
         }
 
         // adjust startIndex based on previous line info
-        if (prevInfo && !prevInfo.number && prevInfo.numOfSpaceChars < currInfo.numOfSpaceChars) {
+        if (prevInfo && !prevInfo.number && prevInfo.spaceCharsNum < currInfo.spaceCharsNum) {
             startIndex++;
         }
 
@@ -91,14 +91,12 @@ export default class Renumberer {
         const text = editor.getLine(startIndex);
         let currInfo = getLineInfo(text);
 
-        let prevInfo = startIndex <= 0 ? undefined : getLineInfo(editor.getLine(startIndex - 1));
+        // console.log("curr: ", currInfo, "prev: ", prevInfo);
 
-        console.log("curr: ", currInfo, "prev: ", prevInfo);
-
-        const isFirstInList = currInfo.number !== undefined && (!prevInfo || prevInfo.number === undefined);
+        const isFirstInList = isFirstInNumberedList(editor, startIndex);
 
         if (isFirstInList && currInfo.number !== 1) {
-            const newText = text.slice(0, currInfo.numOfSpaceChars) + 1 + ". " + text.slice(currInfo.textIndex);
+            const newText = text.slice(0, currInfo.spaceCharsNum) + 1 + ". " + text.slice(currInfo.textIndex);
             firstLineChange = {
                 from: { line: startIndex, ch: 0 },
                 to: { line: startIndex, ch: text.length },
@@ -119,13 +117,15 @@ export default class Renumberer {
         const changes: EditorChange[] = [];
         const indentTracker = new IndentTracker(editor, currLine);
 
+        console.log("indent: ", indentTracker.get());
+
         let firstChange = true;
         let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
         const endOfList = editor.lastLine() + 1;
         for (; currLine < endOfList; currLine++) {
             const text = editor.getLine(currLine);
 
-            const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
+            const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
             // console.debug("tracker: ", indentTracker.get());
             // console.debug(
@@ -151,7 +151,7 @@ export default class Renumberer {
             if (expectedNum !== undefined) {
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
                 if (expectedNum !== currNum && isValidIndent) {
-                    newText = text.slice(0, numOfSpaceChars) + expectedNum + ". " + text.slice(textIndex);
+                    newText = text.slice(0, spaceCharsNum) + expectedNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },
@@ -182,7 +182,7 @@ export default class Renumberer {
         for (; currLine < endOfList; currLine++) {
             const text = editor.getLine(currLine);
 
-            const { spaceIndent, numOfSpaceChars, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
+            const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
             // console.debug("tracker: ", indentTracker.get());
             // console.debug(
@@ -208,7 +208,7 @@ export default class Renumberer {
             if (expectedNum !== undefined) {
                 const isValidIndent = spaceIndent <= indentTracker.get().length;
                 if (expectedNum !== currNum && isValidIndent) {
-                    newText = text.slice(0, numOfSpaceChars) + expectedNum + ". " + text.slice(textIndex);
+                    newText = text.slice(0, spaceCharsNum) + expectedNum + ". " + text.slice(textIndex);
                     changes.push({
                         from: { line: currLine, ch: 0 },
                         to: { line: currLine, ch: text.length },

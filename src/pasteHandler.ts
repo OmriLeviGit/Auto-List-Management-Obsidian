@@ -1,5 +1,5 @@
 import { Editor } from "obsidian";
-import { getLineInfo, getLastListIndex } from "./utils";
+import { getLineInfo, getLastListStart } from "./utils";
 import SettingsManager from "./SettingsManager";
 
 interface PastingRange {
@@ -57,7 +57,7 @@ function countNewlines(text: string) {
 // changes the first item of the last numbered list in text to newNumber
 function modifyText(text: string, newNumber: number): TextModification {
     const lines = text.split("\n");
-    const lineIndex = getLastListIndex(lines);
+    const lineIndex = getLastListStart(lines);
 
     if (lineIndex === undefined) {
         return { modifiedText: undefined, numOfLines: lines.length };
@@ -66,7 +66,7 @@ function modifyText(text: string, newNumber: number): TextModification {
     const targetLine = lines[lineIndex];
     const info = getLineInfo(targetLine);
 
-    const newLine = targetLine.slice(0, info.numOfSpaceChars) + newNumber + ". " + targetLine.slice(info.textIndex);
+    const newLine = targetLine.slice(0, info.spaceCharsNum) + newNumber + ". " + targetLine.slice(info.textIndex);
 
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");

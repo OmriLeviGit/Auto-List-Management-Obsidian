@@ -1,5 +1,5 @@
 import { Editor } from "obsidian";
-import { getLineInfo } from "./utils";
+import { getLineInfo, getPrevItemIndex } from "./utils";
 
 // keeps track of the previous number in numbered list for each offset
 export default class IndentTracker {
@@ -10,20 +10,9 @@ export default class IndentTracker {
     constructor(editor: Editor, currLine: number) {
         this.stack = [];
 
-        if (currLine < 0) return;
-        const currSpaceOffset = getLineInfo(editor.getLine(currLine)).spaceIndent;
+        const prevIndex = getPrevItemIndex(editor, currLine);
 
-        let prevIndex = currLine - 1;
-        let prevSpaceOffset: number | undefined = undefined;
-        for (; prevIndex >= 0; prevIndex--) {
-            prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
-            if (prevSpaceOffset <= currSpaceOffset) {
-                break;
-            }
-        }
-
-        // all preceeding lines are indented further than currLine
-        if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
+        if (prevIndex === undefined) {
             return;
         }
 

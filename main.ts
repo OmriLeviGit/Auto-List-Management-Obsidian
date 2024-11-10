@@ -41,7 +41,7 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
-                            this.changes.push(...this.renumberer.renumberLocallyOne(editor, currLine).changes);
+                            this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
                             // this.changes.push(...this.renumberer.renumberLocally(editor, currLine).changes);
                             this.renumberer.applyChangesToEditor(editor, this.changes);
                         });

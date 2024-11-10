@@ -2,7 +2,7 @@ import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
 
 export interface LineInfo {
-    numOfSpaceChars: number;
+    spaceCharsNum: number;
     spaceIndent: number;
     number: number | undefined;
     textIndex: number | undefined;
@@ -25,7 +25,7 @@ function getLineInfo(line: string): LineInfo {
         index++;
     }
 
-    const numOfSpaceChars = index;
+    const spaceCharsNum = index;
 
     // number indices
     while (index < length && "0".charCodeAt(0) <= line.charCodeAt(index) && line.charCodeAt(index) <= "9".charCodeAt(0))
@@ -33,7 +33,7 @@ function getLineInfo(line: string): LineInfo {
     // check parsing for ". "
     if (line[index] !== "." || line[index + 1] !== " ") {
         return {
-            numOfSpaceChars: numOfSpaceChars,
+            spaceCharsNum,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
@@ -41,23 +41,23 @@ function getLineInfo(line: string): LineInfo {
     }
 
     // console.debug(
-    //     `i: ${index}, text line: "${line}", number detected: ${line.slice(numOfSpaceChars, index)}, textOffset: ${
+    //     `i: ${index}, text line: "${line}", number detected: ${line.slice(spaceCharsNum, index)}, textOffset: ${
     //         index + 2
     //     }`
     // );
 
-    const number = parseInt(line.slice(numOfSpaceChars, index));
+    const number = parseInt(line.slice(spaceCharsNum, index));
 
     if (isNaN(number)) {
         return {
-            numOfSpaceChars: numOfSpaceChars,
+            spaceCharsNum,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
         };
     }
 
-    return { numOfSpaceChars, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
+    return { spaceCharsNum, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
 }
 
 // gets the index of the first item in a numbered list
@@ -82,7 +82,7 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
 }
 
 // index of the first item in the last numbered list
-function getLastListIndex(lines: string[]): number | undefined {
+function getLastListStart(lines: string[]): number | undefined {
     let index: number | undefined = undefined;
     for (let i = lines.length - 1; i >= 0; i--) {
         const info = getLineInfo(lines[i]);
@@ -94,4 +94,58 @@ function getLastListIndex(lines: string[]): number | undefined {
     return index;
 }
 
-export { getLineInfo, getListStart, getLastListIndex };
+function getPrevItemIndex(editor: Editor, index: number): number | undefined {
+    if (index < 0) {
+        return undefined;
+    }
+
+    const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
+
+    let prevIndex = index - 1;
+    let prevSpaceOffset: number | undefined = undefined;
+    for (; prevIndex >= 0; prevIndex--) {
+        prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
+        if (prevSpaceOffset <= currSpaceOffset) {
+            break;
+        }
+    }
+
+    // all preceeding lines are indented further than currLine
+    if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
+        return undefined;
+    }
+
+    return prevIndex;
+}
+
+function isFirstInNumberedList(editor: Editor, index: number): boolean {
+    if (index < 0) {
+        return false;
+    }
+
+    const currLine = getLineInfo(editor.getLine(index));
+
+    if (index === 0) {
+        return currLine.number !== undefined;
+    }
+
+    if (currLine.number === undefined) {
+        return false;
+    }
+
+    const prevIndex = getPrevItemIndex(editor, index);
+
+    if (prevIndex === undefined) {
+        return true;
+    }
+
+    const prevInfo = getLineInfo(editor.getLine(prevIndex));
+
+    if (prevInfo.spaceIndent < currLine.spaceIndent || prevInfo.number === undefined) {
+        return true;
+    }
+
+    return false;
+}
+
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };

@@ -1,7 +1,7 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import { getLineInfo, getListStart, getLastListIndex } from "../src/utils";
+import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList } from "../src/utils";
 
 describe("getLineInfo tests", () => {
     beforeEach(() => {
@@ -12,47 +12,47 @@ describe("getLineInfo tests", () => {
         {
             name: "single digit line",
             input: "1. text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 1, textIndex: 3 },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3 },
         },
         {
             name: "multiple digits line",
             input: "123. text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: 123, textIndex: 5 },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5 },
         },
         {
             name: "no digits line",
             input: ". text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
         },
         {
             name: "line with leading spaces",
             input: "  1. test",
-            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: 1, textIndex: 5 },
+            expected: { spaceCharsNum: 2, spaceIndent: 2, number: 1, textIndex: 5 },
         },
         {
             name: "line with leading tab",
             input: "\t1. test",
-            expected: { numOfSpaceChars: 1, spaceIndent: 4, number: 1, textIndex: 4 },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 1, textIndex: 4 },
         },
         {
             name: "line with leading two spaces and a tab",
             input: "  \t12. test",
-            expected: { numOfSpaceChars: 3, spaceIndent: 6, number: 12, textIndex: 7 },
+            expected: { spaceCharsNum: 3, spaceIndent: 6, number: 12, textIndex: 7 },
         },
         {
             name: "line with leading space and two tab",
             input: " \t\t12. test",
-            expected: { numOfSpaceChars: 3, spaceIndent: 9, number: 12, textIndex: 7 },
+            expected: { spaceCharsNum: 3, spaceIndent: 9, number: 12, textIndex: 7 },
         },
         {
-            name: "line without number and with trailing numOfSpaceChars",
+            name: "line without number and with trailing spaceCharsNum",
             input: "  . text   ",
-            expected: { numOfSpaceChars: 2, spaceIndent: 2, number: undefined, textIndex: undefined },
+            expected: { spaceCharsNum: 2, spaceIndent: 2, number: undefined, textIndex: undefined },
         },
         {
             name: "line with invalid format",
             input: "A text",
-            expected: { numOfSpaceChars: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textIndex: undefined },
         },
     ];
 
@@ -117,7 +117,7 @@ describe("getListStart tests", () => {
     });
 });
 
-describe("getLastListIndex tests", () => {
+describe("getLastListStart tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -157,7 +157,102 @@ describe("getLastListIndex tests", () => {
 
     testCases.forEach(({ name, content, expectedResult }) => {
         test(name, () => {
-            const res = getLastListIndex(content);
+            const res = getLastListStart(content);
+            expect(res).toBe(expectedResult);
+        });
+    });
+});
+
+describe("isFirstInNumberedList tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const testCases = [
+        {
+            name: "First",
+            content: ["1. a", "2. b"],
+            index: 0,
+            expectedResult: true,
+        },
+        {
+            name: "Not first",
+            content: ["1. a", "2. b"],
+            index: 1,
+            expectedResult: false,
+        },
+        {
+            name: "One item",
+            content: ["1. a"],
+            index: 0,
+            expectedResult: true,
+        },
+        {
+            name: "One item indented",
+            content: ["1. a"],
+            index: 0,
+            expectedResult: true,
+        },
+        {
+            name: "First indented",
+            content: ["1. a", " 2. b"],
+            index: 1,
+            expectedResult: true,
+        },
+        {
+            name: "Second indented",
+            content: ["1. a", " 2. b", " 3. b"],
+            index: 2,
+            expectedResult: false,
+        },
+        {
+            name: "Second indented",
+            content: ["1. a", " 2. b", " 3. b"],
+            index: 2,
+            expectedResult: false,
+        },
+        {
+            name: "Second with indent in the middle",
+            content: ["1. a", " 2. b", "3. c"],
+            index: 2,
+            expectedResult: false,
+        },
+        {
+            name: "Lower indent in the middle",
+            content: ["1. a", " 2. b", "3. c", " 4. d"],
+            index: 3,
+            expectedResult: true,
+        },
+        {
+            name: "Text alone",
+            content: ["text"],
+            index: 0,
+            expectedResult: false,
+        },
+        {
+            name: "Text before",
+            content: ["text", "1. a"],
+            index: 1,
+            expectedResult: true,
+        },
+        {
+            name: "Text before indented",
+            content: ["text", " 1. a"],
+            index: 1,
+            expectedResult: true,
+        },
+        {
+            name: "Text before indented",
+            content: ["text", " 1. a"],
+            index: 1,
+            expectedResult: true,
+        },
+    ];
+
+    testCases.forEach(({ name, content, index, expectedResult }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            const res = isFirstInNumberedList(editor, index);
             expect(res).toBe(expectedResult);
         });
     });
