@@ -21,7 +21,7 @@ function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
 
     const settingsManager = SettingsManager.getInstance();
 
-    const smartPaste = settingsManager.getSettings().smartPaste;
+    const smartPaste = settingsManager.getSmartPaste();
     if (smartPaste) {
         const afterPasteIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPasteIndex);

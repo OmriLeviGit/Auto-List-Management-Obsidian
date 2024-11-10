@@ -42,8 +42,8 @@ You can view the available commands by pressing `Ctrl + P`.
 
 ## Performance
 
-The live update feature renumbers lists locally, adjusting the current line based on the previous line until it reaches the first correctly numbered line, which minimizes unnecessary calculations.
-In addition, the plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
+The live update feature renumbers lists locally, adjusting only the lines up to the first correctly numbered line, which reduces unnecessary calculations.
+The plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
 
 ## Limitations
 

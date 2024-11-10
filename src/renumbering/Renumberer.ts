@@ -15,20 +15,23 @@ export default class Renumberer {
         this.strategy = strategy;
     }
 
-    renumber(editor: Editor, currLine: number): PendingChanges {
-        return this.strategy.renumber(editor, currLine);
+    renumber(editor: Editor, currLine: number) {
+        const changes = this.strategy.renumber(editor, currLine).changes;
+        if (changes.length > 0) {
+            this.applyChangesToEditor(editor, changes);
+        }
     }
 
     // renumbers the list at cursor location from start to end
-    listAtCursor = (editor: Editor, changes: EditorChange[]) => {
+    listAtCursor = (editor: Editor) => {
         const { anchor, head } = editor.listSelections()[0];
         const currLine = Math.min(anchor.line, head.line);
-        changes.push(...this.renumberBlock(editor, currLine).changes);
-        this.applyChangesToEditor(editor, changes);
+        this.applyChangesToEditor(editor, this.renumberBlock(editor, currLine).changes);
     };
 
     // renumbers all numbered lists in specified range
-    allListsInRange = (editor: Editor, changes: EditorChange[], currLine: number, end: number) => {
+    allListsInRange = (editor: Editor, currLine: number, end: number) => {
+        const changes: EditorChange[] = [];
         while (currLine <= end) {
             const line = editor.getLine(currLine);
             if (line) {
@@ -46,9 +49,7 @@ export default class Renumberer {
             currLine++;
         }
 
-        if (changes.length > 0) {
-            this.applyChangesToEditor(editor, changes);
-        }
+        this.applyChangesToEditor(editor, changes);
     };
 
     // updates a numbered list from start to end
@@ -62,7 +63,7 @@ export default class Renumberer {
         return generateChanges(editor, startIndex);
     }
 
-    applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
+    private applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
         const changesApplied = changes.length > 0;
 
         if (changesApplied) {

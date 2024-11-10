@@ -25,13 +25,13 @@ export default class IndentTracker {
 
         const instance = SettingsManager.getInstance();
 
-        if (instance.getSettings().startsFromOne) {
+        if (instance.getStartsFromOne()) {
             if (isFirstInNumberedList(editor, prevIndex)) {
                 this.stack[getLineInfo(editor.getLine(prevIndex)).spaceIndent] = 1;
             }
         }
 
-        console.log("stack after creation: ", this.stack);
+        // console.log("stack after creation: ", this.stack);
     }
 
     get(): (number | undefined)[] {

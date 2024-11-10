@@ -13,7 +13,6 @@ const mutex = new Mutex();
 export default class AutoRenumbering extends Plugin {
     private renumberer: Renumberer;
     private settingsManager: SettingsManager;
-    private changes: EditorChange[] = [];
     private isProccessing = false;
     private blockChanges = false; // if the previous action was a special key
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
@@ -24,7 +23,7 @@ export default class AutoRenumbering extends Plugin {
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
         this.settingsManager = SettingsManager.getInstance();
 
-        if (this.settingsManager.getSettings().startsFromOne) {
+        if (this.settingsManager.getStartsFromOne()) {
             this.renumberer = new Renumberer(new startFromOneStrategy());
         } else {
             this.renumberer = new Renumberer(new dynamicStartStrategy());
@@ -33,7 +32,7 @@ export default class AutoRenumbering extends Plugin {
         // editor change
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                if (this.settingsManager.getSettings().liveUpdate === false) {
+                if (this.settingsManager.getLiveUpdate() === false) {
                     return;
                 }
                 if (!this.isProccessing) {
@@ -48,8 +47,9 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currLine = Math.min(anchor.line, head.line);
-                            this.changes.push(...this.renumberer.renumber(editor, currLine).changes);
-                            this.renumberer.applyChangesToEditor(editor, this.changes);
+                            this.renumberer.renumber(editor, currLine);
+                            // this.changes.push(...this.renumberer.renumber(editor, currLine).changes);
+                            // this.renumberer.applyChangesToEditor(editor, this.changes);
                         });
                         this.isProccessing = false;
                     }, 0);
@@ -60,7 +60,7 @@ export default class AutoRenumbering extends Plugin {
         // paste
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (this.settingsManager.getSettings().liveUpdate === false) {
+                if (this.settingsManager.getLiveUpdate() === false) {
                     return;
                 }
 
@@ -75,8 +75,7 @@ export default class AutoRenumbering extends Plugin {
                 mutex.runExclusive(() => {
                     this.blockChanges = true;
                     const { baseIndex, offset } = handlePaste(editor, clipboardContent);
-                    this.renumberer.allListsInRange(editor, this.changes, baseIndex, baseIndex + offset);
-                    this.renumberer.applyChangesToEditor(editor, this.changes);
+                    this.renumberer.allListsInRange(editor, baseIndex, baseIndex + offset);
                 });
             })
         );
@@ -114,10 +113,6 @@ export default class AutoRenumbering extends Plugin {
 
     getIsProcessing() {
         return this.isProccessing;
-    }
-
-    getChanges() {
-        return this.changes;
     }
 
     setIsProcessing(value: boolean) {

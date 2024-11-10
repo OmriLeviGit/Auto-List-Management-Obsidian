@@ -7,8 +7,7 @@ export function registerCommands(plugin: AutoRenumbering) {
         name: "At cursor position",
         editorCallback: (editor: Editor) => {
             plugin.setIsProcessing(true);
-            plugin.getRenumberer().listAtCursor(editor, plugin.getChanges());
-            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
+            plugin.getRenumberer().listAtCursor(editor);
             plugin.setIsProcessing(false);
         },
     });
@@ -21,8 +20,7 @@ export function registerCommands(plugin: AutoRenumbering) {
             const startLine = Math.min(anchor.line, head.line);
             const endLine = Math.max(anchor.line, head.line);
 
-            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), startLine, endLine);
-            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
+            plugin.getRenumberer().allListsInRange(editor, startLine, endLine);
         },
     });
 
@@ -30,8 +28,7 @@ export function registerCommands(plugin: AutoRenumbering) {
         id: "3-note",
         name: "All numbered lists in the entire note",
         editorCallback: (editor: Editor) => {
-            plugin.getRenumberer().allListsInRange(editor, plugin.getChanges(), 0, editor.lastLine());
-            plugin.getRenumberer().applyChangesToEditor(editor, plugin.getChanges());
+            plugin.getRenumberer().allListsInRange(editor, 0, editor.lastLine());
         },
     });
 }

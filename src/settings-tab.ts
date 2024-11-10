@@ -22,7 +22,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Live update")
             .setDesc("Automatically update numbered lists as changes are made. Does not support Vim.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getSettings().liveUpdate).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getLiveUpdate()).onChange(async (value) => {
                     this.settingsManager.setLiveUpdate(value);
 
                     await this.plugin.saveSettings();
@@ -35,21 +35,21 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Smart paste")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getSettings().smartPaste).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getSmartPaste()).onChange(async (value) => {
                     this.settingsManager.setSmartPaste(value);
                     await this.plugin.saveSettings();
                 })
             );
 
         const smartPasteToggleEl = smartPasteSetting.settingEl;
-        const isLiveUpdateEnabled = this.settingsManager.getSettings().liveUpdate;
+        const isLiveUpdateEnabled = this.settingsManager.getLiveUpdate();
         smartPasteToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
 
         new Setting(containerEl)
             .setName("Start numbering from 1")
             .setDesc("The first item of every numbered list is 1.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getSettings().startsFromOne).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getStartsFromOne()).onChange(async (value) => {
                     this.settingsManager.setStartsFromOne(value);
 
                     if (value) {
@@ -68,7 +68,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             )
             .addSlider((slider) => {
                 slider
-                    .setValue(this.settingsManager.getSettings().indentSize)
+                    .setValue(this.settingsManager.getIndentSize())
                     .setLimits(2, 8, 1)
                     .setDynamicTooltip()
                     .onChange(async (value) => {

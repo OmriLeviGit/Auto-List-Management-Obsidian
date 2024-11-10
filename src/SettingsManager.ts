@@ -3,7 +3,7 @@ import { RenumberListSettings } from "./types";
 export const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: true,
     smartPaste: true,
-    startsFromOne: true,
+    startsFromOne: false,
     indentSize: 4,
 };
 
@@ -23,13 +23,28 @@ export default class SettingsManager {
 
         return SettingsManager.instance;
     }
+    public getSettings(): RenumberListSettings {
+        return this.settings;
+    }
+
+    public getLiveUpdate(): boolean {
+        return this.settings.liveUpdate;
+    }
+
+    public getSmartPaste(): boolean {
+        return this.settings.smartPaste;
+    }
+
+    public getStartsFromOne(): boolean {
+        return this.settings.startsFromOne;
+    }
+
+    public getIndentSize(): number {
+        return this.settings.indentSize;
+    }
 
     public setSettings(settings: RenumberListSettings): void {
         this.settings = settings;
-    }
-
-    public getSettings(): RenumberListSettings {
-        return this.settings;
     }
 
     public setLiveUpdate(value: boolean): void {

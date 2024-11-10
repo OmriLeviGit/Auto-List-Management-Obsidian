@@ -90,8 +90,7 @@ describe("generateChanges", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumber(editor, startIndex);
-            renumberer.applyChangesToEditor(editor, changes);
+            renumberer.renumber(editor, startIndex);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);
@@ -132,8 +131,7 @@ describe("generateChanges - local changes only", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumber(editor, startIndex);
-            renumberer.applyChangesToEditor(editor, changes);
+            renumberer.renumber(editor, startIndex);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);
@@ -222,8 +220,7 @@ describe("Generate changes with the IndentTracker", () => {
     testCases.forEach(({ name, content, startIndex, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const { changes } = renumberer.renumber(editor, startIndex);
-            renumberer.applyChangesToEditor(editor, changes);
+            renumberer.renumber(editor, startIndex);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);

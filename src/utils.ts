@@ -8,9 +8,7 @@ function getLineInfo(line: string): LineInfo {
     let index = 0;
     let numOfSpaceIndents = 0;
 
-    const settingsManager = SettingsManager.getInstance();
-    const sett = settingsManager.getSettings();
-    const indentSize = sett.indentSize;
+    const indentSize = SettingsManager.getInstance().getIndentSize();
 
     // num of spaces
     while (index < length && (line[index] === " " || line[index] === "\t")) {
