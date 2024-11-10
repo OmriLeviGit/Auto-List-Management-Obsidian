@@ -89,9 +89,7 @@ export default class Renumberer {
     renumberLocallyOne(editor: Editor, startIndex: number): PendingChanges {
         let firstLineChange: EditorChange | undefined;
         const text = editor.getLine(startIndex);
-        let currInfo = getLineInfo(text);
-
-        // console.log("curr: ", currInfo, "prev: ", prevInfo);
+        const currInfo = getLineInfo(text);
 
         const isFirstInList = isFirstInNumberedList(editor, startIndex);
 
@@ -104,71 +102,13 @@ export default class Renumberer {
             };
         }
 
-        const generatedChanges = this.generateChangesOne(editor, startIndex + 1, 1, true);
+        const generatedChanges = this.generateChanges(editor, startIndex + 1, true);
 
         if (firstLineChange) {
             generatedChanges.changes.unshift(firstLineChange);
         }
 
         return generatedChanges;
-    }
-
-    private generateChangesOne(editor: Editor, currLine: number, startsFrom: number, isLocal = false): PendingChanges {
-        const changes: EditorChange[] = [];
-        const indentTracker = new IndentTracker(editor, currLine);
-
-        console.log("indent: ", indentTracker.get());
-
-        let firstChange = true;
-        let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
-        const endOfList = editor.lastLine() + 1;
-        for (; currLine < endOfList; currLine++) {
-            const text = editor.getLine(currLine);
-
-            const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
-
-            // console.debug("tracker: ", indentTracker.get());
-            // console.debug(
-            //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
-            // );
-
-            // make sure indented text does not stop the search
-            if (currNum === undefined) {
-                firstChange = false;
-                if (prevSpaceIndent < spaceIndent) {
-                    indentTracker.insert(text);
-
-                    continue;
-                }
-                break;
-            }
-
-            const previousNum = indentTracker.get()[spaceIndent];
-            const expectedNum = previousNum === undefined ? undefined : previousNum + 1;
-
-            let newText = text;
-            // if a change is required (expected != actual), push it to the changes list
-            if (expectedNum !== undefined) {
-                const isValidIndent = spaceIndent <= indentTracker.get().length;
-                if (expectedNum !== currNum && isValidIndent) {
-                    newText = text.slice(0, spaceCharsNum) + expectedNum + ". " + text.slice(textIndex);
-                    changes.push({
-                        from: { line: currLine, ch: 0 },
-                        to: { line: currLine, ch: text.length },
-                        text: newText,
-                    });
-                } else if (isLocal && !firstChange && spaceIndent === 0) {
-                    break; // ensures changes are made locally, not until the end of the block
-                }
-            }
-
-            indentTracker.insert(newText);
-
-            prevSpaceIndent = spaceIndent;
-            firstChange = false;
-        }
-
-        return { changes, endIndex: currLine - 1 };
     }
 
     // performs the calculation itself
@@ -184,7 +124,7 @@ export default class Renumberer {
 
             const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
 
-            // console.debug("tracker: ", indentTracker.get());
+            // console.log("tracker: ", indentTracker.get());
             // console.debug(
             //     `line: ${currLine}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`
             // );
