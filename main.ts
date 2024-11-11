@@ -1,6 +1,6 @@
-import { Plugin, Editor, EditorChange } from "obsidian";
+import { Plugin, Editor } from "obsidian";
 import { Mutex } from "async-mutex";
-import { handlePaste } from "src/renumbering/paste-handler";
+import handlePaste from "src/renumbering/paste-handler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/renumbering/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";

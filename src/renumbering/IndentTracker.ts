@@ -21,6 +21,14 @@ export default class IndentTracker {
             this.insert(editor.getLine(i));
         }
 
+        /*
+        for (let i = Math.max(prevIndex, 0); i <= currLine; i++) {
+            this.insert2(editor, i);
+            console.log("in loop");
+            // this.insert(editor.getLine(i));
+        }
+        */
+
         this.lastStackIndex = this.stack.length - 1;
 
         const instance = SettingsManager.getInstance();
@@ -32,6 +40,25 @@ export default class IndentTracker {
         }
 
         // console.log("stack after creation: ", this.stack);
+    }
+
+    insert2(editor: Editor, line: number) {
+        const info = getLineInfo(editor.getLine(line));
+        this.lastStackIndex = info.spaceIndent;
+        const manager = SettingsManager.getInstance();
+        if (manager.getStartsFromOne()) {
+            if (isFirstInNumberedList(editor, line)) {
+                console.log("is first", line);
+                this.stack[this.lastStackIndex] = 1; // undefined means no numbered list in that offset
+                console.log("laststack", this.lastStackIndex, "stack: ", this.stack);
+            } else {
+                console.log("not first", line);
+                this.stack[this.lastStackIndex] = info.number; // undefined means no numbered list in that offset
+            }
+        }
+        // this.stack[this.lastStackIndex] = info.number; // undefined means no numbered list in that offset
+        this.stack.length = this.lastStackIndex + 1;
+        //console.debug("stack after insertion: ", this.stack, "last index: ", this.lastStackIndex);
     }
 
     get(): (number | undefined)[] {
