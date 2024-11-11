@@ -5,7 +5,7 @@ import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
 import { generateChanges } from "./renumbering-utils";
 
 // updates a numbered list from the current line, to the first correctly number line.
-class dynamicStartStrategy implements RenumberingStrategy {
+class DynamicStartStrategy implements RenumberingStrategy {
     renumber(editor: Editor, startLine: number): PendingChanges {
         let currInfo = getLineInfo(editor.getLine(startLine));
         let prevInfo: LineInfo | undefined = undefined;
@@ -36,7 +36,7 @@ class dynamicStartStrategy implements RenumberingStrategy {
 }
 
 // Start renumbering from one
-class startFromOneStrategy implements RenumberingStrategy {
+class StartFromOneStrategy implements RenumberingStrategy {
     renumber(editor: Editor, startIndex: number): PendingChanges {
         let firstLineChange: EditorChange | undefined;
 
@@ -64,4 +64,4 @@ class startFromOneStrategy implements RenumberingStrategy {
     }
 }
 
-export { dynamicStartStrategy, startFromOneStrategy };
+export { DynamicStartStrategy, StartFromOneStrategy };

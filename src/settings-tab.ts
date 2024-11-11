@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
 import SettingsManager from "./SettingsManager";
-import { startFromOneStrategy, dynamicStartStrategy } from "./renumbering/renumbering-strategies";
+import { StartFromOneStrategy, DynamicStartStrategy } from "./renumbering/renumbering-strategies";
 import "./styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
@@ -53,9 +53,9 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     this.settingsManager.setStartsFromOne(value);
 
                     if (value) {
-                        this.plugin.setStrategy(new startFromOneStrategy());
+                        this.plugin.setStrategy(new StartFromOneStrategy());
                     } else {
-                        this.plugin.setStrategy(new dynamicStartStrategy());
+                        this.plugin.setStrategy(new DynamicStartStrategy());
                     }
                     await this.plugin.saveSettings();
                 })

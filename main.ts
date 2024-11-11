@@ -5,7 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/renumbering/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { dynamicStartStrategy, startFromOneStrategy } from "src/renumbering/renumbering-strategies";
+import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/renumbering-strategies";
 import { RenumberingStrategy } from "src/types";
 
 const mutex = new Mutex();
@@ -24,9 +24,9 @@ export default class AutoRenumbering extends Plugin {
         this.settingsManager = SettingsManager.getInstance();
 
         if (this.settingsManager.getStartsFromOne()) {
-            this.renumberer = new Renumberer(new startFromOneStrategy());
+            this.renumberer = new Renumberer(new StartFromOneStrategy());
         } else {
-            this.renumberer = new Renumberer(new dynamicStartStrategy());
+            this.renumberer = new Renumberer(new DynamicStartStrategy());
         }
 
         // editor change

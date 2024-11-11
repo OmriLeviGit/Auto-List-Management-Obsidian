@@ -1,6 +1,6 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { dynamicStartStrategy } from "src/renumbering/renumbering-strategies";
+import { DynamicStartStrategy } from "src/renumbering/renumbering-strategies";
 
 import Renumberer from "../src/renumbering/Renumberer";
 
@@ -8,7 +8,7 @@ describe("generateChanges", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new dynamicStartStrategy());
+        renumberer = new Renumberer(new DynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -103,7 +103,7 @@ describe("generateChanges - local changes only", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new dynamicStartStrategy());
+        renumberer = new Renumberer(new DynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -144,7 +144,7 @@ describe("Generate changes with the IndentTracker", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new dynamicStartStrategy());
+        renumberer = new Renumberer(new DynamicStartStrategy());
         jest.clearAllMocks();
     });
 
