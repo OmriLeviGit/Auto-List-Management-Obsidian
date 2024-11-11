@@ -1,6 +1,6 @@
 import { Editor } from "obsidian";
-import { getLineInfo, getLastListStart } from "./utils";
-import SettingsManager from "./SettingsManager";
+import { getLineInfo, getLastListStart } from "src/utils";
+import SettingsManager from "src/SettingsManager";
 
 interface PastingRange {
     baseIndex: number;
