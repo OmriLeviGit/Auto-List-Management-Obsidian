@@ -2,17 +2,15 @@
 
 The Automatic Renumbering plugin helps keep your numbered lists in sequential order automatically, which is particularly useful for users who frequently work with structured documents. It features live updates, smart pasting, and manual control options.
 
+![Example](resources/example.gif)
+
 ## Installation Steps
 
-To get started with the Automatic Renumbering Plugin, follow these steps:
+1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic Renumbering**.
+2. Click **Install** and enable the plugin.
+3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size**).
 
-1. Download the latest release files and place them into a folder.
-2. Move that folder into Obsidian's **plugins** folder. You can find this folder by opening Obsidian and navigating to **Options → Community plugins**, where you'll see a **folder** and a **refresh** buttons next to the **Installed plugins** heading.
-
-    > **Note:** If the **Installed plugins** heading isn’t visible, this may be because this is your first plugin. Downloading any other community plugin will give you access to this section and the associated buttons.
-
-3. Click the **refresh** button and enable the plugin.
-4. Adjust the **tab size** in the plugin’s in the settings to match your editor’s settings (found under **Options → Editor → Tab indent size**).
+Once installed, the plugin will automatically manage your numbered lists.
 
 ## Features
 
@@ -32,13 +30,11 @@ To get started with the Automatic Renumbering Plugin, follow these steps:
 
 > Regular paste (left) | Smart paste (right).
 
-## Commands
+## Available Commands
 
-You can view the available commands by pressing `Ctrl + P`.
-
--   **Renumber at Cursor**: This command will renumber the list starting from the current cursor position, allowing you to make quick adjustments as needed.
+-   **Renumber at Cursor**: This command renumbers the list that the cursor is within, regardless of where the cursor is placed.
 -   **Renumber Selected Lists**: If you highlight multiple numbered lists, this command renumbers all of them at once.
--   **Renumber Entire Note**: For a comprehensive update, this command renumbers every numbered list in your active note, ensuring complete consistency.
+-   **Renumber Entire Note**: Renumbers every numbered list in your active note.
 
 ## Performance
 
