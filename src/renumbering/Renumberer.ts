@@ -1,9 +1,6 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo } from "../utils";
 import { RenumberingStrategy, PendingChanges } from "../types";
-import { generateChanges } from "./renumbering-utils";
-import IndentTracker from "./IndentTracker";
-import SettingsManager from "src/SettingsManager";
 
 // responsible for all renumbering actions
 export default class Renumberer {
@@ -28,7 +25,7 @@ export default class Renumberer {
     listAtCursor = (editor: Editor) => {
         const { anchor, head } = editor.listSelections()[0];
         const currLine = Math.min(anchor.line, head.line);
-        this.applyChangesToEditor(editor, this.renumberBlock(editor, currLine).changes);
+        this.applyChangesToEditor(editor, this.renumberEntireList(editor, currLine).changes);
     };
 
     // renumbers all numbered lists in specified range
@@ -39,7 +36,7 @@ export default class Renumberer {
             if (line) {
                 const { number } = getLineInfo(line);
                 if (number) {
-                    const newChanges = this.renumberBlock(editor, index);
+                    const newChanges = this.renumberEntireList(editor, index);
 
                     if (newChanges.endIndex !== undefined) {
                         changes.push(...newChanges.changes);
@@ -55,25 +52,21 @@ export default class Renumberer {
     };
 
     // updates a numbered list from start to end
-    private renumberBlock(editor: Editor, currLine: number): PendingChanges {
-        const startIndex = getListStart(editor, currLine);
+    private renumberEntireList(editor: Editor, index: number): PendingChanges {
+        const startIndex = getListStart(editor, index);
+
+        console.log("starting index: ", startIndex);
 
         if (startIndex === undefined) {
             return { changes: [], endIndex: undefined }; // not a part of a numbered list
         }
 
-        const indentTracker = new IndentTracker(editor, startIndex, SettingsManager.getInstance().getStartsFromOne());
-
-        return generateChanges(editor, startIndex, indentTracker);
+        return this.strategy.renumber(editor, startIndex, false);
     }
 
     private applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
-        const changesApplied = changes.length > 0;
-
-        if (changesApplied) {
+        if (changes.length > 0) {
             editor.transaction({ changes });
         }
-        changes.splice(0, changes.length);
-        return changesApplied;
     }
 }

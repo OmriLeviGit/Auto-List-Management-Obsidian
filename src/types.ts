@@ -1,7 +1,7 @@
 import { Editor, EditorChange } from "obsidian";
 
 interface RenumberingStrategy {
-    renumber(editor: Editor, startLine: number): PendingChanges;
+    renumber(editor: Editor, startLine: number, isLocal?: boolean): PendingChanges;
 }
 
 interface PendingChanges {

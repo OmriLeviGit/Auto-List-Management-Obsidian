@@ -268,13 +268,6 @@ describe("Generate changes - Start from one strategy", () => {
             startIndex: 1,
             expected: ["1. a", "2. b", "3. c"],
         },
-
-        // {
-        //     name: "First item is not 1 - v1", // v1 == renumber from previous
-        //     content: ["3. a", "4. b", "10. c"],
-        //     startIndex: 1,
-        //     expected: ["1. a", "2. b", "3. c"],
-        // },
         {
             name: "First index after text",
             content: ["text", "1. a", "10. b"],
@@ -288,13 +281,13 @@ describe("Generate changes - Start from one strategy", () => {
             expected: ["text", "1. a", "2. b"],
         },
         {
-            name: "Second index after text - v2",
+            name: "Second index after text",
             content: ["text", "3. a", "10. b"],
             startIndex: 2,
             expected: ["text", "3. a", "4. b"],
         },
         {
-            name: "Third index after text - v2",
+            name: "Third index after text",
             content: ["text", "3. a", "10. b", "4. c"],
             startIndex: 3,
             expected: ["text", "3. a", "10. b", "11. c"],
@@ -329,14 +322,8 @@ describe("Generate changes - Start from one strategy", () => {
             startIndex: 1,
             expected: ["1. a", " 1. b", " 2. c", "5. d"],
         },
-        // {
-        //     name: "Indented - first item is not 1, second index - v1",
-        //     content: ["1. a", " 4. b", " 10. c", "5. d"],
-        //     startIndex: 2,
-        //     expected: ["1. a", " 1. b", " 2. c", "5. d"],
-        // },
         {
-            name: "Indented - first item is not 1, second index - v2",
+            name: "Indented - first item is not 1, second index",
             content: ["1. a", " 4. b", " 10. c", "5. d"],
             startIndex: 2,
             expected: ["1. a", " 4. b", " 5. c", "5. d"],
@@ -347,6 +334,40 @@ describe("Generate changes - Start from one strategy", () => {
         test(name, () => {
             const editor = createMockEditor(content);
             renumberer.renumber(editor, startIndex);
+
+            expected.forEach((line, i) => {
+                expect(editor.getLine(i)).toBe(line);
+            });
+        });
+    });
+});
+
+describe("Renumber entire list", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const testCases = [
+        {
+            name: "Dynamic renumbering",
+            strategy: new DynamicStartStrategy(),
+            content: ["2. a", " 10. b", "  100. c", "    text", "  200. d", "   text", " 5. e", "6. f"],
+            expected: ["2. a", " 10. b", "  100. c", "    text", "  101. d", "   text", " 11. e", "3. f"],
+        },
+        {
+            name: "Start from one renumbering",
+            strategy: new StartFromOneStrategy(),
+            content: ["2. a", " 10. b", "  100. c", "    text", "  200. d", "   text", " 5. e", "6. f"],
+            expected: ["1. a", " 1. b", "  1. c", "    text", "  2. d", "   text", " 2. e", "2. f"],
+        },
+    ];
+
+    testCases.forEach(({ name, strategy, content, expected }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            const renumberer = new Renumberer(strategy);
+
+            renumberer.allListsInRange(editor, 0, content.length - 1);
 
             expected.forEach((line, i) => {
                 expect(editor.getLine(i)).toBe(line);

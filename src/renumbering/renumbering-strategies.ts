@@ -7,7 +7,7 @@ import IndentTracker from "./IndentTracker";
 
 // updates a numbered list from the current line, to the first correctly number line.
 class DynamicStartStrategy implements RenumberingStrategy {
-    renumber(editor: Editor, index: number): PendingChanges {
+    renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         let currInfo = getLineInfo(editor.getLine(index));
         let prevInfo: LineInfo | undefined = undefined;
 
@@ -27,7 +27,7 @@ class DynamicStartStrategy implements RenumberingStrategy {
             // console.log("indent tracker: ", indentTracker);
             return index === editor.lastLine()
                 ? { changes: [], endIndex: index }
-                : generateChanges(editor, index + 1, indentTracker, true);
+                : generateChanges(editor, index + 1, indentTracker, isLocal);
         }
 
         if (prevInfo && !prevInfo.number && prevInfo.spaceCharsNum < currInfo.spaceCharsNum) {
@@ -35,13 +35,13 @@ class DynamicStartStrategy implements RenumberingStrategy {
         }
         const indentTracker = new IndentTracker(editor, index, false);
 
-        return generateChanges(editor, index, indentTracker, true);
+        return generateChanges(editor, index, indentTracker, isLocal);
     }
 }
 
 // Start renumbering from one
 class StartFromOneStrategy implements RenumberingStrategy {
-    renumber(editor: Editor, index: number): PendingChanges {
+    renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         let firstLineChange: EditorChange | undefined;
 
         let text = editor.getLine(index);
@@ -61,7 +61,7 @@ class StartFromOneStrategy implements RenumberingStrategy {
         }
 
         const indentTracker = new IndentTracker(editor, index, isFirstInList);
-        const generatedChanges = generateChanges(editor, index, indentTracker, true);
+        const generatedChanges = generateChanges(editor, index, indentTracker, isLocal);
 
         if (firstLineChange) {
             generatedChanges.changes.unshift(firstLineChange);
@@ -69,47 +69,6 @@ class StartFromOneStrategy implements RenumberingStrategy {
 
         return generatedChanges;
     }
-
-    /*
-    renumber(editor: Editor, startIndex: number): PendingChanges {
-        let firstLineChange: EditorChange | undefined;
-        startIndex = startIndex - 1;
-
-        if (startIndex < 0) {
-            startIndex++;
-        }
-
-        let text = editor.getLine(startIndex);
-        let currInfo = getLineInfo(text);
-        if (currInfo.number === undefined) {
-            startIndex++;
-        }
-        text = editor.getLine(startIndex);
-        currInfo = getLineInfo(text);
-
-        let isFirstInList = isFirstInNumberedList(editor, startIndex);
-
-        if (isFirstInList) {
-            const newText = text.slice(0, currInfo.spaceCharsNum) + 1 + ". " + text.slice(currInfo.textIndex);
-            firstLineChange = {
-                from: { line: startIndex, ch: 0 },
-                to: { line: startIndex, ch: text.length },
-                text: newText,
-            };
-        }
-
-        const generatedChanges = this.generateChanges(editor, startIndex + 1, true);
-
-        // console.log("is inside: ", firstLineChange !== undefined);
-        if (firstLineChange) {
-            generatedChanges.changes.unshift(firstLineChange);
-        }
-        // console.log("changes: ", generatedChanges);
-        return generatedChanges;
-    }
-
-
-    */
 }
 
 export { DynamicStartStrategy, StartFromOneStrategy };

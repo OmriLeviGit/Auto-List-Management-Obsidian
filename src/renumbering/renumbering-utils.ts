@@ -9,7 +9,7 @@ export function generateChanges(
     editor: Editor,
     index: number,
     indentTracker: IndentTracker,
-    isLocal = false
+    isLocal = true
 ): PendingChanges {
     const changes: EditorChange[] = [];
 
@@ -52,7 +52,7 @@ export function generateChanges(
                     text: newText,
                 });
             } else if (isLocal && !firstChange && spaceIndent === 0) {
-                break; // ensures changes are made locally, not until the end of the block
+                break; // ensures changes are made locally, not until the end of the numbered list
             }
         }
 
