@@ -5,13 +5,13 @@ export const createMockEditor = (initialContent: string[]) => {
     const editor = {
         getLine: jest.fn().mockImplementation((n: number): string => {
             if (n < 0 || content.length <= n) {
-                throw new Error("getLine: index is out of bound");
+                throw new Error(`getLine: index is out of bound: ${n}`);
             }
             return content[n];
         }),
         setLine: jest.fn().mockImplementation((n: number, text: string) => {
             if (n < 0 || content.length <= n) {
-                throw new Error("setLine: index is out of bound");
+                throw new Error(`setLine: index is out of bound: ${n}`);
             }
             content[n] = text;
         }),

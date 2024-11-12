@@ -3,6 +3,7 @@ import { Editor, EditorChange } from "obsidian";
 import { getLineInfo, isFirstInNumberedList } from "../utils";
 import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
 import { generateChanges } from "./renumbering-utils";
+import IndentTracker from "./IndentTracker";
 
 // updates a numbered list from the current line, to the first correctly number line.
 class DynamicStartStrategy implements RenumberingStrategy {
@@ -22,16 +23,18 @@ class DynamicStartStrategy implements RenumberingStrategy {
         }
 
         if (startLine <= 0) {
+            const indentTracker = new IndentTracker(editor, startLine + 1);
             return startLine === editor.lastLine()
                 ? { changes: [], endIndex: startLine }
-                : generateChanges(editor, startLine + 1, true);
+                : generateChanges(editor, startLine + 1, indentTracker, true);
         }
 
         if (prevInfo && !prevInfo.number && prevInfo.spaceCharsNum < currInfo.spaceCharsNum) {
             startLine++;
         }
+        const indentTracker = new IndentTracker(editor, startLine);
 
-        return generateChanges(editor, startLine, true);
+        return generateChanges(editor, startLine, indentTracker, true);
     }
 }
 
@@ -54,7 +57,9 @@ class StartFromOneStrategy implements RenumberingStrategy {
             };
         }
 
-        const generatedChanges = generateChanges(editor, startIndex + 1, true);
+        const indentTracker = new IndentTracker(editor, startIndex + 1);
+
+        const generatedChanges = generateChanges(editor, startIndex + 1, indentTracker, true);
 
         if (firstLineChange) {
             generatedChanges.changes.unshift(firstLineChange);

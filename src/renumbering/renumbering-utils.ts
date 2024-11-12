@@ -5,9 +5,13 @@ import { PendingChanges } from "../types";
 import { getLineInfo } from "../utils";
 
 // performs the calculation itself
-export function generateChanges(editor: Editor, currLine: number, isLocal = false): PendingChanges {
+export function generateChanges(
+    editor: Editor,
+    currLine: number,
+    indentTracker: IndentTracker,
+    isLocal = false
+): PendingChanges {
     const changes: EditorChange[] = [];
-    const indentTracker = new IndentTracker(editor, currLine);
 
     let firstChange = true;
     let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;

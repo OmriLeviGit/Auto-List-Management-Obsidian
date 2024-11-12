@@ -2,6 +2,7 @@ import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo } from "../utils";
 import { RenumberingStrategy, PendingChanges } from "../types";
 import { generateChanges } from "./renumbering-utils";
+import IndentTracker from "./IndentTracker";
 
 // responsible for all renumbering actions
 export default class Renumberer {
@@ -60,7 +61,9 @@ export default class Renumberer {
             return { changes: [], endIndex: undefined }; // not a part of a numbered list
         }
 
-        return generateChanges(editor, startIndex);
+        const indentTracker = new IndentTracker(editor, startIndex);
+
+        return generateChanges(editor, startIndex, indentTracker);
     }
 
     private applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
