@@ -9,7 +9,7 @@ describe("IndentTracker tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        indentTracker = new IndentTracker(createMockEditor([""]), 0);
+        indentTracker = new IndentTracker(createMockEditor([""]), 0, false);
     });
 
     const testCases = [
@@ -155,7 +155,7 @@ describe("IndentTracker creation tests", () => {
             name: "One item",
             content: ["1. text"],
             index: 0,
-            expected: [],
+            expected: [1],
         },
         {
             name: "One text",
@@ -191,7 +191,7 @@ describe("IndentTracker creation tests", () => {
             name: "Decending",
             content: ["  1. text", " 2. text", "3. text"],
             index: 2,
-            expected: [],
+            expected: [3],
         },
         {
             name: "Split by numbers with higher indentation",
@@ -239,7 +239,7 @@ describe("IndentTracker creation tests", () => {
 
     testCases.forEach(({ name, content, index, expected }) => {
         test(name, () => {
-            const indentTracker = new IndentTracker(createMockEditor(content), index);
+            const indentTracker = new IndentTracker(createMockEditor(content), index, false);
 
             expect(indentTracker.get()).toEqual(expected);
         });

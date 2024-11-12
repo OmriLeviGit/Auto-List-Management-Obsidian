@@ -104,7 +104,7 @@ export default class AutoRenumbering extends Plugin {
     async saveSettings() {
         const settingsManager = SettingsManager.getInstance();
         await this.saveData(settingsManager.getSettings());
-        console.log("settings: ", settingsManager.getSettings(), "strategy: ", this.renumberer);
+        // console.log("settings: ", settingsManager.getSettings(), "strategy: ", this.renumberer);
     }
 
     getRenumberer() {

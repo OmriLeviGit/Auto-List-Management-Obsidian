@@ -3,6 +3,7 @@ import { getListStart, getLineInfo } from "../utils";
 import { RenumberingStrategy, PendingChanges } from "../types";
 import { generateChanges } from "./renumbering-utils";
 import IndentTracker from "./IndentTracker";
+import SettingsManager from "src/SettingsManager";
 
 // responsible for all renumbering actions
 export default class Renumberer {
@@ -31,23 +32,23 @@ export default class Renumberer {
     };
 
     // renumbers all numbered lists in specified range
-    allListsInRange = (editor: Editor, currLine: number, end: number) => {
+    allListsInRange = (editor: Editor, index: number, endIndex: number) => {
         const changes: EditorChange[] = [];
-        while (currLine <= end) {
-            const line = editor.getLine(currLine);
+        while (index <= endIndex) {
+            const line = editor.getLine(index);
             if (line) {
                 const { number } = getLineInfo(line);
                 if (number) {
-                    const newChanges = this.renumberBlock(editor, currLine);
+                    const newChanges = this.renumberBlock(editor, index);
 
                     if (newChanges.endIndex !== undefined) {
                         changes.push(...newChanges.changes);
-                        currLine = newChanges.endIndex;
+                        index = newChanges.endIndex;
                     }
                 }
             }
 
-            currLine++;
+            index++;
         }
 
         this.applyChangesToEditor(editor, changes);
@@ -61,7 +62,7 @@ export default class Renumberer {
             return { changes: [], endIndex: undefined }; // not a part of a numbered list
         }
 
-        const indentTracker = new IndentTracker(editor, startIndex);
+        const indentTracker = new IndentTracker(editor, startIndex, SettingsManager.getInstance().getStartsFromOne());
 
         return generateChanges(editor, startIndex, indentTracker);
     }

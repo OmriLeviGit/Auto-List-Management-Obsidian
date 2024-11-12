@@ -7,19 +7,19 @@ import { getLineInfo } from "../utils";
 // performs the calculation itself
 export function generateChanges(
     editor: Editor,
-    currLine: number,
+    index: number,
     indentTracker: IndentTracker,
     isLocal = false
 ): PendingChanges {
     const changes: EditorChange[] = [];
 
     let firstChange = true;
-    let prevSpaceIndent = getLineInfo(editor.getLine(currLine - 1)).spaceIndent;
+    let prevSpaceIndent = getLineInfo(editor.getLine(index - 1)).spaceIndent;
     const endOfList = editor.lastLine() + 1;
-    for (; currLine < endOfList; currLine++) {
-        const text = editor.getLine(currLine);
+    for (; index < endOfList; index++) {
+        const text = editor.getLine(index);
 
-        const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(currLine));
+        const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(index));
 
         // console.log("tracker: ", indentTracker.get());
         // console.debug(
@@ -31,7 +31,6 @@ export function generateChanges(
             firstChange = false;
             if (prevSpaceIndent < spaceIndent) {
                 indentTracker.insert(text);
-
                 continue;
             }
             break;
@@ -40,6 +39,7 @@ export function generateChanges(
         const previousNum = indentTracker.get()[spaceIndent];
         const expectedNum = previousNum === undefined ? undefined : previousNum + 1;
 
+        // console.log("currnum: ", currNum, "expected", expectedNum, "index", index);
         let newText = text;
         // if a change is required (expected != actual), push it to the changes list
         if (expectedNum !== undefined) {
@@ -47,8 +47,8 @@ export function generateChanges(
             if (expectedNum !== currNum && isValidIndent) {
                 newText = text.slice(0, spaceCharsNum) + expectedNum + ". " + text.slice(textIndex);
                 changes.push({
-                    from: { line: currLine, ch: 0 },
-                    to: { line: currLine, ch: text.length },
+                    from: { line: index, ch: 0 },
+                    to: { line: index, ch: text.length },
                     text: newText,
                 });
             } else if (isLocal && !firstChange && spaceIndent === 0) {
@@ -62,5 +62,5 @@ export function generateChanges(
         firstChange = false;
     }
 
-    return { changes, endIndex: currLine - 1 };
+    return { changes, endIndex: index - 1 };
 }

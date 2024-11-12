@@ -87,26 +87,28 @@ function getLastListStart(lines: string[]): number | undefined {
 }
 
 function getPrevItemIndex(editor: Editor, index: number): number | undefined {
-    console.log("1");
+    // console.log("1");
 
-    if (index <= 0) {
+    if (index <= 0 || index > editor.lastLine()) {
         return undefined;
     }
 
-    console.log("2 index", index);
+    // console.log("2 index", index);
     const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
 
-    console.log("3");
+    // console.log("3");
     let prevIndex = index - 1;
+    // console.log("prev1", prevIndex);
     let prevSpaceOffset: number | undefined = undefined;
     for (; prevIndex >= 0; prevIndex--) {
-        console.log("4");
+        // console.log("4");
         prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
         if (prevSpaceOffset <= currSpaceOffset) {
             break;
         }
     }
-    console.log("5");
+    // console.log("prev2", prevIndex);
+    // console.log("5");
 
     // all preceeding lines are indented further than currLine
     if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
