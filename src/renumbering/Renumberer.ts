@@ -55,8 +55,6 @@ export default class Renumberer {
     private renumberEntireList(editor: Editor, index: number): PendingChanges {
         const startIndex = getListStart(editor, index);
 
-        console.log("starting index: ", startIndex);
-
         if (startIndex === undefined) {
             return { changes: [], endIndex: undefined }; // not a part of a numbered list
         }

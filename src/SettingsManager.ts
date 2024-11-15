@@ -1,7 +1,7 @@
 import { RenumberListSettings } from "./types";
 
 export const DEFAULT_SETTINGS: RenumberListSettings = {
-    liveUpdate: true,
+    liveUpdate: false,
     smartPaste: true,
     startsFromOne: false,
     indentSize: 4,
