@@ -26,24 +26,24 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     this.settingsManager.setLiveUpdate(value);
 
                     await this.plugin.saveSettings();
-                    smartPasteToggleEl.classList.toggle("smart-paste-toggle", value);
-                    smartPasteToggleEl.classList.toggle("smart-paste-toggle-disabled", !value);
+                    smartPastingToggleEl.classList.toggle("smart-paste-toggle", value);
+                    smartPastingToggleEl.classList.toggle("smart-paste-toggle-disabled", !value);
                 })
             );
 
-        const smartPasteSetting = new Setting(containerEl)
-            .setName("Smart paste")
+        const smartPastingSetting = new Setting(containerEl)
+            .setName("Smart pasting")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getSmartPaste()).onChange(async (value) => {
-                    this.settingsManager.setSmartPaste(value);
+                toggle.setValue(this.settingsManager.getSmartPasting()).onChange(async (value) => {
+                    this.settingsManager.setSmartPasting(value);
                     await this.plugin.saveSettings();
                 })
             );
 
-        const smartPasteToggleEl = smartPasteSetting.settingEl;
+        const smartPastingToggleEl = smartPastingSetting.settingEl;
         const isLiveUpdateEnabled = this.settingsManager.getLiveUpdate();
-        smartPasteToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
+        smartPastingToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
 
         new Setting(containerEl)
             .setName("Start numbering from 1")

@@ -8,40 +8,42 @@ The Automatic Renumbering plugin helps keep your numbered lists in sequential or
 
 Before proceeding with the installation, please note the following limitations:
 
--   Manual specification of your preferred tab size in the plugin settings is required for correct nested numbering, as the plugin cannot automatically detect tab sizes. This step must be followed to ensure proper functionality.
+-   Manual specification of your preferred tab size in the plugin settings is required for correct nested numbering.
 
 -   The _live update_ feature is not supported in **Vim mode**, as it is temporarily disabled when using special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`), and as a result, it is turned off by default. However, you can still manually use the renumbering commands.
 
 ## Installation Steps
 
-> **Step 3 is mandatory** for accurate parsing of indentations.
+> Step 3 is **mandatory** for accurate parsing of indentations.
 
 1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic Renumbering**.
 2. Click **Install** and enable the plugin.
-3. **Mandatory**: In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size**).
+3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size**).
 
 Once installed, the plugin will automatically manage your numbered lists.
 
-## Features
+## Configuration Options
 
--   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments.
+-   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments. Manual commands are available if you prefer to manage updates yourself.
 
 -   **Smart Pasting**: Maintains the original numbering sequence of the list, rather than applying the numbering from the pasted content.
 
--   **Special Key Handling**: Temporarily disables the live update when special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) are pressed during editing, enabling actions such as undo without triggering unnecessary renumbering.
+start numbering from 1
 
--   **Manual Control**: Offers commands for manual renumbering if you prefer to manage updates yourself.
+tab size
+
+-   Manual specification of your preferred tab size in the plugin settings is required for correct nested numbering, as the plugin cannot automatically detect tab sizes. This step must be followed to ensure proper functionality.
 
 <br>
 <table>
   <tr>
     <td style="text-align: center;">
       <img src="resources/regular_paste.gif" alt="Regular paste" />
-      <p><em>Regular paste</em></p>
+      <p><em>Regular pasting</em></p>
     </td>
     <td style="text-align: center;">
       <img src="resources/smart_paste.gif" alt="Smart paste" />
-      <p><em>Smart paste</em></p>
+      <p><em>Smart pasting</em></p>
     </td>
   </tr>
 </table>

@@ -14,7 +14,7 @@ export function registerCommands(plugin: AutoRenumbering) {
 
     plugin.addCommand({
         id: "2-selection",
-        name: "All selected numbered lists",
+        name: "Selected lists",
         editorCallback: (editor: Editor) => {
             const { anchor, head } = editor.listSelections()[0];
             const startLine = Math.min(anchor.line, head.line);
@@ -26,7 +26,7 @@ export function registerCommands(plugin: AutoRenumbering) {
 
     plugin.addCommand({
         id: "3-note",
-        name: "All numbered lists in the entire note",
+        name: "All numbered lists note",
         editorCallback: (editor: Editor) => {
             plugin.getRenumberer().allListsInRange(editor, 0, editor.lastLine());
         },

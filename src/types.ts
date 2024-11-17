@@ -18,7 +18,7 @@ interface LineInfo {
 
 interface RenumberListSettings {
     liveUpdate: boolean;
-    smartPaste: boolean;
+    smartPasting: boolean;
     startsFromOne: boolean;
     indentSize: number;
 }

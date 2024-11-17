@@ -2,8 +2,8 @@ import { RenumberListSettings } from "./types";
 
 export const DEFAULT_SETTINGS: RenumberListSettings = {
     liveUpdate: false,
-    smartPaste: true,
-    startsFromOne: false,
+    smartPasting: true,
+    startsFromOne: true,
     indentSize: 4,
 };
 
@@ -31,8 +31,8 @@ export default class SettingsManager {
         return this.settings.liveUpdate;
     }
 
-    public getSmartPaste(): boolean {
-        return this.settings.smartPaste;
+    public getSmartPasting(): boolean {
+        return this.settings.smartPasting;
     }
 
     public getStartsFromOne(): boolean {
@@ -51,8 +51,8 @@ export default class SettingsManager {
         this.settings.liveUpdate = value;
     }
 
-    public setSmartPaste(value: boolean): void {
-        this.settings.smartPaste = value;
+    public setSmartPasting(value: boolean): void {
+        this.settings.smartPasting = value;
     }
 
     public setStartsFromOne(value: boolean): void {
