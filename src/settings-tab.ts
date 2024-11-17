@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
 import SettingsManager from "./SettingsManager";
-import { StartFromOneStrategy, DynamicStartStrategy } from "./renumbering/renumbering-strategies";
+import { StartFromOneStrategy, DynamicStartStrategy } from "./renumbering/strategies";
 import "./styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {

@@ -5,7 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/renumbering/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/renumbering-strategies";
+import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/strategies";
 import { RenumberingStrategy } from "src/types";
 
 const mutex = new Mutex();

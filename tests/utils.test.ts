@@ -189,7 +189,7 @@ describe("isFirstInNumberedList tests", () => {
         },
         {
             name: "One item indented",
-            content: ["1. a"],
+            content: [" 1. a"],
             index: 0,
             expectedResult: true,
         },
