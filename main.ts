@@ -1,6 +1,6 @@
 import { Plugin, Editor } from "obsidian";
 import { Mutex } from "async-mutex";
-import handlePaste from "src/renumbering/paste-handler";
+import handlePasteAndDrop from "src/renumbering/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/renumbering/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
@@ -29,9 +29,10 @@ export default class AutoRenumbering extends Plugin {
             this.renumberer = new Renumberer(new DynamicStartStrategy());
         }
 
-        // editor change
+        // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
+                // TODO: writing in the first line
                 if (this.settingsManager.getLiveUpdate() === false) {
                     return;
                 }
@@ -55,26 +56,17 @@ export default class AutoRenumbering extends Plugin {
             })
         );
 
-        // paste
+        // editor-paste listener
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (this.settingsManager.getLiveUpdate() === false) {
-                    return;
-                }
+                handlePasteAndDrop.call(this, evt, editor, mutex);
+            })
+        );
 
-                const clipboardContent = evt.clipboardData?.getData("text");
-
-                if (evt.defaultPrevented || !clipboardContent) {
-                    return;
-                }
-
-                evt.preventDefault();
-
-                mutex.runExclusive(() => {
-                    this.blockChanges = true;
-                    const { baseIndex, offset } = handlePaste(editor, clipboardContent);
-                    this.renumberer.allListsInRange(editor, baseIndex, baseIndex + offset);
-                });
+        // editor-drop listener
+        this.registerEvent(
+            this.app.workspace.on("editor-drop", (evt: DragEvent, editor: Editor) => {
+                handlePasteAndDrop.call(this, evt, editor, mutex);
             })
         );
 

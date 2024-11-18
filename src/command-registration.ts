@@ -3,7 +3,7 @@ import { Editor } from "obsidian";
 
 export function registerCommands(plugin: AutoRenumbering) {
     plugin.addCommand({
-        id: "1-cursor",
+        id: "at-cursor",
         name: "At cursor position",
         editorCallback: (editor: Editor) => {
             plugin.setIsProcessing(true);
@@ -13,7 +13,7 @@ export function registerCommands(plugin: AutoRenumbering) {
     });
 
     plugin.addCommand({
-        id: "2-selection",
+        id: "selection",
         name: "Selected lists",
         editorCallback: (editor: Editor) => {
             const { anchor, head } = editor.listSelections()[0];
@@ -25,7 +25,7 @@ export function registerCommands(plugin: AutoRenumbering) {
     });
 
     plugin.addCommand({
-        id: "3-note",
+        id: "entire-note",
         name: "All numbered lists note",
         editorCallback: (editor: Editor) => {
             plugin.getRenumberer().allListsInRange(editor, 0, editor.lastLine());

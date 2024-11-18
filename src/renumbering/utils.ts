@@ -17,6 +17,7 @@ export function generateChanges(
 
     let firstChange = true;
     let prevSpaceIndent = getLineInfo(editor.getLine(index - 1)).spaceIndent;
+
     const endOfList = editor.lastLine() + 1;
     for (; index < endOfList; index++) {
         const text = editor.getLine(index);

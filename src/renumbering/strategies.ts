@@ -10,13 +10,23 @@ class StartFromOneStrategy implements RenumberingStrategy {
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         let firstLineChange: EditorChange | undefined;
 
-        let text = editor.getLine(index);
-        let currInfo = getLineInfo(text);
+        const text = editor.getLine(index);
+        let lineInfo = getLineInfo(text);
+
+        if (lineInfo.number === undefined) {
+            index++;
+            lineInfo = getLineInfo(editor.getLine(index));
+        }
+
+        if (lineInfo.number === undefined) {
+            index++;
+            return { changes: [], endIndex: index }; // not part of a numbered list
+        }
 
         let isFirstInList = isFirstInNumberedList(editor, index);
         if (isFirstInList) {
-            if (currInfo.number !== 1) {
-                const newText = text.slice(0, currInfo.spaceCharsNum) + 1 + ". " + text.slice(currInfo.textIndex);
+            if (lineInfo.number !== 1) {
+                const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
                 firstLineChange = {
                     from: { line: index, ch: 0 },
                     to: { line: index, ch: text.length },
@@ -27,6 +37,7 @@ class StartFromOneStrategy implements RenumberingStrategy {
         }
 
         const indentTracker = new IndentTracker(editor, index, isFirstInList);
+
         const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
 
         if (firstLineChange) {
