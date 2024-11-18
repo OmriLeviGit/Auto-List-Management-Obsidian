@@ -13,7 +13,7 @@ interface TextModification {
 }
 
 // ensures numbered lists in pasted text are numbered correctly
-export default function handlePaste(editor: Editor, textFromClipboard: string): PastingRange {
+export default function handlePasting(editor: Editor, textFromClipboard: string): PastingRange {
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
 

@@ -4,17 +4,9 @@ The Automatic Renumbering plugin helps keep your numbered lists in sequential or
 
 ![Example](resources/example.gif)
 
-## ⚠️ Limitations
-
-Before proceeding with the installation, please note the following limitations:
-
--   Manual specification of your preferred tab size in the plugin settings is required for correct nested numbering.
-
--   The _live update_ feature is not supported in **Vim mode**, as it is temporarily disabled when using special keys (`Ctrl`, `Command` on Mac, or `Alt/Option`), and as a result, it is turned off by default. However, you can still manually use the renumbering commands.
-
 ## Installation Steps
 
-> Step 3 is **mandatory** for accurate parsing of indentations.
+> Step 3 is required for accurate parsing of indentations.
 
 1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic Renumbering**.
 2. Click **Install** and enable the plugin.
@@ -24,18 +16,25 @@ Once installed, the plugin will automatically manage your numbered lists.
 
 ## Configuration Options
 
--   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments. Manual commands are available if you prefer to manage updates yourself.
+-   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments. Additional commands are available if you prefer to manually control which lists to renumber.
 
--   **Smart Pasting**: Maintains the original numbering sequence of the list, rather than applying the numbering from the pasted content.
+-   **Smart Pasting**: Keeps the numbering intact when pasting content into an existing list, rather than adopting the numbering from the pasted text.
 
-start numbering from 1
+-   **Start numbering from 1**: When enabled, all numbered lists will be numbered starting from 1.
 
-tab size
-
--   Manual specification of your preferred tab size in the plugin settings is required for correct nested numbering, as the plugin cannot automatically detect tab sizes. This step must be followed to ensure proper functionality.
+-   **Tab Size**: You need to manually specify your preferred tab size in the plugin settings, as the plugin cannot automatically detect tab sizes. This step is necessary to ensure proper functionality of nested numbering.
 
 <br>
 <table>
+  <tr>
+    <td colspan="2">
+      <em>Content in clipboard:</em>
+      <div>
+        1. Apple<br> 
+        2. Banana
+      </div>
+    </td>
+  </tr>
   <tr>
     <td style="text-align: center;">
       <img src="resources/regular_paste.gif" alt="Regular paste" />
@@ -58,3 +57,7 @@ tab size
 
 The live update feature renumbers lists locally, adjusting only the lines up to the first correctly numbered line, which reduces unnecessary calculations.
 The plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
+
+## Limitations
+
+For **Vim** users: The _live update_ feature is only active while in **Insert** mode. Manual commands work as usual in all modes.
