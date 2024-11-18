@@ -1,6 +1,6 @@
 import { Plugin, Editor } from "obsidian";
 import { Mutex } from "async-mutex";
-import handlePasting from "src/renumbering/paste-handler";
+import handlePasteAndDrop from "src/renumbering/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/renumbering/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
@@ -29,7 +29,7 @@ export default class AutoRenumbering extends Plugin {
             this.renumberer = new Renumberer(new DynamicStartStrategy());
         }
 
-        // editor change
+        // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
                 if (this.settingsManager.getLiveUpdate() === false) {
@@ -56,29 +56,21 @@ export default class AutoRenumbering extends Plugin {
             })
         );
 
-        // paste
+        // editor-paste listener
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                if (this.settingsManager.getLiveUpdate() === false) {
-                    return;
-                }
-
-                const clipboardContent = evt.clipboardData?.getData("text");
-
-                if (evt.defaultPrevented || !clipboardContent) {
-                    return;
-                }
-
-                evt.preventDefault();
-
-                mutex.runExclusive(() => {
-                    this.blockChanges = true;
-                    const { baseIndex, offset } = handlePasting(editor, clipboardContent);
-                    this.renumberer.allListsInRange(editor, baseIndex, baseIndex + offset);
-                });
+                handlePasteAndDrop.call(this, evt, editor, mutex);
             })
         );
 
+        // editor-drop listener
+        this.registerEvent(
+            this.app.workspace.on("editor-drop", (evt: DragEvent, editor: Editor) => {
+                handlePasteAndDrop.call(this, evt, editor, mutex);
+            })
+        );
+
+        // keyboard stroke listener
         this.handleKeystrokeBound = this.handleKeystroke.bind(this);
         window.addEventListener("keydown", this.handleKeystrokeBound); // Keystroke listener
     }

@@ -55,9 +55,12 @@ Once installed, the plugin will automatically manage your numbered lists.
 
 ## Performance
 
-The live update feature renumbers lists locally, adjusting only the lines up to the first correctly numbered line, which reduces unnecessary calculations.
 The plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
 
 ## Limitations
 
-For **Vim** users: The _live update_ feature is only active while in **Insert** mode. Manual commands work as usual in all modes.
+-   **Undo Behavior**: Renumbering is treated as a separate action in the editor's history, as I couldn't find a reliable way to fully control the edit history.
+
+-   **Modifier Keys**: To avoid conflicts with keyboard shortcuts, the live update feature is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
+
+-   **Vim users**: The live update feature only works in **Insert** mode. Manual renumbering commands, however, will function normally in any of the modes.

@@ -2,21 +2,38 @@
 import { Editor, EditorChange } from "obsidian";
 import { getLineInfo, isFirstInNumberedList } from "../utils";
 import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
-import { generateChanges } from "./utils";
+import generateChanges from "./generateChanges";
 import IndentTracker from "./IndentTracker";
 
 // Start renumbering from one
 class StartFromOneStrategy implements RenumberingStrategy {
+    /*
+    deleting mango doesnt renumber watermelon
+    1. Apple
+    1. Banana
+            1. Orange
+            2. Strawberry
+            2. Mango
+            3. Watermelon
+            
+    deleting mango DOES renumber watermelon
+    1. Apple
+        1. Banana
+    2. Mango
+    3. Watermelon 
+  */
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         let firstLineChange: EditorChange | undefined;
 
-        let text = editor.getLine(index);
-        let currInfo = getLineInfo(text);
+        const text = editor.getLine(index);
+        const lineInfo = getLineInfo(text);
 
-        let isFirstInList = isFirstInNumberedList(editor, index);
+        const isFirstInList = isFirstInNumberedList(editor, index);
+        console.log("index: ", index, "isfirst: ", isFirstInList, lineInfo);
         if (isFirstInList) {
-            if (currInfo.number !== 1) {
-                const newText = text.slice(0, currInfo.spaceCharsNum) + 1 + ". " + text.slice(currInfo.textIndex);
+            if (lineInfo.number !== 1) {
+                console.log("slice: ", text.slice(0, lineInfo.spaceCharsNum + 2), "text", text);
+                const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
                 firstLineChange = {
                     from: { line: index, ch: 0 },
                     to: { line: index, ch: text.length },
@@ -27,8 +44,8 @@ class StartFromOneStrategy implements RenumberingStrategy {
         }
 
         const indentTracker = new IndentTracker(editor, index, isFirstInList);
-        const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
 
+        const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
         if (firstLineChange) {
             generatedChanges.changes.unshift(firstLineChange);
         }

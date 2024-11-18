@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
 import SettingsManager from "./SettingsManager";
 import { StartFromOneStrategy, DynamicStartStrategy } from "./renumbering/strategies";
-import "./styles.css";
+import "styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
     plugin: AutoRenumbering;
@@ -18,16 +18,24 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         const { containerEl } = this;
 
         containerEl.empty();
+
         new Setting(containerEl)
             .setName("Live update")
             .setDesc("Automatically update numbered lists as changes are made.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveUpdate()).onChange(async (value) => {
+                    // Update live update setting
                     this.settingsManager.setLiveUpdate(value);
 
                     await this.plugin.saveSettings();
-                    smartPastingToggleEl.classList.toggle("smart-paste-toggle", value);
-                    smartPastingToggleEl.classList.toggle("smart-paste-toggle-disabled", !value);
+
+                    if (value) {
+                        smartPastingToggleEl.classList.add("smart-paste-toggle");
+                        smartPastingToggleEl.classList.remove("smart-paste-toggle-disabled");
+                    } else {
+                        smartPastingToggleEl.classList.remove("smart-paste-toggle");
+                        smartPastingToggleEl.classList.add("smart-paste-toggle-disabled");
+                    }
                 })
             );
 
@@ -42,8 +50,15 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             );
 
         const smartPastingToggleEl = smartPastingSetting.settingEl;
+
         const isLiveUpdateEnabled = this.settingsManager.getLiveUpdate();
-        smartPastingToggleEl.classList.add(isLiveUpdateEnabled ? "smart-paste-toggle" : "smart-paste-toggle-disabled");
+        if (isLiveUpdateEnabled) {
+            smartPastingToggleEl.classList.add("smart-paste-toggle");
+            smartPastingToggleEl.classList.remove("smart-paste-toggle-disabled");
+        } else {
+            smartPastingToggleEl.classList.add("smart-paste-toggle-disabled");
+            smartPastingToggleEl.classList.remove("smart-paste-toggle");
+        }
 
         new Setting(containerEl)
             .setName("Start numbering from 1")

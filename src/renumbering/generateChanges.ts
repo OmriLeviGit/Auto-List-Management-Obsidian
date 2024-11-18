@@ -3,10 +3,9 @@ import { Editor, EditorChange } from "obsidian";
 import IndentTracker from "./IndentTracker";
 import { PendingChanges } from "../types";
 import { getLineInfo } from "../utils";
-import SettingsManager from "src/SettingsManager";
 
 // performs the calculation itself
-export function generateChanges(
+export default function generateChanges(
     editor: Editor,
     index: number,
     indentTracker: IndentTracker,
@@ -15,8 +14,11 @@ export function generateChanges(
 ): PendingChanges {
     const changes: EditorChange[] = [];
 
+    index = index === 0 ? 1 : index;
+
     let firstChange = true;
     let prevSpaceIndent = getLineInfo(editor.getLine(index - 1)).spaceIndent;
+
     const endOfList = editor.lastLine() + 1;
     for (; index < endOfList; index++) {
         const text = editor.getLine(index);
@@ -26,7 +28,7 @@ export function generateChanges(
         // console.log("tracker: ", indentTracker.get());
         // console.debug(`line: ${index}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`);
 
-        // make sure indented text do not stop the search
+        // make sure indented text does not stop the search
         if (currNum === undefined) {
             firstChange = false;
             if (prevSpaceIndent < spaceIndent) {

@@ -41,7 +41,7 @@ export default class IndentTracker {
     }
 
     // inserts a line to the stack, ensuring its the last one each time. items in higher indices do not affect lower ones.
-    insert(textLine: string, startsFromOne: boolean = false) {
+    insert(textLine: string, startsFromOne = false) {
         const info = getLineInfo(textLine);
         this.stackIndex = info.spaceIndent;
         this.stack[this.stackIndex] = startsFromOne ? 1 : info.number; // undefined means no numbered list in that offset
