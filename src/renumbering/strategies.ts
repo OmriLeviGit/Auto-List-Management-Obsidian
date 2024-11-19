@@ -23,56 +23,34 @@ class StartFromOneStrategy implements RenumberingStrategy {
     3. Watermelon
   */
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
-        let firstLineChanges: PendingChanges = { changes: [], endIndex: index };
-        while (true) {
-            console.log("rec index", index, "last index", editor.lastLine());
+        let firstLineChange: EditorChange | undefined;
 
-            if (index < 0 || editor.lastLine() < index) {
-                console.log("out of range");
-                return { changes: [], endIndex: index };
+        const text = editor.getLine(index);
+        const lineInfo = getLineInfo(text);
+
+        const isFirstInList = isFirstInNumberedList(editor, index);
+        console.log("index: ", index, "isfirst: ", isFirstInList, lineInfo);
+        if (isFirstInList) {
+            if (lineInfo.number !== 1) {
+                console.log("slice: ", text.slice(0, lineInfo.spaceCharsNum + 2), "text", text);
+                const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
+                firstLineChange = {
+                    from: { line: index, ch: 0 },
+                    to: { line: index, ch: text.length },
+                    text: newText,
+                };
             }
-
-            const text = editor.getLine(index);
-            const lineInfo = getLineInfo(text);
-
-            const isFirstInList = isFirstInNumberedList(editor, index);
-            console.log("index: ", index, "isfirst: ", isFirstInList, text, lineInfo);
-
-            if (isFirstInList) {
-                // set the first line to 1 manually
-                if (lineInfo.number !== 1) {
-                    const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
-                    const firstLineChange = {
-                        from: { line: index, ch: 0 },
-                        to: { line: index, ch: text.length },
-                        text: newText,
-                    };
-                    firstLineChanges.changes.push(firstLineChange);
-                }
-
-                index++; // renumber from the next item on the list
-                continue;
-            }
-            break;
+            index++;
         }
 
-        const l = getLineInfo(editor.getLine(index));
+        const indentTracker = new IndentTracker(editor, index, isFirstInList);
 
-        // console.log(`isFirst: ${isFirstInList}, sameIndex: ${l.spaceIndent == lineInfo.spaceIndent}`);
-
-        const p = getPrevItemIndex(editor, index);
-
-        let b = false;
-        if (p && isFirstInNumberedList(editor, p)) {
-            b = true;
+        const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
+        if (firstLineChange) {
+            generatedChanges.changes.unshift(firstLineChange);
         }
 
-        const indentTracker = new IndentTracker(editor, index, b);
-        console.log("trakcer: ", indentTracker);
-        firstLineChanges.changes.push(...generateChanges(editor, index, indentTracker, true, isLocal).changes);
-        console.log("generated changes: ", firstLineChanges.changes);
-
-        return firstLineChanges;
+        return generatedChanges;
     }
 }
 
