@@ -1,6 +1,6 @@
 // updates a numbered list from the current line, to the first correctly number line.
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo, isFirstInNumberedList } from "../utils";
+import { getLineInfo, getPrevItemIndex, isFirstInNumberedList } from "../utils";
 import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
 import generateChanges from "./generateChanges";
 import IndentTracker from "./IndentTracker";
@@ -20,37 +20,59 @@ class StartFromOneStrategy implements RenumberingStrategy {
     1. Apple
         1. Banana
     2. Mango
-    3. Watermelon 
+    3. Watermelon
   */
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
-        let firstLineChange: EditorChange | undefined;
+        let firstLineChanges: PendingChanges = { changes: [], endIndex: index };
+        while (true) {
+            console.log("rec index", index, "last index", editor.lastLine());
 
-        const text = editor.getLine(index);
-        const lineInfo = getLineInfo(text);
-
-        const isFirstInList = isFirstInNumberedList(editor, index);
-        console.log("index: ", index, "isfirst: ", isFirstInList, lineInfo);
-        if (isFirstInList) {
-            if (lineInfo.number !== 1) {
-                console.log("slice: ", text.slice(0, lineInfo.spaceCharsNum + 2), "text", text);
-                const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
-                firstLineChange = {
-                    from: { line: index, ch: 0 },
-                    to: { line: index, ch: text.length },
-                    text: newText,
-                };
+            if (index < 0 || editor.lastLine() < index) {
+                console.log("out of range");
+                return { changes: [], endIndex: index };
             }
-            index++;
+
+            const text = editor.getLine(index);
+            const lineInfo = getLineInfo(text);
+
+            const isFirstInList = isFirstInNumberedList(editor, index);
+            console.log("index: ", index, "isfirst: ", isFirstInList, text, lineInfo);
+
+            if (isFirstInList) {
+                // set the first line to 1 manually
+                if (lineInfo.number !== 1) {
+                    const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
+                    const firstLineChange = {
+                        from: { line: index, ch: 0 },
+                        to: { line: index, ch: text.length },
+                        text: newText,
+                    };
+                    firstLineChanges.changes.push(firstLineChange);
+                }
+
+                index++; // renumber from the next item on the list
+                continue;
+            }
+            break;
         }
 
-        const indentTracker = new IndentTracker(editor, index, isFirstInList);
+        const l = getLineInfo(editor.getLine(index));
 
-        const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
-        if (firstLineChange) {
-            generatedChanges.changes.unshift(firstLineChange);
+        // console.log(`isFirst: ${isFirstInList}, sameIndex: ${l.spaceIndent == lineInfo.spaceIndent}`);
+
+        const p = getPrevItemIndex(editor, index);
+
+        let b = false;
+        if (p && isFirstInNumberedList(editor, p)) {
+            b = true;
         }
 
-        return generatedChanges;
+        const indentTracker = new IndentTracker(editor, index, b);
+        console.log("trakcer: ", indentTracker);
+        firstLineChanges.changes.push(...generateChanges(editor, index, indentTracker, true, isLocal).changes);
+        console.log("generated changes: ", firstLineChanges.changes);
+
+        return firstLineChanges;
     }
 }
 

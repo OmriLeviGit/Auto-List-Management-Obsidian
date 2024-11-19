@@ -13,17 +13,22 @@ export default function generateChanges(
     isLocal = true
 ): PendingChanges {
     const changes: EditorChange[] = [];
+    const lastIndex = editor.lastLine() + 1;
+
+    if (index < 0 || lastIndex <= index) {
+        return { changes: [], endIndex: index };
+    }
+    // console.log("inside - index: ", index, "tracker: ", indentTracker);
 
     index = index === 0 ? 1 : index;
 
     let firstChange = true;
     let prevSpaceIndent = getLineInfo(editor.getLine(index - 1)).spaceIndent;
 
-    const endOfList = editor.lastLine() + 1;
-    for (; index < endOfList; index++) {
+    for (; index < lastIndex; index++) {
         const text = editor.getLine(index);
 
-        const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(editor.getLine(index));
+        const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(text);
 
         // console.log("tracker: ", indentTracker.get());
         // console.debug(`line: ${index}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`);
@@ -53,14 +58,13 @@ export default function generateChanges(
 
         const firstItemOnNewIndent = expectedNum === undefined;
         const shouldUpdateToOne = shouldRenumberFromOne && firstItemOnNewIndent && prevSpaceIndent < spaceIndent;
-        const isValidIndent = spaceIndent <= indentTracker.getLastIndex() + 1;
+        const isValidIndent = spaceIndent <= indentTracker.lastIndex() + 1;
         const isNumChanged = expectedNum !== currNum;
         const shouldUpdate = expectedNum !== undefined && isNumChanged && isValidIndent; // if is different from expected number
 
         // console.log("currnum: ", currNum, "expected", expectedNum, "index", index);
         // if a change is required (expected != actual), push it to the changes list
         let newText = text;
-
         if (shouldUpdateToOne) {
             expectedNum = 1;
             newText = `${text.slice(0, spaceCharsNum)}${expectedNum}. ${text.slice(textIndex)}`;

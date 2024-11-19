@@ -18,7 +18,7 @@ Once installed, the plugin will automatically manage your numbered lists.
 
 -   **Live Update**: Automatically renumbers lists as you edit, helping maintain accurate sequencing without manual adjustments. Additional commands are available if you prefer to manually control which lists to renumber.
 
--   **Smart Pasting**: Keeps the numbering intact when pasting content into an existing list, rather than adopting the numbering from the pasted text.
+-   **Smart Pasting**: Keeps the numbering intact when pasting content into an existing list, rather than adopting the numbering from the pasted text. Requires _live update_ to be active.
 
 -   **Start numbering from 1**: When enabled, all numbered lists will be numbered starting from 1.
 
@@ -61,6 +61,6 @@ The plugin was tested with documents containing lists with over 10,000 lines, an
 
 -   **Undo Behavior**: Renumbering is treated as a separate action in the editor's history, as I couldn't find a reliable way to fully control the edit history.
 
--   **Modifier Keys**: To avoid conflicts with keyboard shortcuts, the live update feature is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
+-   **Modifier Keys**: To avoid conflicts with keyboard shortcuts, the _live update_ feature is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
 
--   **Vim users**: The live update feature only works in **Insert** mode. Manual renumbering commands, however, will function normally in any of the modes.
+-   **Vim users**: The _live update_ feature only works in **Insert** mode. Manual renumbering commands, however, will function normally in any of the modes.

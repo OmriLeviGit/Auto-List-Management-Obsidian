@@ -53,7 +53,7 @@ export default class IndentTracker {
         return this.stack;
     }
 
-    getLastIndex(): number {
+    lastIndex(): number {
         return this.stackIndex;
     }
 }
