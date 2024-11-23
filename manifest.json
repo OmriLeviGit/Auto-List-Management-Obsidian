@@ -2,7 +2,7 @@
     "id": "automatic-renumbering",
     "name": "Automatic Renumbering",
     "author": "Omri Levi",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "minAppVersion": "0.15.0",
     "description": "Updates numbered lists automatically to keep them in sequential order. Offers both live updating and manual control options, and supports nested lists.",
     "isDesktopOnly": true
