@@ -34,11 +34,11 @@ Once installed, the plugin will automatically manage your numbered lists.
   <table>
     <tr>
       <td style="text-align: center;">
-        <img src="resources/regular_paste.gif" alt="Regular paste" />
+        <img src="resources/regular_paste.gif" alt="Regular paste" style="display: block; margin: auto;" />
         <p><em>Regular pasting</em></p>
       </td>
       <td style="text-align: center;">
-        <img src="resources/smart_paste.gif" alt="Smart paste" />
+        <img src="resources/smart_paste.gif" alt="Smart paste" style="display: block; margin: auto;" />
         <p><em>Smart pasting</em></p>
       </td>
     </tr>
