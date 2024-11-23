@@ -25,27 +25,25 @@ Once installed, the plugin will automatically manage your numbered lists.
 -   **Tab Size**: You need to manually specify your preferred tab size in the plugin settings, as the plugin cannot automatically detect tab sizes. This step is necessary to ensure proper functionality of nested numbering.
 
 <br>
-<table>
-  <tr>
-    <td colspan="2">
-      <em>Content in clipboard:</em>
-      <div>
-        1. Apple<br> 
-        2. Banana
-      </div>
-    </td>
-  </tr>
-  <tr>
-    <td style="text-align: center;">
-      <img src="resources/regular_paste.gif" alt="Regular paste" />
-      <p><em>Regular pasting</em></p>
-    </td>
-    <td style="text-align: center;">
-      <img src="resources/smart_paste.gif" alt="Smart paste" />
-      <p><em>Smart pasting</em></p>
-    </td>
-  </tr>
-</table>
+<div>
+  <em>Content in clipboard:</em>
+    <ol>
+      <li>Apple</li>
+      <li>Banana</li>
+    </ol>
+  <table>
+    <tr>
+      <td style="text-align: center;">
+        <img src="resources/regular_paste.gif" alt="Regular paste" />
+        <p><em>Regular pasting</em></p>
+      </td>
+      <td style="text-align: center;">
+        <img src="resources/smart_paste.gif" alt="Smart paste" />
+        <p><em>Smart pasting</em></p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## Available Commands
 
