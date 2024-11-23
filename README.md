@@ -27,12 +27,10 @@ Once installed, the plugin will automatically manage your numbered lists.
 <br>
 <div>
   <em>Content in clipboard:</em>
-  <div>
     <ol>
       <li>Apple</li>
       <li>Banana</li>
     </ol>
-  </div>
   <table>
     <tr>
       <td style="text-align: center;">
