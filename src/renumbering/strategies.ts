@@ -1,74 +1,84 @@
-// updates a numbered list from the current line, to the first correctly number line.
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo, getPrevItemIndex, isFirstInNumberedList } from "../utils";
+import { getLineInfo, isFirstInNumberedList } from "../utils";
 import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
 import generateChanges from "./generateChanges";
 import IndentTracker from "./IndentTracker";
 
 // Start renumbering from one
 class StartFromOneStrategy implements RenumberingStrategy {
-    /*
-    deleting mango doesnt renumber watermelon
-    1. Apple
-    1. Banana
-            1. Orange
-            2. Strawberry
-            2. Mango
-            3. Watermelon
-            
-    deleting mango DOES renumber watermelon
-    1. Apple
-        1. Banana
-    2. Mango
-    3. Watermelon
-  */
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
-        let firstLineChange: EditorChange | undefined;
-
-        const text = editor.getLine(index);
-        const lineInfo = getLineInfo(text);
-
-        const isFirstInList = isFirstInNumberedList(editor, index);
-        console.log("index: ", index, "isfirst: ", isFirstInList, lineInfo);
-        if (isFirstInList) {
+        // function to create the first line change if needed
+        const createFirstLineChange = (text: string, lineInfo: LineInfo, index: number): EditorChange | undefined => {
             if (lineInfo.number !== 1) {
-                console.log("slice: ", text.slice(0, lineInfo.spaceCharsNum + 2), "text", text);
-                const newText = text.slice(0, lineInfo.spaceCharsNum) + 1 + ". " + text.slice(lineInfo.textIndex);
-                firstLineChange = {
+                const newText = text.slice(0, lineInfo.spaceCharsNum) + "1. " + text.slice(lineInfo.textIndex);
+                return {
                     from: { line: index, ch: 0 },
                     to: { line: index, ch: text.length },
                     text: newText,
                 };
             }
+            return undefined;
+        };
+
+        const text = editor.getLine(index);
+        const lineInfo = getLineInfo(text);
+        let isFirstInList = isFirstInNumberedList(editor, index);
+
+        // console.log("index: ", index, "isFirstInList: ", isFirstInList, lineInfo);
+
+        let firstLineChange: EditorChange | undefined = undefined;
+        if (isFirstInList) {
+            firstLineChange = createFirstLineChange(text, lineInfo, index);
             index++;
+        }
+
+        if (index > editor.lastLine()) {
+            const changes = firstLineChange !== undefined ? [firstLineChange] : [];
+            return { changes, endIndex: index };
+        }
+
+        const newLineInfo = getLineInfo(editor.getLine(index));
+
+        // if there's no number in the line, theres no need to further renumbering
+        if (newLineInfo.number === undefined) {
+            const changes = firstLineChange !== undefined ? [firstLineChange] : [];
+            return { changes, endIndex: index };
+        }
+
+        // prevent adjustment for the following line if the indentation is lower
+        if (newLineInfo.spaceIndent < lineInfo.spaceIndent) {
+            isFirstInList = false;
         }
 
         const indentTracker = new IndentTracker(editor, index, isFirstInList);
 
-        const generatedChanges = generateChanges(editor, index, indentTracker, true, isLocal);
+        // changes for the remaining lines
+        const changeList = generateChanges(editor, index, indentTracker, true, isLocal);
         if (firstLineChange) {
-            generatedChanges.changes.unshift(firstLineChange);
+            changeList.changes.unshift(firstLineChange);
         }
 
-        return generatedChanges;
+        return changeList;
     }
 }
 
-// updates a numbered list from the current line, to the first correctly number line.
+// updates a numbered list from the current line, to the first correctly number line
 class DynamicStartStrategy implements RenumberingStrategy {
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         let currInfo = getLineInfo(editor.getLine(index));
         let prevInfo: LineInfo | undefined = undefined;
 
+        // handle twice for cases where changes move the cursor to a line with different indentation
         if (currInfo.number === undefined) {
             index++;
             prevInfo = currInfo;
             currInfo = getLineInfo(editor.getLine(index));
         }
 
+        // if there's no number in the line, theres no need to further renumbering
         if (currInfo.number === undefined) {
             index++;
-            return { changes: [], endIndex: index }; // not part of a numbered list
+            return { changes: [], endIndex: index };
         }
 
         if (index <= 0) {

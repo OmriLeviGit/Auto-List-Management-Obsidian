@@ -6,7 +6,7 @@ interface RenumberingStrategy {
 
 interface PendingChanges {
     changes: EditorChange[];
-    endIndex: number | undefined;
+    endIndex: number;
 }
 
 interface LineInfo {
@@ -21,11 +21,6 @@ interface RenumberListSettings {
     smartPasting: boolean;
     startsFromOne: boolean;
     indentSize: number;
-}
-
-interface PendingChanges {
-    changes: EditorChange[];
-    endIndex: number | undefined;
 }
 
 export type { RenumberingStrategy, PendingChanges, LineInfo, RenumberListSettings };
