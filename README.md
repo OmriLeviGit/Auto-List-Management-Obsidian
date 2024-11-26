@@ -1,4 +1,4 @@
-# Automatic Renumbering Plugin for Obsidian
+# Automatic List Renumbering Plugin for Obsidian
 
 The Automatic Renumbering plugin helps keep your numbered lists in sequential order automatically, which is particularly useful for users who frequently work with structured documents. It features live updates, smart pasting, and manual control options.
 
@@ -8,7 +8,7 @@ The Automatic Renumbering plugin helps keep your numbered lists in sequential or
 
 > Step 3 is required for accurate parsing of indentations.
 
-1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic Renumbering**.
+1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic List Renumbering**.
 2. Click **Install** and enable the plugin.
 3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size**).
 
