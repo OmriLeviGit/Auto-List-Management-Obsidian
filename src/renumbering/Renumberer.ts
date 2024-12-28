@@ -14,8 +14,8 @@ export default class Renumberer {
         this.strategy = strategy;
     }
 
-    renumber(editor: Editor, currLine: number) {
-        const changes = this.strategy.renumber(editor, currLine).changes;
+    renumber(editor: Editor, lineNum: number) {
+        const changes = this.strategy.renumber(editor, lineNum).changes;
         if (changes.length > 0) {
             this.applyChangesToEditor(editor, changes);
         }
@@ -24,8 +24,8 @@ export default class Renumberer {
     // renumbers the list at cursor location from start to end
     listAtCursor = (editor: Editor) => {
         const { anchor, head } = editor.listSelections()[0];
-        const currLine = Math.min(anchor.line, head.line);
-        const newChanges = this.renumberEntireList(editor, currLine);
+        const lineNum = Math.min(anchor.line, head.line);
+        const newChanges = this.renumberEntireList(editor, lineNum);
 
         if (newChanges !== undefined) {
             this.applyChangesToEditor(editor, newChanges.changes);

@@ -10,10 +10,17 @@ interface PendingChanges {
 }
 
 interface LineInfo {
-    spaceCharsNum: number;
-    spaceIndent: number;
+    spaceCharsNum: number; // number of space characters (\t or ' ' both count as 1)
+    spaceIndent: number; // the indentation size, i.e. if \t is set to be 4 then '\t ' is an indent of 5
     number: number | undefined;
     textIndex: number | undefined;
+    isCheckBox: boolean;
+    isChecked?: boolean;
+}
+
+interface CheckboxInfo {
+    isCheckBox: boolean;
+    isChecked?: boolean;
 }
 
 interface RenumberListSettings {
@@ -23,4 +30,4 @@ interface RenumberListSettings {
     indentSize: number;
 }
 
-export type { RenumberingStrategy, PendingChanges, LineInfo, RenumberListSettings };
+export type { RenumberingStrategy, PendingChanges, LineInfo, CheckboxInfo as CheckBoxInfo, RenumberListSettings };

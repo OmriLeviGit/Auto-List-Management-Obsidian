@@ -1,6 +1,6 @@
 import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
-import { LineInfo } from "./types";
+import { LineInfo, CheckBoxInfo } from "./types";
 
 // extract information from a line of text
 function getLineInfo(line: string): LineInfo {
@@ -20,25 +20,33 @@ function getLineInfo(line: string): LineInfo {
     const spaceCharsNum = index;
 
     // number indices
-    while (index < length && "0".charCodeAt(0) <= line.charCodeAt(index) && line.charCodeAt(index) <= "9".charCodeAt(0))
+    while (
+        index < length &&
+        "0".charCodeAt(0) <= line.charCodeAt(index) &&
+        line.charCodeAt(index) <= "9".charCodeAt(0)
+    ) {
         index++;
-    // check parsing for ". "
-    if (line[index] !== "." || line[index + 1] !== " ") {
+    }
+
+    const isNumberDetected = spaceCharsNum !== index && line[index] === "." && line[index + 1] === " ";
+
+    // console.log(`line: ${line}, index:${index}`);
+    if (!isNumberDetected) {
+        const checkboxInfo = getCheckboxInfo(line, index, isNumberDetected);
         return {
             spaceCharsNum,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
+            isCheckBox: checkboxInfo.isCheckBox,
+            isChecked: checkboxInfo.isChecked,
         };
     }
 
-    // console.debug(
-    //     `i: ${index}, text line: "${line}", number detected: ${line.slice(spaceCharsNum, index)}, textOffset: ${
-    //         index + 2
-    //     }`
-    // );
-
     const number = parseInt(line.slice(spaceCharsNum, index));
+
+    index += 2;
+    const checkboxInfo = getCheckboxInfo(line, index, isNumberDetected);
 
     if (isNaN(number)) {
         return {
@@ -46,12 +54,48 @@ function getLineInfo(line: string): LineInfo {
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
+            isCheckBox: checkboxInfo.isCheckBox,
+            isChecked: checkboxInfo.isChecked,
         };
     }
 
-    return { spaceCharsNum, spaceIndent: numOfSpaceIndents, number, textIndex: index + 2 };
+    return {
+        spaceCharsNum,
+        spaceIndent: numOfSpaceIndents,
+        number,
+        textIndex: index,
+        isCheckBox: checkboxInfo.isCheckBox,
+        isChecked: checkboxInfo.isChecked,
+    };
 }
 
+function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean): CheckBoxInfo {
+    const EMPTY_CHECKBOX_NUMBERED = /^\[ \] /; // unchecked checkbox inside a numbered item
+    const FULL_CHECKBOX_NUMBERED = /^\[.\] /; // checked checkbox inside a numbered item
+    const EMPTY_CHECKBOX = /^\s*- \[ \] /; // unchecked checkbox, indented or not
+    const FULL_CHECKBOX = /^\s*- \[.\] /; // unchecked checkbox, indented or not
+    const s = line.slice(index);
+
+    if (isNumberDetected) {
+        if (EMPTY_CHECKBOX_NUMBERED.test(s)) {
+            return { isCheckBox: true, isChecked: false };
+        }
+        if (FULL_CHECKBOX_NUMBERED.test(s)) {
+            return { isCheckBox: true, isChecked: true };
+        }
+    }
+
+    if (EMPTY_CHECKBOX.test(s)) {
+        return { isCheckBox: true, isChecked: false };
+    }
+    if (FULL_CHECKBOX.test(s)) {
+        return { isCheckBox: true, isChecked: true };
+    }
+
+    return { isCheckBox: false };
+}
+
+// TODO not perfect
 // gets the index of the first item in a numbered list
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {
     if (currLineIndex < 0 || editor.lastLine() < currLineIndex) {
