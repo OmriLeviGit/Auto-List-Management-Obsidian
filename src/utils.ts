@@ -72,11 +72,12 @@ function getLineInfo(line: string): LineInfo {
 function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean): CheckBoxInfo {
     const EMPTY_CHECKBOX_NUMBERED = /^\[ \] /; // unchecked checkbox inside a numbered item
     const FULL_CHECKBOX_NUMBERED = /^\[.\] /; // checked checkbox inside a numbered item
+
     const EMPTY_CHECKBOX = /^\s*- \[ \] /; // unchecked checkbox, indented or not
     const FULL_CHECKBOX = /^\s*- \[.\] /; // unchecked checkbox, indented or not
-    const s = line.slice(index);
 
     if (isNumberDetected) {
+        const s = line.slice(index); // slice out the number
         if (EMPTY_CHECKBOX_NUMBERED.test(s)) {
             return { isCheckBox: true, isChecked: false };
         }
@@ -85,10 +86,10 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
         }
     }
 
-    if (EMPTY_CHECKBOX.test(s)) {
+    if (EMPTY_CHECKBOX.test(line)) {
         return { isCheckBox: true, isChecked: false };
     }
-    if (FULL_CHECKBOX.test(s)) {
+    if (FULL_CHECKBOX.test(line)) {
         return { isCheckBox: true, isChecked: true };
     }
 
@@ -192,4 +193,4 @@ function isFirstInNumberedList(editor: Editor, index: number): boolean {
     return false;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };
+export { getLineInfo, getCheckboxInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };

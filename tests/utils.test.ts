@@ -64,81 +64,166 @@ describe("getLineInfo tests", () => {
     });
 });
 
-// describe("getLineInfo checkbox tests", () => {
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//     });
+describe("getLineInfo checkbox tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-//     const testCases = [
-//         {
-//             name: "",
-//             input: "- [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: "- [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//         {
-//             name: "",
-//             input: " - [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: " - [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//         {
-//             name: "",
-//             input: "\t- [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: "\t- [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//         {
-//             name: "",
-//             input: "123. [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: "123. [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//         {
-//             name: "",
-//             input: " 123. [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: " 123. [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//         {
-//             name: "",
-//             input: "\t123. [ ] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: false },
-//         },
-//         {
-//             name: "",
-//             input: "\t123. [x] text",
-//             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isCheckBox: true, isChecked: true },
-//         },
-//     ];
+    // TODO consider not  using undefined for text
+    const testCases = [
+        {
+            name: "1",
+            input: "- [ ] text",
+            expected: {
+                spaceCharsNum: 0,
+                spaceIndent: 0,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "2",
+            input: "- [x] text",
+            expected: {
+                spaceCharsNum: 0,
+                spaceIndent: 0,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+        {
+            name: "3",
+            input: " - [ ] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 1,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "4",
+            input: " - [x] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 1,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+        {
+            name: "5",
+            input: "\t- [ ] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 4,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "6",
+            input: "\t- [x] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 4,
+                number: undefined,
+                textIndex: undefined,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+        {
+            name: "7",
+            input: "123. [ ] text",
+            expected: {
+                spaceCharsNum: 0,
+                spaceIndent: 0,
+                number: 123,
+                textIndex: 5,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "8",
+            input: "123. [x] text",
+            expected: {
+                spaceCharsNum: 0,
+                spaceIndent: 0,
+                number: 123,
+                textIndex: 5,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+        {
+            name: "9",
+            input: " 123. [ ] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 1,
+                number: 123,
+                textIndex: 6,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "0",
+            input: " 123. [x] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 1,
+                number: 123,
+                textIndex: 6,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+        {
+            name: "11",
+            input: "\t123. [ ] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 4,
+                number: 123,
+                textIndex: 6,
+                isCheckBox: true,
+                isChecked: false,
+            },
+        },
+        {
+            name: "12",
+            input: "\t123. [x] text",
+            expected: {
+                spaceCharsNum: 1,
+                spaceIndent: 4,
+                number: 123,
+                textIndex: 6,
+                isCheckBox: true,
+                isChecked: true,
+            },
+        },
+    ];
 
-//     testCases.forEach(({ name, input, expected }) => {
-//         test(name, () => {
-//             const result = getLineInfo(input);
-//             expect(result).toEqual(expected);
-//         });
-//     });
-// });
+    testCases.forEach(({ name, input, expected }) => {
+        test(name, () => {
+            const result = getLineInfo(input);
+            expect(result).toEqual(expected);
+        });
+    });
+});
 
 describe("getListStart tests", () => {
     beforeEach(() => {

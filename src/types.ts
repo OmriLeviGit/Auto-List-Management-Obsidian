@@ -18,7 +18,7 @@ interface LineInfo {
     isChecked?: boolean;
 }
 
-interface CheckboxInfo {
+interface CheckBoxInfo {
     isCheckBox: boolean;
     isChecked?: boolean;
 }
@@ -30,4 +30,4 @@ interface RenumberListSettings {
     indentSize: number;
 }
 
-export type { RenumberingStrategy, PendingChanges, LineInfo, CheckboxInfo as CheckBoxInfo, RenumberListSettings };
+export type { RenumberingStrategy, PendingChanges, LineInfo, CheckBoxInfo, RenumberListSettings };
