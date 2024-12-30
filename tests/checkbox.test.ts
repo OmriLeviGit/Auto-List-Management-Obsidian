@@ -9,87 +9,86 @@ describe("getCheckboxInfo checkbox tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
-
     const testCases = [
         {
-            name: "",
+            name: "Test with unchecked checkbox at the start of a line",
             input: "- [ ] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox at the start of a line",
             input: "- [x] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: true },
         },
         {
-            name: "",
+            name: "Test with unchecked checkbox with space at the start",
             input: " - [ ] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox with space at the start",
             input: " - [x] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: true },
         },
         {
-            name: "",
+            name: "Test with unchecked checkbox with tab indentation",
             input: "\t- [ ] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox with tab indentation",
             input: "\t- [x] text",
             index: 0,
             isNumberDetected: false,
             expected: { isCheckbox: true, isChecked: true },
         },
         {
-            name: "",
+            name: "Test with unchecked checkbox in numbered list",
             input: "123. [ ] text",
             index: 5,
             isNumberDetected: true,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox in numbered list",
             input: "123. [x] text",
             index: 5,
             isNumberDetected: true,
             expected: { isCheckbox: true, isChecked: true },
         },
         {
-            name: "",
+            name: "Test with unchecked checkbox and leading space in numbered list",
             input: " 123. [ ] text",
             index: 6,
             isNumberDetected: true,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox and leading space in numbered list",
             input: " 123. [x] text",
             index: 6,
             isNumberDetected: true,
             expected: { isCheckbox: true, isChecked: true },
         },
         {
-            name: "",
+            name: "Test with unchecked checkbox and tab indentation in numbered list",
             input: "\t123. [ ] text",
             index: 6,
             isNumberDetected: true,
             expected: { isCheckbox: true, isChecked: false },
         },
         {
-            name: "",
+            name: "Test with checked checkbox and tab indentation in numbered list",
             input: "\t123. [x] text",
             index: 6,
             isNumberDetected: true,
@@ -252,6 +251,18 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
             index: 1,
             expected: 3,
         },
+        {
+            name: "Test no checked item",
+            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
+            index: 0,
+            expected: 3,
+        },
+        {
+            name: "Test all items checked",
+            content: ["- [x] a", "- [x] b", "- [x] c"],
+            index: 0,
+            expected: 1,
+        },
     ];
 
     testCases.forEach(({ name, content, index, expected }) => {
@@ -299,6 +310,24 @@ describe("getCheckboxEndIndex - sort to bottom tests", () => {
             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\t- [x] d", "- [x] e"],
             index: 1,
             expected: 4,
+        },
+        {
+            name: "Test no checked item",
+            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
+            index: 0,
+            expected: 3,
+        },
+        {
+            name: "Test no checked item",
+            content: ["- [ ] a", "- [ ] b", "- [ ] c", "d"],
+            index: 0,
+            expected: 3,
+        },
+        {
+            name: "Test all items checked",
+            content: ["- [x] a", "- [x] b", "- [x] c"],
+            index: 0,
+            expected: 3,
         },
     ];
 

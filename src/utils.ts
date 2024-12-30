@@ -96,7 +96,7 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
     return { isCheckbox: false };
 }
 
-// TODO not perfect
+// TODO not perfect, does not take into account indents and im not sure if its intendend (it might be)
 // gets the index of the first item in a numbered list
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {
     if (currLineIndex < 0 || editor.lastLine() < currLineIndex) {
@@ -120,8 +120,9 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
 
 // index of the first item in the last numbered list
 function getLastListStart(lines: string[]): number | undefined {
+    const maxIndex = lines.length - 1;
     let index: number | undefined = undefined;
-    for (let i = lines.length - 1; i >= 0; i--) {
+    for (let i = maxIndex; i >= 0; i--) {
         const info = getLineInfo(lines[i]);
         if (info.number === undefined) {
             break;

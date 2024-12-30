@@ -12,4 +12,18 @@ module.exports = {
     testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     testPathIgnorePatterns: ["/node_modules/", "/__mocks__/"],
+
+    // Coverage settings
+    collectCoverage: process.argv.includes("--coverage"), // Enable coverage when --coverage flag is present
+    coverageDirectory: "./coverage", // Output directory for coverage reports
+    coverageReporters: ["text", "lcov"], // Formats for coverage reports
+    coveragePathIgnorePatterns: ["/node_modules/", "/tests/__mocks__/"], // Optionally ignore certain files or directories from coverage
+    coverageThreshold: {
+        global: {
+            branches: 80,
+            functions: 90,
+            lines: 90,
+            statements: 90,
+        },
+    },
 };

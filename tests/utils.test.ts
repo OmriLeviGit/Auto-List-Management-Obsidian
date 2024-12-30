@@ -69,10 +69,9 @@ describe("getLineInfo checkbox tests", () => {
         jest.clearAllMocks();
     });
 
-    // TODO consider not  using undefined for text
     const testCases = [
         {
-            name: "1",
+            name: "checkbox unchecked",
             input: "- [ ] text",
             expected: {
                 spaceCharsNum: 0,
@@ -84,7 +83,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "2",
+            name: "checkbox checked",
             input: "- [x] text",
             expected: {
                 spaceCharsNum: 0,
@@ -96,7 +95,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "3",
+            name: "checkbox unchecked with space",
             input: " - [ ] text",
             expected: {
                 spaceCharsNum: 1,
@@ -108,7 +107,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "4",
+            name: "checkbox checked with space",
             input: " - [x] text",
             expected: {
                 spaceCharsNum: 1,
@@ -120,7 +119,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "5",
+            name: "checkbox unchecked with tab",
             input: "\t- [ ] text",
             expected: {
                 spaceCharsNum: 1,
@@ -132,7 +131,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "6",
+            name: "checkbox checked with tab",
             input: "\t- [x] text",
             expected: {
                 spaceCharsNum: 1,
@@ -144,7 +143,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "7",
+            name: "number with checkbox unchecked",
             input: "123. [ ] text",
             expected: {
                 spaceCharsNum: 0,
@@ -156,7 +155,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "8",
+            name: "number with checkbox checked",
             input: "123. [x] text",
             expected: {
                 spaceCharsNum: 0,
@@ -168,7 +167,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "9",
+            name: "number with space and checkbox unchecked",
             input: " 123. [ ] text",
             expected: {
                 spaceCharsNum: 1,
@@ -180,7 +179,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "0",
+            name: "number with space and checkbox checked",
             input: " 123. [x] text",
             expected: {
                 spaceCharsNum: 1,
@@ -192,7 +191,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "11",
+            name: "number with tab and checkbox unchecked",
             input: "\t123. [ ] text",
             expected: {
                 spaceCharsNum: 1,
@@ -204,7 +203,7 @@ describe("getLineInfo checkbox tests", () => {
             },
         },
         {
-            name: "12",
+            name: "number with tab and checkbox checked",
             input: "\t123. [x] text",
             expected: {
                 spaceCharsNum: 1,

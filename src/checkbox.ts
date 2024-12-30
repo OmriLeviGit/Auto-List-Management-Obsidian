@@ -11,6 +11,7 @@ function reorder(editor: Editor, lineNum: number) {
     const endIndex = getCheckboxEndIndex(editor, lineNum);
 
     if (info.isChecked == false) {
+        // and cursor not inside checked
         // swap()
     }
 }
@@ -31,7 +32,7 @@ function getCheckboxEndIndex(editor: Editor, index: number): number | undefined 
     }
 
     let lastUncheckedIndex = index;
-    let firstItemChecked = true;
+    let isPartOfCheckedSequence = lineInfo.isChecked;
     while (index <= editor.lastLine()) {
         const nextLineInfo = getLineInfo(editor.getLine(index));
         // Check if both the current and next lines either both have numbers or both lack numbers
@@ -45,16 +46,14 @@ function getCheckboxEndIndex(editor: Editor, index: number): number | undefined 
             break;
         }
 
-        if (nextLineInfo.isChecked === false) {
-            firstItemChecked = true;
-        }
-
-        if (sortToBottom) {
+        // if sort to bottom or found another unchecked box, the list of checked items must be below
+        if (sortToBottom || !nextLineInfo.isChecked) {
             lastUncheckedIndex = index;
+            isPartOfCheckedSequence = false;
         } else {
-            if (nextLineInfo.isChecked && firstItemChecked === true) {
+            if (nextLineInfo.isChecked && !isPartOfCheckedSequence) {
                 lastUncheckedIndex = index;
-                firstItemChecked = false;
+                isPartOfCheckedSequence = true;
             }
         }
 
