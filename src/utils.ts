@@ -1,6 +1,6 @@
 import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
-import { LineInfo, CheckBoxInfo } from "./types";
+import { LineInfo, CheckboxInfo } from "./types";
 
 // extract information from a line of text
 function getLineInfo(line: string): LineInfo {
@@ -38,7 +38,7 @@ function getLineInfo(line: string): LineInfo {
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
-            isCheckBox: checkboxInfo.isCheckBox,
+            isCheckbox: checkboxInfo.isCheckbox,
             isChecked: checkboxInfo.isChecked,
         };
     }
@@ -54,7 +54,7 @@ function getLineInfo(line: string): LineInfo {
             spaceIndent: numOfSpaceIndents,
             number: undefined,
             textIndex: undefined,
-            isCheckBox: checkboxInfo.isCheckBox,
+            isCheckbox: checkboxInfo.isCheckbox,
             isChecked: checkboxInfo.isChecked,
         };
     }
@@ -64,12 +64,12 @@ function getLineInfo(line: string): LineInfo {
         spaceIndent: numOfSpaceIndents,
         number,
         textIndex: index,
-        isCheckBox: checkboxInfo.isCheckBox,
+        isCheckbox: checkboxInfo.isCheckbox,
         isChecked: checkboxInfo.isChecked,
     };
 }
 
-function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean): CheckBoxInfo {
+function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean): CheckboxInfo {
     const EMPTY_CHECKBOX_NUMBERED = /^\[ \] /; // unchecked checkbox inside a numbered item
     const FULL_CHECKBOX_NUMBERED = /^\[.\] /; // checked checkbox inside a numbered item
 
@@ -79,21 +79,21 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
     if (isNumberDetected) {
         const s = line.slice(index); // slice out the number
         if (EMPTY_CHECKBOX_NUMBERED.test(s)) {
-            return { isCheckBox: true, isChecked: false };
+            return { isCheckbox: true, isChecked: false };
         }
         if (FULL_CHECKBOX_NUMBERED.test(s)) {
-            return { isCheckBox: true, isChecked: true };
+            return { isCheckbox: true, isChecked: true };
         }
     }
 
     if (EMPTY_CHECKBOX.test(line)) {
-        return { isCheckBox: true, isChecked: false };
+        return { isCheckbox: true, isChecked: false };
     }
     if (FULL_CHECKBOX.test(line)) {
-        return { isCheckBox: true, isChecked: true };
+        return { isCheckbox: true, isChecked: true };
     }
 
-    return { isCheckBox: false };
+    return { isCheckbox: false };
 }
 
 // TODO not perfect

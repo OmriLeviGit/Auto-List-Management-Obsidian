@@ -1,13 +1,14 @@
 import { Editor } from "obsidian";
 import { getLineInfo } from "./utils";
+import SettingsManager from "./SettingsManager";
 
 function reorder(editor: Editor, lineNum: number) {
     const info = getLineInfo(editor.getLine(lineNum)); // TODO make sure is not < 0
-    if (!info.isCheckBox) {
+    if (!info.isCheckbox) {
         return;
     }
 
-    const endIndex = getCheckedEndIndex(editor, lineNum);
+    const endIndex = getCheckboxEndIndex(editor, lineNum);
 
     if (info.isChecked == false) {
         // swap()
@@ -15,27 +16,52 @@ function reorder(editor: Editor, lineNum: number) {
 }
 
 // gets the index of the last item in a numbered list
-function getCheckedEndIndex(editor: Editor, currLineIndex: number): number | undefined {
-    if (currLineIndex < 0 || editor.lastLine() < currLineIndex) {
+function getCheckboxEndIndex(editor: Editor, index: number): number | undefined {
+    if (index < 0 || editor.lastLine() < index) {
         return undefined;
     }
 
-    const currInfo = getLineInfo(editor.getLine(currLineIndex));
-    if (currInfo.number === undefined && currInfo.isCheckBox == false) {
+    const sortToBottom = SettingsManager.getInstance().getSortCheckboxesBottom();
+
+    const lineInfo = getLineInfo(editor.getLine(index));
+    const lineHasNumber = lineInfo.number !== undefined;
+
+    if (lineInfo.isCheckbox === false) {
         return undefined;
     }
 
-    let nextIndex = currLineIndex + 1;
+    let lastUncheckedIndex = index;
+    let firstItemChecked = true;
+    while (index <= editor.lastLine()) {
+        const nextLineInfo = getLineInfo(editor.getLine(index));
+        // Check if both the current and next lines either both have numbers or both lack numbers
+        const bothLinesHaveSameNumberStatus = (nextLineInfo.number !== undefined) === lineHasNumber;
 
-    while (nextIndex <= editor.lastLine()) {
-        const info = getLineInfo(editor.getLine(nextIndex));
-        if (info.number === undefined || info.isCheckBox === false || info.spaceIndent < currInfo.spaceIndent) {
+        if (
+            !nextLineInfo.isCheckbox ||
+            !bothLinesHaveSameNumberStatus ||
+            nextLineInfo.spaceIndent !== lineInfo.spaceIndent
+        ) {
             break;
         }
-        nextIndex++;
+
+        if (nextLineInfo.isChecked === false) {
+            firstItemChecked = true;
+        }
+
+        if (sortToBottom) {
+            lastUncheckedIndex = index;
+        } else {
+            if (nextLineInfo.isChecked && firstItemChecked === true) {
+                lastUncheckedIndex = index;
+                firstItemChecked = false;
+            }
+        }
+
+        index++;
     }
 
-    return nextIndex - 1;
+    return lastUncheckedIndex + 1;
 }
 
-export { reorder, getCheckedEndIndex };
+export { reorder, getCheckboxEndIndex };

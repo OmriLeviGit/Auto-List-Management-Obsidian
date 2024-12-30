@@ -1,10 +1,12 @@
 import { RenumberListSettings } from "./types";
 
 export const DEFAULT_SETTINGS: RenumberListSettings = {
-    liveUpdate: true,
+    liveNumberingUpdate: true,
     smartPasting: true,
     startsFromOne: true,
     indentSize: 4,
+    liveCheckboxUpdate: true,
+    sortCheckboxesToBottom: true,
 };
 
 // a singleton for the settings
@@ -27,38 +29,55 @@ export default class SettingsManager {
         return this.settings;
     }
 
-    public getLiveUpdate(): boolean {
-        return this.settings.liveUpdate;
+    public setSettings(settings: RenumberListSettings): void {
+        this.settings = settings;
+    }
+
+    public getLiveNumberingUpdate(): boolean {
+        return this.settings.liveNumberingUpdate;
+    }
+
+    public setLiveNumberingUpdate(value: boolean): void {
+        this.settings.liveNumberingUpdate = value;
     }
 
     public getSmartPasting(): boolean {
         return this.settings.smartPasting;
     }
 
+    public setSmartPasting(value: boolean): void {
+        this.settings.smartPasting = value;
+    }
+
     public getStartsFromOne(): boolean {
         return this.settings.startsFromOne;
+    }
+
+    public setStartsFromOne(value: boolean): void {
+        this.settings.startsFromOne = value;
     }
 
     public getIndentSize(): number {
         return this.settings.indentSize;
     }
 
-    public setSettings(settings: RenumberListSettings): void {
-        this.settings = settings;
-    }
-
-    public setLiveUpdate(value: boolean): void {
-        this.settings.liveUpdate = value;
-    }
-
-    public setSmartPasting(value: boolean): void {
-        this.settings.smartPasting = value;
-    }
-
-    public setStartsFromOne(value: boolean): void {
-        this.settings.startsFromOne = value;
-    }
     public setIndentSize(value: number): void {
         this.settings.indentSize = value;
+    }
+
+    public getLiveCheckboxUpdate(): boolean {
+        return this.settings.liveCheckboxUpdate;
+    }
+
+    public setLiveCheckboxUpdate(value: boolean): void {
+        this.settings.liveCheckboxUpdate = value;
+    }
+
+    public getSortCheckboxesBottom(): boolean {
+        return this.settings.sortCheckboxesToBottom;
+    }
+
+    public setSortCheckboxesBottom(value: boolean): void {
+        this.settings.sortCheckboxesToBottom = value;
     }
 }

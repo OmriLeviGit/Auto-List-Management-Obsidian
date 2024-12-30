@@ -14,7 +14,7 @@ interface TextModification {
 }
 
 export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, editor: Editor, mutex: Mutex) {
-    if (!this.settingsManager.getLiveUpdate()) {
+    if (!this.settingsManager.getLiveNumberingUpdate()) {
         return;
     }
 

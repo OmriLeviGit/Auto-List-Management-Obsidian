@@ -14,20 +14,22 @@ interface LineInfo {
     spaceIndent: number; // the indentation size, i.e. if \t is set to be 4 then '\t ' is an indent of 5
     number: number | undefined;
     textIndex: number | undefined;
-    isCheckBox: boolean;
+    isCheckbox: boolean;
     isChecked?: boolean;
 }
 
-interface CheckBoxInfo {
-    isCheckBox: boolean;
+interface CheckboxInfo {
+    isCheckbox: boolean;
     isChecked?: boolean;
 }
 
 interface RenumberListSettings {
-    liveUpdate: boolean;
+    liveNumberingUpdate: boolean;
     smartPasting: boolean;
     startsFromOne: boolean;
     indentSize: number;
+    liveCheckboxUpdate: boolean;
+    sortCheckboxesToBottom: boolean;
 }
 
-export type { RenumberingStrategy, PendingChanges, LineInfo, CheckBoxInfo, RenumberListSettings };
+export type { RenumberingStrategy, PendingChanges, LineInfo, CheckboxInfo, RenumberListSettings };

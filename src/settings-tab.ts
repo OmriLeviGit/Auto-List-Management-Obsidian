@@ -23,9 +23,9 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Live update")
             .setDesc("Automatically update numbered lists as changes are made.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getLiveUpdate()).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
                     // Update live update setting
-                    this.settingsManager.setLiveUpdate(value);
+                    this.settingsManager.setLiveNumberingUpdate(value);
 
                     await this.plugin.saveSettings();
 
@@ -51,8 +51,8 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         const smartPastingToggleEl = smartPastingSetting.settingEl;
 
-        const isLiveUpdateEnabled = this.settingsManager.getLiveUpdate();
-        if (isLiveUpdateEnabled) {
+        const isLiveNumberingUpdateEnabled = this.settingsManager.getLiveNumberingUpdate();
+        if (isLiveNumberingUpdateEnabled) {
             smartPastingToggleEl.classList.add("smart-paste-toggle");
             smartPastingToggleEl.classList.remove("smart-paste-toggle-disabled");
         } else {
