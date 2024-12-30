@@ -312,35 +312,3 @@ describe("getCheckboxEndIndex - sort to bottom tests", () => {
         });
     });
 });
-
-// describe("getCheckboxEndIndex - sort to top tests", () => {
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//     });
-//     const testCases = [
-//         {
-//             name: "Test sort to top",
-//             sortToBottom: false,
-//             content: ["- [ ] a", "- [ ] b", "- [x] c", "- [x] d", "e"],
-//             index: 0,
-//             expected: 3,
-//         },
-//         {
-//             name: "Test sort to bottom",
-//             sortToBottom: true,
-//             content: ["- [ ] a", "- [ ] b", "- [x] c", "- [x] d", "e"],
-//             index: 0,
-//             expected: 4,
-//         },
-//     ];
-
-//     testCases.forEach(({ name, sortToBottom, content, index, expected }) => {
-//         test(name, () => {
-//             SettingsManager.getInstance().setSortCheckboxesBottom(sortToBottom);
-//             const editor = createMockEditor(content);
-//             const res = getCheckboxEndIndex(editor, index);
-
-//             expect(res).toBe(expected);
-//         });
-//     });
-// });
