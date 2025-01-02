@@ -1,6 +1,7 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo } from "../utils";
 import { RenumberingStrategy, PendingChanges } from "../types";
+import { reorder } from "src/checkbox";
 
 // responsible for all renumbering actions
 export default class Renumberer {
@@ -19,6 +20,8 @@ export default class Renumberer {
         if (changes.length > 0) {
             this.applyChangesToEditor(editor, changes);
         }
+
+        reorder(editor, lineNum);
     }
 
     // renumbers the list at cursor location from start to end

@@ -1,19 +1,44 @@
-import { Editor } from "obsidian";
+import { Editor, EditorPosition } from "obsidian";
 import { getLineInfo } from "./utils";
 import SettingsManager from "./SettingsManager";
 
 function reorder(editor: Editor, lineNum: number) {
     const info = getLineInfo(editor.getLine(lineNum)); // TODO make sure is not < 0
-    if (!info.isCheckbox) {
+    let originalPos = editor.getCursor(); // TODO better cursor pos elsewhere
+
+    if (editor.getLine(lineNum + 1).length < editor.getLine(lineNum).length) {
+        const pos2: EditorPosition = { line: lineNum, ch: editor.getLine(lineNum + 1).length };
+        originalPos = pos2;
+    }
+    // TODO better cursor pos elsewhere
+
+    if (!info.isCheckbox || info.isChecked === false || originalPos.ch < info.textIndex) {
+        console.log(`out ${lineNum}`);
         return;
     }
 
     const endIndex = getCheckboxEndIndex(editor, lineNum);
 
-    if (info.isChecked == false) {
-        // and cursor not inside checked
-        // swap()
+    if (endIndex !== undefined) {
+        insert(editor, lineNum, endIndex);
     }
+
+    editor.setCursor(originalPos);
+}
+
+function insert(editor: Editor, line1: number, line2: number) {
+    const text1 = editor.getLine(line1);
+
+    const pos1: EditorPosition = { line: line1, ch: 0 };
+    const pos2: EditorPosition = { line: line2, ch: 0 };
+
+    if (editor.lastLine() < line2) {
+        editor.replaceRange("\n" + text1, pos2, pos2);
+    } else {
+        editor.replaceRange(text1 + "\n", pos2, pos2);
+    }
+
+    editor.replaceRange("", pos1, { line: line1 + 1, ch: 0 });
 }
 
 // gets the index of the last item in a numbered list

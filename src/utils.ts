@@ -37,8 +37,8 @@ function getLineInfo(line: string): LineInfo {
             spaceCharsNum,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
-            textIndex: undefined,
-            isCheckbox: checkboxInfo.isCheckbox,
+            textIndex: index,
+            isCheckbox: checkboxInfo.isCheckbox, // TODO just change to  true false undefined
             isChecked: checkboxInfo.isChecked,
         };
     }
@@ -53,7 +53,7 @@ function getLineInfo(line: string): LineInfo {
             spaceCharsNum,
             spaceIndent: numOfSpaceIndents,
             number: undefined,
-            textIndex: undefined,
+            textIndex: 0,
             isCheckbox: checkboxInfo.isCheckbox,
             isChecked: checkboxInfo.isChecked,
         };

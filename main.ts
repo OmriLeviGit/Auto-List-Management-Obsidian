@@ -32,6 +32,7 @@ export default class AutoRenumbering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
+                console.log("editor called");
                 if (this.settingsManager.getLiveNumberingUpdate() === false) {
                     return;
                 }
