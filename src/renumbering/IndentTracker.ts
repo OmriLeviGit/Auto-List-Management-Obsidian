@@ -37,7 +37,7 @@ export default class IndentTracker {
             // console.debug(`inserted i = ${i}, stack = ${this.stack}`);
         }
 
-        // console.debug("stack after creation: ", this.stack);
+        console.debug("stack after creation: ", this.stack);
     }
 
     // inserts a line to the stack, ensuring its the last one each time. items in higher indices do not affect lower ones.

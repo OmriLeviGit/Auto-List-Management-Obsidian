@@ -235,6 +235,12 @@ describe("IndentTracker creation tests", () => {
             index: 6,
             expected: [undefined, undefined, 4],
         },
+        {
+            name: "Starts form one - Across text",
+            content: ["1. a", " \ttext", "10. c"],
+            index: 0,
+            expected: [1, undefined, undefined, undefined, undefined, undefined, undefined],
+        },
     ];
 
     testCases.forEach(({ name, content, index, expected }) => {

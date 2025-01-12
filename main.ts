@@ -2,7 +2,7 @@ import { Plugin, Editor } from "obsidian";
 import { Mutex } from "async-mutex";
 import handlePasteAndDrop from "src/renumbering/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
-import Renumberer from "src/renumbering/Renumberer";
+import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/strategies";

@@ -1,5 +1,5 @@
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo, isFirstInNumberedList } from "../utils";
+import { getLineInfo, getNextItemIndex, isFirstInNumberedList } from "../utils";
 import { RenumberingStrategy, LineInfo, PendingChanges } from "../types";
 import generateChanges from "./generateChanges";
 import IndentTracker from "./IndentTracker";
@@ -7,45 +7,97 @@ import IndentTracker from "./IndentTracker";
 // Start renumbering from one
 class StartFromOneStrategy implements RenumberingStrategy {
     renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
-        // function to create the first line change if needed
-        const createFirstLineChange = (text: string, lineInfo: LineInfo, index: number): EditorChange | undefined => {
-            if (lineInfo.number !== 1) {
-                const newText = text.slice(0, lineInfo.spaceCharsNum) + "1. " + text.slice(lineInfo.textIndex);
-                return {
-                    from: { line: index, ch: 0 },
-                    to: { line: index, ch: text.length },
-                    text: newText,
-                };
+        const changeList: PendingChanges = { changes: [], endIndex: index };
+        const text = editor.getLine(index);
+        const lineInfo = getLineInfo(text);
+
+        if (lineInfo.number === undefined) {
+            return changeList;
+        }
+
+        console.log("out before, index = ", index - 1);
+        const before = this.abc(editor, index - 1, isLocal);
+        if (before !== undefined) {
+            console.log("in before");
+            changeList.changes.push(...before.changes);
+            changeList.endIndex = before.endIndex;
+        }
+
+        /*
+
+        maybe make a loop
+        */
+
+        console.log("out mid, index = ", changeList.endIndex);
+        if (changeList.endIndex <= index) {
+            console.log("in mid");
+            const mid = this.abc(editor, index, isLocal);
+            if (mid !== undefined) {
+                changeList.changes.push(...mid.changes);
+                changeList.endIndex = mid.endIndex;
             }
-            return undefined;
-        };
+        }
+
+        console.log("out after, index = ", changeList.endIndex);
+        if (changeList.endIndex <= index + 1) {
+            console.log("in after");
+            const after = this.abc(editor, index + 1, isLocal);
+            if (after !== undefined) {
+                changeList.changes.push(...after.changes);
+                changeList.endIndex = after.endIndex;
+            }
+        }
+
+        const nextIndex = getNextItemIndex(editor, index);
+
+        console.log("out next, index = ", changeList.endIndex, "next index = ", nextIndex);
+        if (nextIndex !== undefined && changeList.endIndex <= nextIndex) {
+            console.log("in next");
+            const next = this.abc(editor, nextIndex, isLocal);
+            if (next !== undefined) {
+                changeList.changes.push(...next.changes);
+                changeList.endIndex = next.endIndex;
+            }
+        }
+        console.log("changelistlen", changeList.changes.length, changeList.changes);
+
+        return changeList;
+    }
+
+    private abc(editor: Editor, index: number, isLocal: boolean): PendingChanges | undefined {
+        if (index < 0 || editor.lastLine() < index) {
+            return;
+        }
 
         const text = editor.getLine(index);
         const lineInfo = getLineInfo(text);
-        let isFirstInList = isFirstInNumberedList(editor, index);
 
-        // console.log("index: ", index, "isFirstInList: ", isFirstInList, lineInfo);
-
-        let firstLineChange: EditorChange | undefined = undefined;
+        const isFirstInList = isFirstInNumberedList(editor, index);
         if (isFirstInList) {
-            firstLineChange = createFirstLineChange(text, lineInfo, index);
-            index++;
+            console.log("index ", index, "is first");
+            const firstChange = this.createFirstLineChange(text, lineInfo, index);
+            if (firstChange) {
+                return { changes: [firstChange], endIndex: index + 1 };
+            }
+            return { changes: [], endIndex: index + 1 };
+        }
+        return this.followingLine(editor, index, lineInfo, isLocal);
+    }
+
+    private followingLine(editor: Editor, index: number, lineInfo: LineInfo, isLocal: boolean) {
+        if (editor.lastLine() < index) {
+            return undefined;
         }
 
-        if (index > editor.lastLine()) {
-            const changes = firstLineChange !== undefined ? [firstLineChange] : [];
-            return { changes, endIndex: index };
-        }
-
+        console.log("@index = ", index);
         const newLineInfo = getLineInfo(editor.getLine(index));
-
         // if there's no number in the line, theres no need to further renumbering
         if (newLineInfo.number === undefined) {
-            const changes = firstLineChange !== undefined ? [firstLineChange] : [];
-            return { changes, endIndex: index };
+            return undefined;
         }
 
         // prevent adjustment for the following line if the indentation is lower
+        let isFirstInList = true;
         if (newLineInfo.spaceIndent < lineInfo.spaceIndent) {
             isFirstInList = false;
         }
@@ -54,11 +106,21 @@ class StartFromOneStrategy implements RenumberingStrategy {
 
         // changes for the remaining lines
         const changeList = generateChanges(editor, index, indentTracker, true, isLocal);
-        if (firstLineChange) {
-            changeList.changes.unshift(firstLineChange);
-        }
 
         return changeList;
+    }
+
+    // function to create the first line change if needed
+    private createFirstLineChange(text: string, lineInfo: LineInfo, index: number): EditorChange | undefined {
+        if (lineInfo.number !== 1) {
+            const newText = text.slice(0, lineInfo.spaceCharsNum) + "1. " + text.slice(lineInfo.textIndex);
+            return {
+                from: { line: index, ch: 0 },
+                to: { line: index, ch: text.length },
+                text: newText,
+            };
+        }
+        return undefined;
     }
 }
 

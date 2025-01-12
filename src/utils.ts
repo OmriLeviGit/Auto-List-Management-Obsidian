@@ -87,35 +87,52 @@ function getLastListStart(lines: string[]): number | undefined {
 }
 
 function getPrevItemIndex(editor: Editor, index: number): number | undefined {
-    // console.log("1");
-
-    if (index <= 0 || index > editor.lastLine()) {
+    if (index <= 0 || editor.lastLine() < index) {
         return undefined;
     }
 
-    // console.log("2 index", index);
     const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
 
-    // console.log("3");
     let prevIndex = index - 1;
-    // console.log("prev1", prevIndex);
-    let prevSpaceOffset: number | undefined = undefined;
-    for (; prevIndex >= 0; prevIndex--) {
-        // console.log("4");
-        prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
-        if (prevSpaceOffset <= currSpaceOffset) {
+    while (prevIndex >= 0) {
+        const info = getLineInfo(editor.getLine(prevIndex));
+
+        if (info.spaceIndent == currSpaceOffset && info.number !== undefined) {
+            return prevIndex;
+        }
+
+        if (info.spaceIndent < currSpaceOffset) {
+            break;
+        }
+
+        prevIndex--;
+    }
+
+    return undefined;
+}
+
+function getNextItemIndex(editor: Editor, index: number): number | undefined {
+    if (index < 0 || editor.lastLine() <= index) {
+        return undefined;
+    }
+
+    const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
+
+    let nextIndex = index + 1;
+    let nextSpaceOffset: number | undefined = undefined;
+    for (; nextIndex <= editor.lastLine(); nextIndex++) {
+        nextSpaceOffset = getLineInfo(editor.getLine(nextIndex)).spaceIndent;
+        if (nextSpaceOffset <= currSpaceOffset) {
             break;
         }
     }
-    // console.log("prev2", prevIndex);
-    // console.log("5");
 
-    // all preceeding lines are indented further than currLine
-    if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
+    // all following lines are indented further than the current index
+    if (nextSpaceOffset && nextSpaceOffset > currSpaceOffset) {
         return undefined;
     }
 
-    return prevIndex;
+    return nextIndex;
 }
 
 function isFirstInNumberedList(editor: Editor, index: number): boolean {
@@ -148,4 +165,4 @@ function isFirstInNumberedList(editor: Editor, index: number): boolean {
     return false;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, getNextItemIndex, isFirstInNumberedList };

@@ -81,5 +81,5 @@ export default function generateChanges(
         firstChange = false;
     }
 
-    return { changes, endIndex: index - 1 };
+    return { changes, endIndex: index };
 }

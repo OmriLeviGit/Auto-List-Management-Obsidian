@@ -1,7 +1,7 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList } from "src/utils";
+import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList, getNextItemIndex } from "src/utils";
 
 describe("getLineInfo tests", () => {
     beforeEach(() => {
@@ -253,6 +253,47 @@ describe("isFirstInNumberedList tests", () => {
         test(name, () => {
             const editor = createMockEditor(content);
             const res = isFirstInNumberedList(editor, index);
+            expect(res).toBe(expectedResult);
+        });
+    });
+});
+
+describe("getNextItemIndex tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const testCases = [
+        {
+            name: "First item",
+            content: ["1. a", "2. b"],
+            index: 0,
+            expectedResult: 1,
+        },
+        {
+            name: "One item",
+            content: ["1. a"],
+            index: 0,
+            expectedResult: undefined,
+        },
+        {
+            name: "With indent",
+            content: ["1. a", " text", "2. b"],
+            index: 2,
+            expectedResult: undefined,
+        },
+        {
+            name: "With double indent",
+            content: ["1. a", " 2. b", "  text", " 3. c", " 4. d"],
+            index: 1,
+            expectedResult: 3,
+        },
+    ];
+
+    testCases.forEach(({ name, content, index, expectedResult }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            const res = getNextItemIndex(editor, index);
             expect(res).toBe(expectedResult);
         });
     });

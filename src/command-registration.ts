@@ -18,7 +18,7 @@ export function registerCommands(plugin: AutoRenumbering) {
         editorCallback: (editor: Editor) => {
             const { anchor, head } = editor.listSelections()[0];
             const startLine = Math.min(anchor.line, head.line);
-            const endLine = Math.max(anchor.line, head.line);
+            const endLine = Math.max(anchor.line, head.line) + 1;
 
             plugin.getRenumberer().allListsInRange(editor, startLine, endLine);
         },
@@ -28,7 +28,7 @@ export function registerCommands(plugin: AutoRenumbering) {
         id: "3-entire-note",
         name: "All numbered lists note",
         editorCallback: (editor: Editor) => {
-            plugin.getRenumberer().allListsInRange(editor, 0, editor.lastLine());
+            plugin.getRenumberer().allListsInRange(editor, 0, editor.lastLine() + 1);
         },
     });
 }

@@ -9,6 +9,12 @@ interface PendingChanges {
     endIndex: number;
 }
 
+interface ChangeResult {
+    changes: EditorChange[];
+    revisitIndices: number[];
+    endIndex: number;
+}
+
 interface LineInfo {
     spaceCharsNum: number;
     spaceIndent: number;
@@ -23,4 +29,4 @@ interface RenumberListSettings {
     indentSize: number;
 }
 
-export type { RenumberingStrategy, PendingChanges, LineInfo, RenumberListSettings };
+export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, RenumberListSettings };

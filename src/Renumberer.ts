@@ -1,6 +1,6 @@
 import { Editor, EditorChange } from "obsidian";
-import { getListStart, getLineInfo } from "../utils";
-import { RenumberingStrategy, PendingChanges } from "../types";
+import { getListStart, getLineInfo } from "./utils";
+import { RenumberingStrategy, PendingChanges } from "./types";
 
 // responsible for all renumbering actions
 export default class Renumberer {
@@ -35,7 +35,8 @@ export default class Renumberer {
     // renumbers all numbered lists in specified range
     allListsInRange = (editor: Editor, index: number, endIndex: number) => {
         const changes: EditorChange[] = [];
-        while (index <= endIndex) {
+        while (index < endIndex) {
+            console.log("index = ", index, "end = ", endIndex);
             const line = editor.getLine(index);
             if (line) {
                 const { number } = getLineInfo(line);
@@ -51,7 +52,7 @@ export default class Renumberer {
 
             index++;
         }
-
+        console.log("index = ", index);
         this.applyChangesToEditor(editor, changes);
     };
 
