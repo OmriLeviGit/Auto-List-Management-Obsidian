@@ -1,7 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AutoRenumbering from "../main";
 import SettingsManager from "./SettingsManager";
-import { StartFromOneStrategy, DynamicStartStrategy } from "./renumbering/strategies";
 import "styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
@@ -66,12 +65,6 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getStartsFromOne()).onChange(async (value) => {
                     this.settingsManager.setStartsFromOne(value);
-
-                    if (value) {
-                        this.plugin.setStrategy(new StartFromOneStrategy());
-                    } else {
-                        this.plugin.setStrategy(new DynamicStartStrategy());
-                    }
                     await this.plugin.saveSettings();
                 })
             );

@@ -1,21 +1,12 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo } from "./utils";
-import { RenumberingStrategy, PendingChanges } from "./types";
+import { PendingChanges } from "./types";
+import { renumber } from "./renumbering/generateChanges";
 
 // responsible for all renumbering actions
 export default class Renumberer {
-    private strategy: RenumberingStrategy;
-
-    constructor(strategy: RenumberingStrategy) {
-        this.strategy = strategy;
-    }
-
-    setStrategy(strategy: RenumberingStrategy) {
-        this.strategy = strategy;
-    }
-
-    renumber(editor: Editor, currLine: number) {
-        const changes = this.strategy.renumber(editor, currLine).changes;
+    renumber(editor: Editor, index: number) {
+        const changes = renumber(editor, index).changes;
         if (changes.length > 0) {
             this.applyChangesToEditor(editor, changes);
         }
@@ -36,7 +27,6 @@ export default class Renumberer {
     allListsInRange = (editor: Editor, index: number, endIndex: number) => {
         const changes: EditorChange[] = [];
         while (index < endIndex) {
-            console.log("index = ", index, "end = ", endIndex);
             const line = editor.getLine(index);
             if (line) {
                 const { number } = getLineInfo(line);
@@ -52,7 +42,7 @@ export default class Renumberer {
 
             index++;
         }
-        console.log("index = ", index);
+        // console.log("index = ", index);
         this.applyChangesToEditor(editor, changes);
     };
 
@@ -61,7 +51,7 @@ export default class Renumberer {
         const startIndex = getListStart(editor, index);
 
         if (startIndex !== undefined) {
-            return this.strategy.renumber(editor, startIndex, false);
+            return renumber(editor, startIndex, false);
         }
 
         return undefined;

@@ -1,85 +1,114 @@
 // RenumberingUtils.ts
 import { Editor, EditorChange } from "obsidian";
-import IndentTracker from "./IndentTracker";
-import { PendingChanges } from "../types";
-import { getLineInfo } from "../utils";
+import { ChangeResult, LineInfo, PendingChanges } from "../types";
+import { getLineInfo, getPrevItemIndex, isFirstInNumberedList } from "../utils";
+import SettingsManager from "src/SettingsManager";
+
+function renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
+    const revisitIndices = [index]; // contains indices to revisit
+    const changes: EditorChange[] = [];
+
+    if (index > 0) {
+        revisitIndices.unshift(index - 1);
+    }
+
+    if (index < editor.lastLine()) {
+        revisitIndices.push(index + 1);
+    }
+
+    let endIndex = index;
+    while (0 < revisitIndices.length) {
+        const indexToRenumber = revisitIndices.shift()!;
+        if (indexToRenumber < endIndex) {
+            continue;
+        }
+
+        const info = getLineInfo(editor.getLine(indexToRenumber));
+        if (info.number === undefined) {
+            continue;
+        }
+
+        let num: number;
+        const prevIndex = getPrevItemIndex(editor, indexToRenumber);
+        const isStartFromOne = SettingsManager.getInstance().getStartsFromOne();
+
+        if (prevIndex === undefined) {
+            num = isStartFromOne ? 1 : info.number; // is the item number in the list
+        } else {
+            num = getLineInfo(editor.getLine(prevIndex)).number! + 1;
+        }
+
+        const changeResult = generateChanges(editor, indexToRenumber, num, info.spaceIndent, isLocal);
+        if (changeResult) {
+            changes.push(...changeResult.changes);
+            revisitIndices.push(...changeResult.revisitIndices);
+            endIndex = changeResult.endIndex;
+        }
+    }
+
+    return { changes, endIndex };
+}
 
 // performs the calculation itself
-export default function generateChanges(
+function generateChanges(
     editor: Editor,
     index: number,
-    indentTracker: IndentTracker,
-    shouldRenumberFromOne: boolean,
+    currentNumber: number,
+    indent: number,
     isLocal = true
-): PendingChanges {
+): ChangeResult | undefined {
+    const revisitIndices: number[] = [];
     const changes: EditorChange[] = [];
-    const lastIndex = editor.lastLine() + 1;
+    let isFirstChange = true;
 
-    if (index < 0 || lastIndex <= index) {
-        return { changes: [], endIndex: index };
+    if (index < 0) {
+        return undefined;
     }
-    // console.log("inside - index: ", index, "tracker: ", indentTracker);
 
-    index = index === 0 ? 1 : index;
+    for (; index <= editor.lastLine(); index++) {
+        const lineText = editor.getLine(index);
+        const info = getLineInfo(lineText);
 
-    let firstChange = true;
-    let prevSpaceIndent = getLineInfo(editor.getLine(index - 1)).spaceIndent;
-
-    for (; index < lastIndex; index++) {
-        const text = editor.getLine(index);
-
-        const { spaceIndent, spaceCharsNum, number: currNum, textIndex } = getLineInfo(text);
-
-        // console.log("tracker: ", indentTracker.get());
-        // console.debug(`line: ${index}, spaceIndent: ${spaceIndent}, curr num: ${currNum}, text index: ${textIndex}`);
-
-        // make sure indented text does not stop the search
-        if (currNum === undefined) {
-            firstChange = false;
-            if (prevSpaceIndent < spaceIndent) {
-                indentTracker.insert(text);
-                continue;
-            }
+        // if not a number or on a lower indent
+        if (info.number === undefined || info.spaceIndent < indent) {
             break;
         }
 
-        const previousNum = indentTracker.get()[spaceIndent];
-        let expectedNum = previousNum === undefined ? undefined : previousNum + 1;
-
-        // console.log("index", index, "previous num", previousNum, "expected: ", expectedNum);
-
-        const applyTextChange = (newText: string) => {
-            changes.push({
-                from: { line: index, ch: 0 },
-                to: { line: index, ch: text.length },
-                text: newText,
-            });
-        };
-
-        const firstItemOnNewIndent = expectedNum === undefined;
-        const shouldUpdateToOne = shouldRenumberFromOne && firstItemOnNewIndent && prevSpaceIndent < spaceIndent;
-        const isValidIndent = spaceIndent <= indentTracker.lastIndex() + 1;
-        const isNumChanged = expectedNum !== currNum;
-        const shouldUpdate = expectedNum !== undefined && isNumChanged && isValidIndent; // if is different from expected number
-
-        // console.log("currnum: ", currNum, "expected", expectedNum, "index", index);
-        // if a change is required (expected != actual), push it to the changes list
-        let newText = text;
-        if (shouldUpdateToOne) {
-            expectedNum = 1;
-            newText = `${text.slice(0, spaceCharsNum)}${expectedNum}. ${text.slice(textIndex)}`;
-            applyTextChange(newText);
-        } else if (shouldUpdate) {
-            newText = `${text.slice(0, spaceCharsNum)}${expectedNum}. ${text.slice(textIndex)}`;
-            applyTextChange(newText);
-        } else if (isLocal && !firstChange && spaceIndent === 0) {
-            break; // ensures changes are made locally, not until the end of the numbered list
+        // if on a higher indent
+        if (info.spaceIndent > indent) {
+            revisitIndices.push(index);
+            continue;
         }
 
-        indentTracker.insert(newText);
-        prevSpaceIndent = spaceIndent;
-        firstChange = false;
+        // if is local, allow the current line's numbering to be already what it's supposed to be only once
+        if (isLocal) {
+            if (info.number === currentNumber) {
+                if (!isFirstChange) {
+                    break;
+                }
+                isFirstChange = false;
+                continue;
+            }
+        }
+
+        const updatedLine = getUpdatedLine(index, currentNumber, info, lineText);
+        changes.push(updatedLine);
+
+        currentNumber++;
+        isFirstChange = false;
     }
 
-    return { changes, endIndex: index };
+    return { changes, revisitIndices, endIndex: index };
 }
+
+function getUpdatedLine(index: number, expectedNum: number, info: LineInfo, text: string): EditorChange {
+    const newText = `${text.slice(0, info.spaceCharsNum)}${expectedNum}. ${text.slice(info.textIndex)}`;
+    const updatedLine = {
+        from: { line: index, ch: 0 },
+        to: { line: index, ch: text.length },
+        text: newText,
+    };
+    return updatedLine;
+}
+
+export { renumber };

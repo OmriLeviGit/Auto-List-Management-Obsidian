@@ -1,14 +1,15 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
-import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/strategies";
 
 import Renumberer from "../src/Renumberer";
+import SettingsManager from "src/SettingsManager";
 
 describe("General tests", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new DynamicStartStrategy());
+        renumberer = new Renumberer();
+        // renumberer = new Renumberer(new DynamicStartStrategy());
         jest.clearAllMocks();
     });
 
@@ -103,8 +104,9 @@ describe("Dynamic strategy", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new DynamicStartStrategy());
         jest.clearAllMocks();
+        SettingsManager.getInstance().setStartsFromOne(false);
+        renumberer = new Renumberer();
     });
 
     const testCases = [
@@ -144,7 +146,8 @@ describe("Renumber/IndentTracker interaction", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new DynamicStartStrategy());
+        // renumberer = new Renumberer(new DynamicStartStrategy());
+        renumberer = new Renumberer();
         jest.clearAllMocks();
     });
 
@@ -233,8 +236,9 @@ describe("Start from one strategy", () => {
     let renumberer: Renumberer;
 
     beforeEach(() => {
-        renumberer = new Renumberer(new StartFromOneStrategy());
         jest.clearAllMocks();
+        SettingsManager.getInstance().setStartsFromOne(true);
+        renumberer = new Renumberer();
     });
 
     const testCases = [
@@ -360,7 +364,7 @@ describe("Start from one strategy", () => {
     });
 });
 
-describe.only("Renumber entire list", () => {
+describe("Renumber entire list", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -374,16 +378,16 @@ describe.only("Renumber entire list", () => {
         // },
         {
             name: "Start from one renumbering",
-            strategy: new StartFromOneStrategy(),
+            // strategy: new StartFromOneStrategy(),
             content: ["2. a", " 10. b", "  100. c", "    text", "  200. d", "   text", " 5. e", "6. f"],
             expected: ["1. a", " 1. b", "  1. c", "    text", "  2. d", "   text", " 2. e", "2. f"],
         },
     ];
 
-    testCases.forEach(({ name, strategy, content, expected }) => {
+    testCases.forEach(({ name, content, expected }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const renumberer = new Renumberer(strategy);
+            const renumberer = new Renumberer();
 
             renumberer.allListsInRange(editor, 0, content.length);
 
