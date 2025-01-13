@@ -93,66 +93,23 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
 
     const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
 
-    let prevIndex = index - 1;
-    while (prevIndex >= 0) {
+    for (let prevIndex = index - 1; prevIndex >= 0; prevIndex--) {
         const info = getLineInfo(editor.getLine(prevIndex));
 
+        // Skip lines with deeper indentation
         if (info.spaceIndent > currSpaceOffset) {
-            prevIndex--;
             continue;
         }
 
-        if (info.spaceIndent === currSpaceOffset) {
-            if (info.number !== undefined) {
-                return prevIndex;
-            }
+        // If we find a line with same indentation and it has a number, we found our match
+        if (info.spaceIndent === currSpaceOffset && info.number !== undefined) {
+            return prevIndex;
         }
 
         return undefined;
     }
-
-    // while (prevIndex >= 0) {
-    //     console.log(prevIndex, "line = ", editor.getLine(prevIndex));
-    //     const info = getLineInfo(editor.getLine(prevIndex));
-
-    //     if (info.spaceIndent === currSpaceOffset && info.number !== undefined) {
-    //         console.log("prev", prevIndex, "1");
-    //         return prevIndex;
-    //     }
-
-    //     if (info.spaceIndent < currSpaceOffset) {
-    //         console.log("prev", prevIndex, "2");
-    //         break;
-    //     }
-
-    //     prevIndex--;
-    // }
 
     return undefined;
-}
-
-function getNextItemIndex(editor: Editor, index: number): number | undefined {
-    if (index < 0 || editor.lastLine() <= index) {
-        return undefined;
-    }
-
-    const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
-
-    let nextIndex = index + 1;
-    let nextSpaceOffset: number | undefined = undefined;
-    for (; nextIndex <= editor.lastLine(); nextIndex++) {
-        nextSpaceOffset = getLineInfo(editor.getLine(nextIndex)).spaceIndent;
-        if (nextSpaceOffset <= currSpaceOffset) {
-            break;
-        }
-    }
-
-    // all following lines are indented further than the current index
-    if (nextSpaceOffset && nextSpaceOffset > currSpaceOffset) {
-        return undefined;
-    }
-
-    return nextIndex;
 }
 
 function isFirstInNumberedList(editor: Editor, index: number): boolean {
@@ -185,4 +142,4 @@ function isFirstInNumberedList(editor: Editor, index: number): boolean {
     return false;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, getNextItemIndex, isFirstInNumberedList };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };

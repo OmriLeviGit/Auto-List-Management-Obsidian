@@ -22,9 +22,16 @@ export default class Renumberer {
     };
 
     // renumbers all numbered lists in specified range
-    renumberAllInRange = (editor: Editor, index: number, endIndex: number) => {
+    renumberAllInRange = (editor: Editor, index: number, limit: number) => {
+        if (index < 0 || editor.lastLine() + 1 < limit || limit < index) {
+            console.debug(
+                `renumbering range is invalid with index=${index}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
+            );
+            return;
+        }
+
         const newChanges: EditorChange[] = [];
-        while (index < endIndex) {
+        while (index < limit) {
             const line = editor.getLine(index);
             if (line) {
                 const { number } = getLineInfo(line);

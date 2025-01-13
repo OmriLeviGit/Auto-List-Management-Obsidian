@@ -319,7 +319,7 @@ describe("Renumber entire list", () => {
         const renumberer = new Renumberer();
         SettingsManager.getInstance().setStartsFromOne(true);
 
-        renumberer.renumberAllInRange(editor, 0, content.length - 1);
+        renumberer.renumberAllInRange(editor, 0, content.length);
 
         expected.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);
@@ -334,7 +334,7 @@ describe("Renumber entire list", () => {
         const renumberer = new Renumberer();
         SettingsManager.getInstance().setStartsFromOne(false);
 
-        renumberer.renumberAllInRange(editor, 0, content.length - 1);
+        renumberer.renumberAllInRange(editor, 0, content.length);
 
         expected.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);
