@@ -35,7 +35,7 @@ export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, edit
     mutex.runExclusive(() => {
         this.blockChanges = true;
         const { baseIndex, offset } = processTextInput(editor, content);
-        this.renumberer.allListsInRange(editor, baseIndex, baseIndex + offset);
+        this.renumberer.renumberAllInRange(editor, baseIndex, baseIndex + offset);
     });
 }
 

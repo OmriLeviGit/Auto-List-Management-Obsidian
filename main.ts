@@ -1,11 +1,10 @@
-import { Plugin, Editor } from "obsidian";
+import { Plugin, Editor, EditorPosition } from "obsidian";
 import { Mutex } from "async-mutex";
-import handlePasteAndDrop from "src/renumbering/pasteAndDropHandler";
+import handlePasteAndDrop from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { RenumberingStrategy } from "src/types";
 
 const mutex = new Mutex();
 
@@ -40,6 +39,8 @@ export default class AutoRenumbering extends Plugin {
 
                     setTimeout(() => {
                         mutex.runExclusive(() => {
+                            const originalPos = editor.getCursor();
+
                             if (this.blockChanges) {
                                 return;
                             }
@@ -47,7 +48,9 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currIndex = Math.min(anchor.line, head.line);
-                            this.renumberer.renumber(editor, currIndex);
+                            this.renumberer.renumberAtIndex(editor, currIndex);
+
+                            editor.setCursor(originalPos);
                         });
                         this.isProccessing = false;
                     }, 0);

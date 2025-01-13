@@ -97,16 +97,36 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     while (prevIndex >= 0) {
         const info = getLineInfo(editor.getLine(prevIndex));
 
-        if (info.spaceIndent == currSpaceOffset && info.number !== undefined) {
-            return prevIndex;
+        if (info.spaceIndent > currSpaceOffset) {
+            prevIndex--;
+            continue;
         }
 
-        if (info.spaceIndent < currSpaceOffset) {
-            break;
+        if (info.spaceIndent === currSpaceOffset) {
+            if (info.number !== undefined) {
+                return prevIndex;
+            }
         }
 
-        prevIndex--;
+        return undefined;
     }
+
+    // while (prevIndex >= 0) {
+    //     console.log(prevIndex, "line = ", editor.getLine(prevIndex));
+    //     const info = getLineInfo(editor.getLine(prevIndex));
+
+    //     if (info.spaceIndent === currSpaceOffset && info.number !== undefined) {
+    //         console.log("prev", prevIndex, "1");
+    //         return prevIndex;
+    //     }
+
+    //     if (info.spaceIndent < currSpaceOffset) {
+    //         console.log("prev", prevIndex, "2");
+    //         break;
+    //     }
+
+    //     prevIndex--;
+    // }
 
     return undefined;
 }
