@@ -35,12 +35,12 @@ export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, edit
     mutex.runExclusive(() => {
         this.blockChanges = true;
         const { baseIndex, offset } = processTextInput(editor, content);
-        this.renumberer.renumberAllInRange(editor, baseIndex, baseIndex + offset);
+        this.renumberer.renumberAllListsInRange(editor, baseIndex, baseIndex + offset);
     });
 }
 
 // ensures numbered lists in pasted text are numbered correctly
-export function processTextInput(editor: Editor, textFromClipboard: string): PastingRange {
+function processTextInput(editor: Editor, textFromClipboard: string): PastingRange {
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
     let numOfLines: number;
@@ -95,9 +95,7 @@ function modifyText(text: string, newNumber: number): TextModification {
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");
 
-    // console.debug("modifiedText:", modifiedText);
-
     return { modifiedText, numOfLines: lines.length };
 }
 
-export { modifyText, countNewlines };
+export { modifyText };

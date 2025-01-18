@@ -110,34 +110,4 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-function isFirstInNumberedList(editor: Editor, index: number): boolean {
-    if (index < 0) {
-        return false;
-    }
-
-    const currLine = getLineInfo(editor.getLine(index));
-
-    if (index === 0) {
-        return currLine.number !== undefined;
-    }
-
-    if (currLine.number === undefined) {
-        return false;
-    }
-
-    const prevIndex = getPrevItemIndex(editor, index);
-
-    if (prevIndex === undefined) {
-        return true;
-    }
-
-    const prevInfo = getLineInfo(editor.getLine(prevIndex));
-
-    if (prevInfo.spaceIndent < currLine.spaceIndent || prevInfo.number === undefined) {
-        return true;
-    }
-
-    return false;
-}
-
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };
