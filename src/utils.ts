@@ -60,10 +60,8 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
 
     const currInfo = getLineInfo(editor.getLine(currLineIndex));
     if (currInfo.number === undefined) {
-        return undefined;
+        return currLineIndex;
     }
-
-    if (currLineIndex == 0) return 0;
 
     let prevIndex = currLineIndex - 1;
     while (0 <= prevIndex && getLineInfo(editor.getLine(prevIndex)).number !== undefined) {

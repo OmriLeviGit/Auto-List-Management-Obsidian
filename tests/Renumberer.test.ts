@@ -217,8 +217,7 @@ describe("Dynamic renumbering tests", () => {
         const editor = createMockEditor(content);
         const renumberer = new Renumberer();
         SettingsManager.getInstance().setStartsFromOne(false);
-
-        renumberer.renumberAllInRange(editor, 0, content.indexOf(""));
+        renumberer.renumberAllListsInRange(editor, 0, content.indexOf(""));
 
         expectedContent.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);
@@ -440,7 +439,7 @@ describe("Start from one renumbering tests", () => {
         const renumberer = new Renumberer();
         SettingsManager.getInstance().setStartsFromOne(true);
 
-        renumberer.renumberAllInRange(editor, 0, content.indexOf(""));
+        renumberer.renumberAllListsInRange(editor, 0, content.indexOf(""));
 
         expectedContent.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);

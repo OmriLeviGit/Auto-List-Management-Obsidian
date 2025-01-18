@@ -12,44 +12,45 @@ export default class Renumberer {
     }
 
     // renumbers all numbered lists in specified range
-    renumberAllInRange = (editor: Editor, index: number, limit: number) => {
-        if (index < 0 || editor.lastLine() + 1 < limit || limit < index) {
+    renumberAllListsInRange = (editor: Editor, startIndex: number, limit: number) => {
+        const isInvalidRange = startIndex < 0 || editor.lastLine() + 1 < limit || limit < startIndex;
+
+        if (isInvalidRange) {
             console.debug(
-                `renumbering range is invalid with index=${index}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
+                `renumbering range is invalid with index=${startIndex}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
             );
             return;
         }
 
         const newChanges: EditorChange[] = [];
-        while (index < limit) {
-            const line = editor.getLine(index);
-            if (line) {
-                const { number } = getLineInfo(line);
-                if (number) {
-                    const pendingChanges = this.renumberEntireList(editor, index);
 
-                    if (pendingChanges !== undefined) {
-                        newChanges.push(...pendingChanges.changes);
-                        index = pendingChanges.endIndex;
-                    }
-                }
+        for (let i = startIndex; i < limit; i++) {
+            const line = editor.getLine(i);
+
+            if (line === undefined) {
+                continue;
             }
 
-            index++;
+            const { number } = getLineInfo(line);
+
+            if (number === undefined) {
+                continue;
+            }
+
+            const startIndex = getListStart(editor, i);
+
+            if (startIndex !== undefined) {
+                const pendingChanges = this.renumber(editor, startIndex, false);
+
+                if (pendingChanges) {
+                    newChanges.push(...pendingChanges.changes);
+                    i = pendingChanges.endIndex; // Subtract 1 to account for the loop's increment
+                }
+            }
         }
+
         this.applyChangesToEditor(editor, newChanges);
     };
-
-    // updates a numbered list from start to end
-    renumberEntireList(editor: Editor, index: number): PendingChanges | undefined {
-        const startIndex = getListStart(editor, index);
-
-        if (startIndex !== undefined) {
-            return this.renumber(editor, startIndex, false);
-        }
-
-        return undefined;
-    }
 
     // bfs where indents == junctions
     public renumber(editor: Editor, index: number, isLocal = true): PendingChanges {

@@ -86,7 +86,7 @@ describe("getListStart tests", () => {
             name: "no number in the line",
             content: ["1. item 1", "2. item 2", "not a number"],
             index: 2,
-            expected: undefined,
+            expected: 2,
         },
         {
             name: "accessing a negative line index",
