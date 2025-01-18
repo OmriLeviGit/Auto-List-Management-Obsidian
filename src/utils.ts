@@ -105,10 +105,8 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
 
     const currInfo = getLineInfo(editor.getLine(currLineIndex));
     if (currInfo.number === undefined) {
-        return undefined;
+        return currLineIndex;
     }
-
-    if (currLineIndex == 0) return 0;
 
     let prevIndex = currLineIndex - 1;
     while (0 <= prevIndex && getLineInfo(editor.getLine(prevIndex)).number !== undefined) {
@@ -133,65 +131,29 @@ function getLastListStart(lines: string[]): number | undefined {
 }
 
 function getPrevItemIndex(editor: Editor, index: number): number | undefined {
-    // console.log("1");
-
-    if (index <= 0 || index > editor.lastLine()) {
+    if (index <= 0 || editor.lastLine() < index) {
         return undefined;
     }
 
-    // console.log("2 index", index);
     const currSpaceOffset = getLineInfo(editor.getLine(index)).spaceIndent;
 
-    // console.log("3");
-    let prevIndex = index - 1;
-    // console.log("prev1", prevIndex);
-    let prevSpaceOffset: number | undefined = undefined;
-    for (; prevIndex >= 0; prevIndex--) {
-        // console.log("4");
-        prevSpaceOffset = getLineInfo(editor.getLine(prevIndex)).spaceIndent;
-        if (prevSpaceOffset <= currSpaceOffset) {
-            break;
-        }
-    }
-    // console.log("prev2", prevIndex);
-    // console.log("5");
+    for (let prevIndex = index - 1; prevIndex >= 0; prevIndex--) {
+        const info = getLineInfo(editor.getLine(prevIndex));
 
-    // all preceeding lines are indented further than currLine
-    if (prevSpaceOffset && prevSpaceOffset > currSpaceOffset) {
+        // Skip lines with deeper indentation
+        if (info.spaceIndent > currSpaceOffset) {
+            continue;
+        }
+
+        // If we find a line with same indentation and it has a number, we found our match
+        if (info.spaceIndent === currSpaceOffset && info.number !== undefined) {
+            return prevIndex;
+        }
+
         return undefined;
     }
 
-    return prevIndex;
+    return undefined;
 }
 
-function isFirstInNumberedList(editor: Editor, index: number): boolean {
-    if (index < 0) {
-        return false;
-    }
-
-    const currLine = getLineInfo(editor.getLine(index));
-
-    if (index === 0) {
-        return currLine.number !== undefined;
-    }
-
-    if (currLine.number === undefined) {
-        return false;
-    }
-
-    const prevIndex = getPrevItemIndex(editor, index);
-
-    if (prevIndex === undefined) {
-        return true;
-    }
-
-    const prevInfo = getLineInfo(editor.getLine(prevIndex));
-
-    if (prevInfo.spaceIndent < currLine.spaceIndent || prevInfo.number === undefined) {
-        return true;
-    }
-
-    return false;
-}
-
-export { getLineInfo, getCheckboxInfo, getListStart, getLastListStart, getPrevItemIndex, isFirstInNumberedList };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };

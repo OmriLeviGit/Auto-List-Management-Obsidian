@@ -1,7 +1,7 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import { getLineInfo, getListStart, getLastListStart, isFirstInNumberedList } from "src/utils";
+import { getLineInfo, getListStart, getLastListStart, getPrevItemIndex } from "src/utils";
 
 describe("getLineInfo tests", () => {
     beforeEach(() => {
@@ -246,7 +246,7 @@ describe("getListStart tests", () => {
             name: "no number in the line",
             content: ["1. item 1", "2. item 2", "not a number"],
             index: 2,
-            expected: undefined,
+            expected: 2,
         },
         {
             name: "accessing a negative line index",
@@ -329,7 +329,7 @@ describe("getLastListStart tests", () => {
     });
 });
 
-describe("isFirstInNumberedList tests", () => {
+describe("getPrevItemIndex tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -339,87 +339,81 @@ describe("isFirstInNumberedList tests", () => {
             name: "First",
             content: ["1. a", "2. b"],
             index: 0,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "Not first",
             content: ["1. a", "2. b"],
             index: 1,
-            expected: false,
+            expectedResult: 0,
         },
         {
             name: "One item",
             content: ["1. a"],
             index: 0,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "One item indented",
             content: [" 1. a"],
             index: 0,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "First indented",
             content: ["1. a", " 2. b"],
             index: 1,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "Second indented",
             content: ["1. a", " 2. b", " 3. b"],
             index: 2,
-            expected: false,
-        },
-        {
-            name: "Second indented",
-            content: ["1. a", " 2. b", " 3. b"],
-            index: 2,
-            expected: false,
+            expectedResult: 1,
         },
         {
             name: "Second with indent in the middle",
             content: ["1. a", " 2. b", "3. c"],
             index: 2,
-            expected: false,
+            expectedResult: 0,
         },
         {
             name: "Lower indent in the middle",
             content: ["1. a", " 2. b", "3. c", " 4. d"],
             index: 3,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "Text alone",
             content: ["text"],
             index: 0,
-            expected: false,
+            expectedResult: undefined,
         },
         {
             name: "Text before",
             content: ["text", "1. a"],
             index: 1,
-            expected: true,
+            expectedResult: undefined,
         },
         {
             name: "Text before indented",
             content: ["text", " 1. a"],
             index: 1,
-            expected: true,
+            expectedResult: undefined,
         },
         {
-            name: "Text before indented",
-            content: ["text", " 1. a"],
+            name: "Indented text before indented",
+            content: [" text", " 1. a"],
             index: 1,
-            expected: true,
+            expectedResult: undefined,
         },
     ];
 
-    testCases.forEach(({ name, content, index, expected }) => {
+    testCases.forEach(({ name, content, index, expectedResult }) => {
         test(name, () => {
             const editor = createMockEditor(content);
-            const res = isFirstInNumberedList(editor, index);
-            expect(res).toBe(expected);
+            const res = getPrevItemIndex(editor, index);
+            expect(res).toBe(expectedResult);
         });
     });
 });

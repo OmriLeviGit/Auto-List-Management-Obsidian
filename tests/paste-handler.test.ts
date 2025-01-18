@@ -1,6 +1,6 @@
 import "./__mocks__/main";
 
-import { modifyText } from "src/renumbering/pasteAndDropHandler";
+import { modifyText } from "src/pasteAndDropHandler";
 
 describe("modifyText tests", () => {
     beforeEach(() => {

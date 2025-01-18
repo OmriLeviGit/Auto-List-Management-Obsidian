@@ -1,12 +1,10 @@
-import { Plugin, Editor } from "obsidian";
+import { Plugin, Editor, EditorPosition } from "obsidian";
 import { Mutex } from "async-mutex";
-import handlePasteAndDrop from "src/renumbering/pasteAndDropHandler";
+import handlePasteAndDrop from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
-import Renumberer from "src/renumbering/Renumberer";
+import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { DynamicStartStrategy, StartFromOneStrategy } from "src/renumbering/strategies";
-import { RenumberingStrategy } from "src/types";
 
 const mutex = new Mutex();
 
@@ -24,9 +22,9 @@ export default class AutoRenumbering extends Plugin {
         this.settingsManager = SettingsManager.getInstance();
 
         if (this.settingsManager.getStartsFromOne()) {
-            this.renumberer = new Renumberer(new StartFromOneStrategy());
+            this.renumberer = new Renumberer();
         } else {
-            this.renumberer = new Renumberer(new DynamicStartStrategy());
+            this.renumberer = new Renumberer();
         }
 
         // editor-change listener
@@ -42,6 +40,8 @@ export default class AutoRenumbering extends Plugin {
 
                     setTimeout(() => {
                         mutex.runExclusive(() => {
+                            const originalPos = editor.getCursor();
+
                             if (this.blockChanges) {
                                 return;
                             }
@@ -49,7 +49,9 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currIndex = Math.min(anchor.line, head.line);
-                            this.renumberer.renumber(editor, currIndex);
+                            this.renumberer.renumberAtIndex(editor, currIndex);
+
+                            editor.setCursor(originalPos);
                         });
                         this.isProccessing = false;
                     }, 0);
@@ -96,7 +98,6 @@ export default class AutoRenumbering extends Plugin {
     async saveSettings() {
         const settingsManager = SettingsManager.getInstance();
         await this.saveData(settingsManager.getSettings());
-        // console.log("settings: ", settingsManager.getSettings(), "strategy: ", this.renumberer);
     }
 
     getRenumberer() {
@@ -109,9 +110,5 @@ export default class AutoRenumbering extends Plugin {
 
     setIsProcessing(value: boolean) {
         this.isProccessing = value;
-    }
-
-    setStrategy(strategy: RenumberingStrategy) {
-        this.renumberer.setStrategy(strategy);
     }
 }
