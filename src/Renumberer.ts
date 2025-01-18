@@ -6,20 +6,10 @@ import SettingsManager from "./SettingsManager";
 // responsible for all renumbering actions
 export default class Renumberer {
     renumberAtIndex(editor: Editor, index: number) {
-        const newChanges = this.renumber(editor, index).changes;
-        this.applyChangesToEditor(editor, newChanges);
+        const pendingChanges = this.renumber(editor, index);
+        this.applyChangesToEditor(editor, pendingChanges.changes);
+        return pendingChanges.endIndex;
     }
-
-    // renumbers the list at cursor location from start to end
-    renumberAtCursor = (editor: Editor) => {
-        const { anchor, head } = editor.listSelections()[0];
-        const currLine = Math.min(anchor.line, head.line);
-        const newChanges = this.renumberEntireList(editor, currLine)?.changes;
-
-        if (newChanges !== undefined) {
-            this.applyChangesToEditor(editor, newChanges);
-        }
-    };
 
     // renumbers all numbered lists in specified range
     renumberAllInRange = (editor: Editor, index: number, limit: number) => {
@@ -51,7 +41,7 @@ export default class Renumberer {
     };
 
     // updates a numbered list from start to end
-    private renumberEntireList(editor: Editor, index: number): PendingChanges | undefined {
+    renumberEntireList(editor: Editor, index: number): PendingChanges | undefined {
         const startIndex = getListStart(editor, index);
 
         if (startIndex !== undefined) {
@@ -61,24 +51,32 @@ export default class Renumberer {
         return undefined;
     }
 
-    private renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
-        const revisitIndices = [index]; // contains indices to revisit
+    // bfs where indents == junctions
+    public renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
         const changes: EditorChange[] = [];
+        const queue = [index]; // contains indices to revisit
+        let endIndex = index;
 
         if (index > 0) {
-            revisitIndices.unshift(index - 1);
+            queue.unshift(index - 1);
         }
 
         if (index < editor.lastLine()) {
-            revisitIndices.push(index + 1);
+            queue.push(index + 1);
         }
 
-        let lastCheckedIndex = revisitIndices[0]; // the last checked indent for that offset
-        let lastCheckedOffset = undefined; // the last checked offset for that offset
-        while (0 < revisitIndices.length) {
-            const indexToRenumber = revisitIndices.shift()!;
+        const visited: number[] = []; // visited[spaceIndent] == lastVisitedIndex
+        const firstSpaceIndent = getLineInfo(editor.getLine(queue[0])).spaceIndent;
+        visited[firstSpaceIndent] = queue[0];
+
+        while (0 < queue.length) {
+            const indexToRenumber = queue.shift()!;
+            if (indexToRenumber > editor.lastLine()) {
+                break;
+            }
             const info = getLineInfo(editor.getLine(indexToRenumber));
-            if (indexToRenumber < lastCheckedIndex && info.spaceIndent === lastCheckedOffset) {
+            if (indexToRenumber < visited[info.spaceIndent]) {
+                // if this indentation has been visited and its this index had already been renumbered
                 continue;
             }
 
@@ -98,12 +96,13 @@ export default class Renumberer {
 
             const changeResult = this.generateChanges(editor, indexToRenumber, num, info.spaceIndent, isLocal);
             changes.push(...changeResult.changes);
-            revisitIndices.push(...changeResult.revisitIndices);
-            lastCheckedIndex = changeResult.endIndex;
-            lastCheckedOffset = info.spaceIndent;
+            queue.push(...changeResult.revisitIndices);
+
+            visited[info.spaceIndent] = changeResult.endIndex;
+            endIndex = Math.max(endIndex, changeResult.endIndex);
         }
 
-        return { changes, endIndex: lastCheckedIndex };
+        return { changes, endIndex };
     }
 
     // performs the calculation itself
@@ -111,12 +110,12 @@ export default class Renumberer {
         editor: Editor,
         firstIndex: number,
         currentNumber: number,
-        indent: number,
+        firstIndent: number,
         isLocal = true
     ): ChangeResult {
         const revisitIndices: number[] = [];
         const changes: EditorChange[] = [];
-        let isFirstChange = true;
+        let firstMatchInSuccession = true;
 
         if (firstIndex < 0) {
             return { changes, revisitIndices, endIndex: firstIndex };
@@ -129,42 +128,44 @@ export default class Renumberer {
             const info = getLineInfo(lineText);
 
             // if on a higher indent, add it's first index to the the queue to revisit
-            if (info.spaceIndent > indent) {
+            if (info.spaceIndent > firstIndent) {
                 if (indexToRevisit) {
                     revisitIndices.push(currentIndex);
                     indexToRevisit = false;
                 }
                 continue;
-            } else {
-                indexToRevisit = true;
             }
 
-            // if not a number or on a lower indent
-            if (info.number === undefined || info.spaceIndent < indent) {
+            // if on a lower indent, add it as a junction and break
+            if (info.spaceIndent < firstIndent) {
+                revisitIndices.push(currentIndex);
                 break;
             }
 
-            // if is local, allow the current line's numbering to be already what it's supposed to be only once
-            if (isLocal) {
-                if (info.number === currentNumber) {
-                    if (!isFirstChange) {
-                        break;
-                    }
+            indexToRevisit = true;
 
-                    isFirstChange = false;
-                    currentNumber++;
-                    continue;
-                }
+            // if not a number or on a lower indent
+            if (info.number === undefined) {
+                break;
             }
+
+            // if already equal to the current line, no need to update
+            if (info.number === currentNumber) {
+                // if isLocal and there are 2 matches in a row, break
+                if (isLocal && firstMatchInSuccession === false) {
+                    currentIndex += 1;
+                    break;
+                }
+                firstMatchInSuccession = false;
+
+                currentNumber++;
+                continue;
+            }
+            firstMatchInSuccession = true;
 
             const updatedLine = this.getUpdatedLine(currentIndex, currentNumber, info, lineText);
             changes.push(updatedLine);
-
             currentNumber++;
-
-            if (currentIndex !== firstIndex) {
-                isFirstChange = false; // even if the first line is renumbered, dont stop on the next correctly numbered line
-            }
         }
 
         return { changes, revisitIndices, endIndex: currentIndex };
