@@ -23,9 +23,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setDesc("Automatically update numbered lists as changes are made.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveUpdate()).onChange(async (value) => {
-                    // Update live update setting
                     this.settingsManager.setLiveUpdate(value);
-
                     await this.plugin.saveSettings();
 
                     if (value) {
