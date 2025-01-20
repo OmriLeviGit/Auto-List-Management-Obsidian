@@ -7,7 +7,6 @@ import SettingsManager from "./SettingsManager";
 export default class Renumberer {
     renumberAtIndex(editor: Editor, index: number) {
         const pendingChanges = this.renumber(editor, index);
-        console.log("index: ", index);
 
         this.applyChangesToEditor(editor, pendingChanges.changes);
         return pendingChanges.endIndex;
