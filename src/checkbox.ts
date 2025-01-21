@@ -1,5 +1,6 @@
 import { Editor, EditorPosition } from "obsidian";
 import { getLineInfo } from "./utils";
+import { LineInfo } from "./types";
 import SettingsManager from "./SettingsManager";
 
 function reorder(editor: Editor, lineNum: number) {
@@ -10,6 +11,7 @@ function reorder(editor: Editor, lineNum: number) {
         const pos2: EditorPosition = { line: lineNum, ch: editor.getLine(lineNum + 1).length };
     }
 
+    console.log(info.isChecked, lineNum);
     if (info.isChecked === undefined || info.isChecked === false) {
         return;
     }
@@ -37,50 +39,45 @@ function insert(editor: Editor, line: number, atIndex: number) {
 }
 
 // gets the index of the last item in a numbered list
-function getCheckboxEndIndex(editor: Editor, index: number): number | undefined {
-    if (index < 0 || editor.lastLine() < index) {
+function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
+    if (startIndex < 0 || editor.lastLine() < startIndex) {
         return undefined;
     }
 
     const sortToBottom = SettingsManager.getInstance().getSortCheckboxesBottom();
 
-    const lineInfo = getLineInfo(editor.getLine(index));
-    const lineHasNumber = lineInfo.number !== undefined;
+    const startInfo = getLineInfo(editor.getLine(startIndex));
 
-    if (lineInfo.isChecked === undefined) {
+    if (startInfo.isChecked === undefined) {
         return undefined;
     }
 
-    let lastUncheckedIndex = index;
-    let isPartOfCheckedSequence = lineInfo.isChecked;
-    while (index <= editor.lastLine()) {
-        const nextLineInfo = getLineInfo(editor.getLine(index));
-        // Check if both the current and next lines either both have numbers or both lack numbers
-        const bothLinesHaveSameNumberStatus = (nextLineInfo.number !== undefined) === lineHasNumber;
+    const startContainsNumber = startInfo.number !== undefined;
 
-        if (
-            nextLineInfo.isChecked === undefined ||
-            !bothLinesHaveSameNumberStatus ||
-            nextLineInfo.spaceIndent !== lineInfo.spaceIndent
-        ) {
-            break;
+    const shouldBreak = (currentInfo: LineInfo): boolean => {
+        const currentContainsNumber = currentInfo.number !== undefined;
+        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+        if (!hasSameNumberStatus || !hasSameIndentation) {
+            return true;
         }
 
-        // if sort to bottom or found another unchecked box, the list of checked items must be below
-        if (sortToBottom || nextLineInfo.isChecked === undefined) {
-            lastUncheckedIndex = index;
-            isPartOfCheckedSequence = false;
-        } else {
-            if (nextLineInfo.isChecked && !isPartOfCheckedSequence) {
-                lastUncheckedIndex = index;
-                isPartOfCheckedSequence = true;
-            }
+        return sortToBottom ? currentInfo.isChecked === undefined : currentInfo.isChecked !== false;
+    };
+
+    let index = startIndex;
+    while (index <= editor.lastLine()) {
+        const currentInfo = getLineInfo(editor.getLine(index));
+
+        if (shouldBreak(currentInfo)) {
+            break;
         }
 
         index++;
     }
 
-    return lastUncheckedIndex + 1;
+    return index;
 }
 
 export { reorder, insert, getCheckboxEndIndex };
