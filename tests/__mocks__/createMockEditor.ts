@@ -1,4 +1,4 @@
-import { Editor, EditorTransaction } from "obsidian";
+import { Editor, EditorPosition, EditorTransaction } from "obsidian";
 export const createMockEditor = (initialContent: string[]) => {
     const content = [...initialContent];
 
@@ -17,6 +17,14 @@ export const createMockEditor = (initialContent: string[]) => {
         }),
         lastLine: jest.fn().mockImplementation((): number => {
             return content.length - 1;
+        }),
+        replaceRange: jest.fn().mockImplementation((replacement: string, from: EditorPosition, to: EditorPosition) => {
+            if (replacement === "") {
+                content.splice(from.line, 1);
+            } else {
+                // content.splice(from.line, 0, replacement);
+                content.splice(from.line, 0, replacement.replace("\n", ""));
+            }
         }),
         transaction: jest.fn().mockImplementation((tx: EditorTransaction, origin?: string) => {
             const changes = tx.changes;

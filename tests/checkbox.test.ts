@@ -1,7 +1,7 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
-import { getCheckboxEndIndex } from "src/checkbox";
+import { getCheckboxEndIndex, insert } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
 describe("getCheckboxEndIndex - unchecked end detection tests", () => {
@@ -244,6 +244,114 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
             const res = getCheckboxEndIndex(editor, index);
 
             expect(res).toBe(expected);
+        });
+    });
+});
+
+describe.only("insert", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const testCases = [
+        // {
+        //     name: "Single Item",
+        //     content: ["a"],
+        //     index: 0,
+        //     insertTo: 0,
+        //     expected: ["a"],
+        // },
+        // {
+        //     name: "Insert in place (at the beginning)",
+        //     content: ["a", "b"],
+        //     index: 0,
+        //     insertTo: 0,
+        //     expected: ["a", "b"],
+        // },
+        // {
+        //     name: "Insert in place (at the end)",
+        //     content: ["a", "b"],
+        //     index: 1,
+        //     insertTo: 1,
+        //     expected: ["a", "b"],
+        // },
+        // {
+        //     name: "Insert in place (at the middle)",
+        //     content: ["a", "b", "c"],
+        //     index: 1,
+        //     insertTo: 1,
+        //     expected: ["a", "b", "c"],
+        // },
+        {
+            name: "From the start to the middle",
+            content: ["a", "b", "c"],
+            index: 0,
+            insertTo: 1,
+            expected: ["b", "a", "c"],
+        },
+        // {
+        //     name: "From the end to the middle",
+        //     content: ["a", "b", "c"],
+        //     index: 2,
+        //     insertTo: 1,
+        //     expected: ["a", "c", "b"],
+        // },
+        // {
+        //     name: "From the middle to the start",
+        //     content: ["a", "b", "c"],
+        //     index: 1,
+        //     insertTo: 0,
+        //     expected: ["b", "a", "c"],
+        // },
+        // {
+        //     name: "From the middle to the end",
+        //     content: ["a", "b", "c"],
+        //     index: 1,
+        //     insertTo: 2,
+        //     expected: ["a", "c", "b"],
+        // },
+        // {
+        //     name: "From start to end",
+        //     content: ["a", "b", "c"],
+        //     index: 0,
+        //     insertTo: 2,
+        //     expected: ["b", "c", "a"],
+        // },
+        // {
+        //     name: "From end to start",
+        //     content: ["a", "b", "c"],
+        //     index: 2,
+        //     insertTo: 0,
+        //     expected: ["c", "a", "b"],
+        // },
+        // {
+        //     name: "Longer sequence forward insert",
+        //     content: ["a", "b", "c", "d", "e"],
+        //     index: 1,
+        //     insertTo: 3,
+        //     expected: ["a", "c", "d", "b", "e"],
+        // },
+        // {
+        //     name: "Longer sequence backwards insert",
+        //     content: ["a", "b", "c", "d", "e"],
+        //     index: 3,
+        //     insertTo: 1,
+        //     expected: ["a", "d", "b", "c", "e"],
+        // },
+    ];
+
+    testCases.forEach(({ name, content, index, insertTo, expected }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+            insert(editor, index, insertTo);
+
+            // content.forEach((_, i) => {
+            //     console.debug(`@${editor.getLine(i)}@`);
+            // });
+
+            expected.forEach((_, i) => {
+                expect(editor.getLine(i)).toBe(expected[i]);
+            });
         });
     });
 });

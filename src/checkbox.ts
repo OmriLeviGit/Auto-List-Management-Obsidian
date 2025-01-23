@@ -4,14 +4,8 @@ import { LineInfo } from "./types";
 import SettingsManager from "./SettingsManager";
 
 function reorder(editor: Editor, lineNum: number) {
-    console.log("reorder");
     const info = getLineInfo(editor.getLine(lineNum)); // TODO make sure is not < 0
 
-    if (editor.getLine(lineNum + 1).length < editor.getLine(lineNum).length) {
-        const pos2: EditorPosition = { line: lineNum, ch: editor.getLine(lineNum + 1).length };
-    }
-
-    console.log(info.isChecked, lineNum);
     if (info.isChecked === undefined || info.isChecked === false) {
         return;
     }
@@ -23,19 +17,25 @@ function reorder(editor: Editor, lineNum: number) {
     }
 }
 
-function insert(editor: Editor, line: number, atIndex: number) {
-    const text1 = editor.getLine(line);
-
-    const pos1: EditorPosition = { line: line, ch: 0 };
-    const pos2: EditorPosition = { line: atIndex, ch: 0 };
-
-    if (editor.lastLine() < atIndex) {
-        editor.replaceRange("\n" + text1, pos2, pos2);
-    } else {
-        editor.replaceRange(text1 + "\n", pos2, pos2);
+function insert(editor: Editor, fromLine: number, toLine: number) {
+    const content = editor.getLine(fromLine);
+    console.debug("firstReplace before");
+    for (let i = 0; i <= editor.lastLine(); i++) {
+        console.debug(`@${editor.getLine(i)}@`);
     }
 
-    editor.replaceRange("", pos1, { line: line + 1, ch: 0 });
+    editor.replaceRange("", { line: fromLine, ch: 0 }, { line: fromLine + 1, ch: 0 });
+
+    console.debug("after firstReplace");
+    for (let i = 0; i <= editor.lastLine(); i++) {
+        console.debug(`@${editor.getLine(i)}@`);
+    }
+    const adjustedToLine = fromLine < toLine ? toLine - 1 : toLine;
+    editor.replaceRange(content + "\n", { line: adjustedToLine, ch: 0 }, { line: adjustedToLine, ch: 0 });
+    console.debug("after second replacement");
+    for (let i = 0; i <= editor.lastLine(); i++) {
+        console.debug(`@${editor.getLine(i)}@`);
+    }
 }
 
 // gets the index of the last item in a numbered list
