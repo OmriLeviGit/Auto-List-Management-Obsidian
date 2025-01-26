@@ -1,21 +1,23 @@
-import { Editor, EditorChange, EditorPosition } from "obsidian";
+import { Editor, EditorChange } from "obsidian";
 import { getLineInfo } from "./utils";
 import { LineInfo } from "./types";
 import SettingsManager from "./SettingsManager";
 
-function reorder(editor: Editor, lineNum: number) {
-    const info = getLineInfo(editor.getLine(lineNum)); // TODO make sure is not < 0
+function reorder(editor: Editor, index: number) {
+    const info = getLineInfo(editor.getLine(index)); // TODO make sure is not < 0
 
-    if (info.isChecked === undefined || info.isChecked === false) {
+    // if not a checkbox or not checked, no need to reorder
+    if (info.isChecked !== true) {
         return;
     }
 
-    const endIndex = getCheckboxEndIndex(editor, lineNum);
+    const toLine = getCheckboxEndIndex(editor, index);
 
-    if (endIndex !== undefined) {
-        moveLine(editor, lineNum, endIndex);
+    if (toLine !== undefined) {
+        moveLine(editor, index, toLine);
     }
 }
+
 function moveLine(editor: Editor, fromLine: number, toLine: number) {
     if (fromLine === toLine) {
         return;
@@ -30,7 +32,6 @@ function moveLine(editor: Editor, fromLine: number, toLine: number) {
 
     if (fromLine === lastLine) {
         // Case 1: Moving from last line
-        console.log("1");
         removeLine = {
             from: { line: fromLine - 1, ch: editor.getLine(fromLine - 1).length },
             to: { line: fromLine + 1, ch: content.length },
@@ -55,7 +56,6 @@ function moveLine(editor: Editor, fromLine: number, toLine: number) {
         };
     } else {
         // Case 3: Moving between non-last lines
-
         removeLine = {
             from: { line: fromLine, ch: 0 },
             to: { line: fromLine + 1, ch: 0 },

@@ -7,7 +7,6 @@ import SettingsManager from "./SettingsManager";
 export default class Renumberer {
     renumberAtIndex(editor: Editor, index: number) {
         const pendingChanges = this.renumber(editor, index);
-
         this.applyChangesToEditor(editor, pendingChanges.changes);
         return pendingChanges.endIndex;
     }
@@ -45,7 +44,7 @@ export default class Renumberer {
 
                 if (pendingChanges) {
                     newChanges.push(...pendingChanges.changes);
-                    i = pendingChanges.endIndex; // Subtract 1 to account for the loop's increment
+                    i = pendingChanges.endIndex;
                 }
             }
         }
@@ -91,7 +90,7 @@ export default class Renumberer {
 
             let num: number;
             if (prevIndex === undefined) {
-                num = isStartFromOne ? 1 : info.number; // is the item number in the list
+                num = isStartFromOne ? 1 : info.number; // is the first item number in the list
             } else {
                 num = getLineInfo(editor.getLine(prevIndex)).number! + 1;
             }
@@ -163,7 +162,7 @@ export default class Renumberer {
                 currentNumber++;
                 continue;
             }
-            firstMatchInSuccession = true;
+            firstMatchInSuccession = true; // if no match was found, set the flag to true, so two matches in a row could be detected
 
             const updatedLine = this.getUpdatedLine(currentIndex, currentNumber, info, lineText);
             changes.push(updatedLine);

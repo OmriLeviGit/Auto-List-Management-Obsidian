@@ -1,6 +1,6 @@
 {
     "name": "automatic-renumbering",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Automatically renumber numbered lists as you edit them.",
     "main": "main.js",
     "scripts": {
