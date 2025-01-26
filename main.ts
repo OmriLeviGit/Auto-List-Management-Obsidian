@@ -5,7 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { reorder } from "src/checkbox";
+import { moveLine, reorder } from "src/checkbox";
 
 const mutex = new Mutex();
 
@@ -40,7 +40,7 @@ export default class AutoRenumbering extends Plugin {
 
                     setTimeout(() => {
                         mutex.runExclusive(() => {
-                            const originalPos = editor.getCursor();
+                            const originalPos: EditorPosition = editor.getCursor();
 
                             if (this.blockChanges) {
                                 return;
@@ -49,11 +49,18 @@ export default class AutoRenumbering extends Plugin {
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currIndex = Math.min(anchor.line, head.line);
-
+                            console.log("h");
                             reorder(editor, currIndex);
-                            // this.renumberer.renumberAtIndex(editor, currIndex);
+                            moveLine(editor, 1, 1);
 
-                            editor.setCursor(originalPos);
+                            const newLineLen = editor.getLine(originalPos.line).length;
+
+                            const newPos: EditorPosition = {
+                                line: originalPos.line,
+                                ch: Math.min(originalPos.ch, newLineLen),
+                            };
+
+                            editor.setCursor(newPos);
                         });
                         this.isProccessing = false;
                     }, 0);

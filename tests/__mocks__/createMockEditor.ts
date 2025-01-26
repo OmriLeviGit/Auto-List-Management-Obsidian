@@ -22,8 +22,7 @@ export const createMockEditor = (initialContent: string[]) => {
             if (replacement === "") {
                 content.splice(from.line, 1);
             } else {
-                // content.splice(from.line, 0, replacement);
-                content.splice(from.line, 0, replacement.replace("\n", ""));
+                content.splice(from.line, 0, replacement);
             }
         }),
         transaction: jest.fn().mockImplementation((tx: EditorTransaction, origin?: string) => {

@@ -1,4 +1,4 @@
-import { Editor, EditorPosition } from "obsidian";
+import { Editor, EditorChange, EditorPosition } from "obsidian";
 import { getLineInfo } from "./utils";
 import { LineInfo } from "./types";
 import SettingsManager from "./SettingsManager";
@@ -13,29 +13,65 @@ function reorder(editor: Editor, lineNum: number) {
     const endIndex = getCheckboxEndIndex(editor, lineNum);
 
     if (endIndex !== undefined) {
-        insert(editor, lineNum, endIndex);
+        moveLine(editor, lineNum, endIndex);
     }
 }
+function moveLine(editor: Editor, fromLine: number, toLine: number) {
+    if (fromLine === toLine) {
+        return;
+    }
 
-function insert(editor: Editor, fromLine: number, toLine: number) {
+    const changes: EditorChange[] = [];
     const content = editor.getLine(fromLine);
-    console.debug("firstReplace before");
-    for (let i = 0; i <= editor.lastLine(); i++) {
-        console.debug(`@${editor.getLine(i)}@`);
+    const lastLine = editor.lastLine();
+
+    let removeLine: EditorChange;
+    let insertLine: EditorChange;
+
+    if (fromLine === lastLine) {
+        // Case 1: Moving from last line
+        console.log("1");
+        removeLine = {
+            from: { line: fromLine - 1, ch: editor.getLine(fromLine - 1).length },
+            to: { line: fromLine + 1, ch: content.length },
+            text: "",
+        };
+        insertLine = {
+            from: { line: toLine, ch: 0 },
+            to: { line: toLine, ch: 0 },
+            text: content + "\n",
+        };
+    } else if (toLine === lastLine) {
+        // Case 2: Moving to last line
+        removeLine = {
+            from: { line: fromLine, ch: 0 },
+            to: { line: fromLine + 1, ch: 0 },
+            text: "",
+        };
+        insertLine = {
+            from: { line: toLine + 1, ch: 0 },
+            to: { line: toLine + 1, ch: 0 },
+            text: "\n" + content,
+        };
+    } else {
+        // Case 3: Moving between non-last lines
+
+        removeLine = {
+            from: { line: fromLine, ch: 0 },
+            to: { line: fromLine + 1, ch: 0 },
+            text: "",
+        };
+        const adjustedLine = toLine > fromLine ? toLine + 1 : toLine;
+        insertLine = {
+            from: { line: adjustedLine, ch: 0 },
+            to: { line: adjustedLine, ch: 0 },
+            text: content + "\n",
+        };
     }
 
-    editor.replaceRange("", { line: fromLine, ch: 0 }, { line: fromLine + 1, ch: 0 });
-
-    console.debug("after firstReplace");
-    for (let i = 0; i <= editor.lastLine(); i++) {
-        console.debug(`@${editor.getLine(i)}@`);
-    }
-    const adjustedToLine = fromLine < toLine ? toLine - 1 : toLine;
-    editor.replaceRange(content + "\n", { line: adjustedToLine, ch: 0 }, { line: adjustedToLine, ch: 0 });
-    console.debug("after second replacement");
-    for (let i = 0; i <= editor.lastLine(); i++) {
-        console.debug(`@${editor.getLine(i)}@`);
-    }
+    console.log(fromLine, toLine);
+    changes.push(insertLine, removeLine);
+    editor.transaction({ changes });
 }
 
 // gets the index of the last item in a numbered list
@@ -80,4 +116,4 @@ function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undef
     return index;
 }
 
-export { reorder, insert, getCheckboxEndIndex };
+export { reorder, moveLine, getCheckboxEndIndex };
