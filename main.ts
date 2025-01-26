@@ -5,7 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { moveLine, reorder as reorderCheckboxes } from "src/checkbox";
+import { reorderCheckboxes } from "src/checkbox";
 
 const mutex = new Mutex();
 
@@ -31,6 +31,7 @@ export default class AutoRenumbering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
+                console.log("editor");
                 if (this.settingsManager.getLiveNumberingUpdate() === false) {
                     return;
                 }
@@ -45,7 +46,7 @@ export default class AutoRenumbering extends Plugin {
                             if (this.blockChanges) {
                                 return;
                             }
-
+                            console.log("@");
                             this.blockChanges = true;
                             const { anchor, head } = editor.listSelections()[0];
                             const currIndex = Math.min(anchor.line, head.line);

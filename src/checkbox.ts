@@ -1,9 +1,8 @@
 import { Editor, EditorChange } from "obsidian";
 import { getLineInfo } from "./utils";
 import { LineInfo } from "./types";
-import SettingsManager from "./SettingsManager";
 
-function reorder(editor: Editor, index: number) {
+function reorderCheckboxes(editor: Editor, index: number) {
     const info = getLineInfo(editor.getLine(index)); // TODO make sure is not < 0
 
     // if not a checkbox or not checked, no need to reorder
@@ -17,6 +16,94 @@ function reorder(editor: Editor, index: number) {
         moveLine(editor, index, toLine);
     }
 }
+
+// gets the index of the last item in a numbered list
+function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
+    if (startIndex < 0 || editor.lastLine() < startIndex) {
+        return undefined;
+    }
+
+    const startInfo = getLineInfo(editor.getLine(startIndex));
+
+    if (startInfo.isChecked !== true) {
+        return undefined;
+    }
+
+    const startContainsNumber = startInfo.number !== undefined;
+
+    const shouldBreak = (currentInfo: LineInfo): boolean => {
+        const currentContainsNumber = currentInfo.number !== undefined;
+        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+        if (!hasSameNumberStatus || !hasSameIndentation) {
+            return true;
+        }
+
+        return currentInfo.isChecked === true || currentInfo.isChecked === undefined;
+    };
+
+    let index = startIndex + 1;
+    while (index <= editor.lastLine()) {
+        const currentInfo = getLineInfo(editor.getLine(index));
+
+        if (shouldBreak(currentInfo)) {
+            break;
+        }
+
+        index++;
+    }
+
+    return index - 1;
+}
+
+/*
+// gets the index of the last item in a numbered list # TODO this version is both sort to top or to bottom
+function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
+    if (startIndex < 0 || editor.lastLine() < startIndex) {
+        return undefined;
+    }
+
+    const sortToBottom = SettingsManager.getInstance().getSortCheckboxesBottom();
+
+    const startInfo = getLineInfo(editor.getLine(startIndex));
+
+    if (startInfo.isChecked !== true) {
+        return undefined;
+    }
+
+    const startContainsNumber = startInfo.number !== undefined;
+
+    const shouldBreak = (currentInfo: LineInfo): boolean => {
+        const currentContainsNumber = currentInfo.number !== undefined;
+        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+        if (!hasSameNumberStatus || !hasSameIndentation) {
+            return true;
+        }
+
+        if (sortToBottom) {
+            return currentInfo.isChecked === undefined;
+        }
+        
+        return currentInfo.isChecked === true || currentInfo.isChecked === undefined;
+    };
+
+    let index = startIndex + 1;
+    while (index <= editor.lastLine()) {
+        const currentInfo = getLineInfo(editor.getLine(index));
+
+        if (shouldBreak(currentInfo)) {
+            break;
+        }
+
+        index++;
+    }
+
+    return index - 1;
+}
+*/
 
 function moveLine(editor: Editor, fromLine: number, toLine: number) {
     if (fromLine === toLine) {
@@ -74,46 +161,4 @@ function moveLine(editor: Editor, fromLine: number, toLine: number) {
     editor.transaction({ changes });
 }
 
-// gets the index of the last item in a numbered list
-function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
-    if (startIndex < 0 || editor.lastLine() < startIndex) {
-        return undefined;
-    }
-
-    const sortToBottom = SettingsManager.getInstance().getSortCheckboxesBottom();
-
-    const startInfo = getLineInfo(editor.getLine(startIndex));
-
-    if (startInfo.isChecked === undefined) {
-        return undefined;
-    }
-
-    const startContainsNumber = startInfo.number !== undefined;
-
-    const shouldBreak = (currentInfo: LineInfo): boolean => {
-        const currentContainsNumber = currentInfo.number !== undefined;
-        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
-        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
-
-        if (!hasSameNumberStatus || !hasSameIndentation) {
-            return true;
-        }
-
-        return sortToBottom ? currentInfo.isChecked === undefined : currentInfo.isChecked !== false;
-    };
-
-    let index = startIndex;
-    while (index <= editor.lastLine()) {
-        const currentInfo = getLineInfo(editor.getLine(index));
-
-        if (shouldBreak(currentInfo)) {
-            break;
-        }
-
-        index++;
-    }
-
-    return index;
-}
-
-export { reorder, moveLine, getCheckboxEndIndex };
+export { reorderCheckboxes, getCheckboxEndIndex };

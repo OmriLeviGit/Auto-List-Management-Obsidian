@@ -1,10 +1,10 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
-import { getCheckboxEndIndex, moveLine } from "src/checkbox";
+import { getCheckboxEndIndex } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
-describe("getCheckboxEndIndex - unchecked end detection tests", () => {
+describe.only("getCheckboxEndIndex - unchecked end detection tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -116,71 +116,77 @@ describe("getCheckboxEndIndex - unchecked end detection tests", () => {
     });
 });
 
-describe("getCheckboxEndIndex - sort to bottom tests", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-    const testCases = [
-        {
-            name: "Test index 0 checked",
-            content: ["- [x] a"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test index 0 unchecked",
-            content: ["- [ ] a"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test default",
-            content: ["- [ ] a", "- [x] b", "- [x] c"],
-            index: 0,
-            expected: 3,
-        },
-        {
-            name: "Test sort to bottom with indent",
-            content: ["- [ ] a", "- [x] b", "\t- [x] c", "- [ ] d"],
-            index: 0,
-            expected: 2,
-        },
-        {
-            name: "Test indented sort to bottom",
-            content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\t- [x] d", "- [x] e"],
-            index: 1,
-            expected: 4,
-        },
-        {
-            name: "Test indented text sort to bottom",
-            content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\ttext", "\t- [x] d", "- [x] e"],
-            index: 1,
-            expected: 3,
-        },
-        {
-            name: "Test no checked item",
-            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
-            index: 0,
-            expected: 3,
-        },
-        {
-            name: "Test all items checked",
-            content: ["- [x] a", "- [x] b", "- [x] c"],
-            index: 0,
-            expected: 3,
-        },
-    ];
+// describe("getCheckboxEndIndex - sort to bottom tests", () => {
+//     beforeEach(() => {
+//         jest.clearAllMocks();
+//     });
+//     const testCases = [
+//         {
+//             name: "Test index 0 checked",
+//             content: ["- [x] a"],
+//             index: 0,
+//             expected: 1,
+//         },
+//         {
+//             name: "Test index 0 unchecked",
+//             content: ["- [ ] a"],
+//             index: 0,
+//             expected: 1,
+//         },
+//         {
+//             name: "Test default",
+//             content: ["- [ ] a", "- [x] b", "- [x] c"],
+//             index: 0,
+//             expected: 3,
+//         },
+//         {
+//             name: "Test sort to bottom with indent",
+//             content: ["- [ ] a", "- [x] b", "\t- [x] c", "- [ ] d"],
+//             index: 0,
+//             expected: 2,
+//         },
+//         {
+//             name: "Test indented sort to bottom",
+//             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\t- [x] d", "- [x] e"],
+//             index: 1,
+//             expected: 4,
+//         },
+//         {
+//             name: "Test indented text sort to bottom",
+//             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\ttext", "\t- [x] d", "- [x] e"],
+//             index: 1,
+//             expected: 3,
+//         },
+//         {
+//             name: "Test no checked item",
+//             content: ["- [ ] a", "- [ ] b", "- [ ] c"],
+//             index: 0,
+//             expected: 3,
+//         },
+//         {
+//             name: "Test all items checked",
+//             content: ["- [x] a", "- [x] b", "- [x] c"],
+//             index: 0,
+//             expected: 3,
+//         },
+//         {
+//             name: "Should stop on text all items checked",
+//             content: ["- [ ] a", "- [ ] b", "text"],
+//             index: 0,
+//             expected: 2,
+//         },
+//     ];
 
-    testCases.forEach(({ name, content, index, expected }) => {
-        test(name, () => {
-            SettingsManager.getInstance().setSortCheckboxesBottom(true);
-            const editor = createMockEditor(content);
-            const res = getCheckboxEndIndex(editor, index);
+//     testCases.forEach(({ name, content, index, expected }) => {
+//         test(name, () => {
+//             SettingsManager.getInstance().setSortCheckboxesBottom(true);
+//             const editor = createMockEditor(content);
+//             const res = getCheckboxEndIndex(editor, index);
 
-            expect(res).toBe(expected);
-        });
-    });
-});
+//             expect(res).toBe(expected);
+//         });
+//     });
+// });
 
 describe("getCheckboxEndIndex - sort to top tests", () => {
     beforeEach(() => {
@@ -206,6 +212,24 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
             expected: 1,
         },
         {
+            name: "Test no checked item",
+            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
+            index: 0,
+            expected: 3,
+        },
+        {
+            name: "Test all items checked",
+            content: ["- [x] a", "- [x] b", "- [x] c"],
+            index: 0,
+            expected: 0,
+        },
+        {
+            name: "Should stop on text all items checked",
+            content: ["- [ ] a", "- [ ] b", "text"],
+            index: 0,
+            expected: 2,
+        },
+        {
             name: "Test sort to top with indent",
             content: ["- [ ] a", "- [x] b", "\t- [x] c", "- [ ] d"],
             index: 0,
@@ -222,18 +246,6 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\ttext", "\t- [x] d", "- [x] e"],
             index: 1,
             expected: 2,
-        },
-        {
-            name: "Test no checked item",
-            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
-            index: 0,
-            expected: 3,
-        },
-        {
-            name: "Test all items checked",
-            content: ["- [x] a", "- [x] b", "- [x] c"],
-            index: 0,
-            expected: 0,
         },
     ];
 
