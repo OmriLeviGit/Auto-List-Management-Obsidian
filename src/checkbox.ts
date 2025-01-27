@@ -59,7 +59,7 @@ function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undef
 
 /*
 // gets the index of the last item in a numbered list # TODO this version is both sort to top or to bottom
-function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
+function getCheckboxEndIndexBySort(editor: Editor, startIndex: number): number | undefined {
     if (startIndex < 0 || editor.lastLine() < startIndex) {
         return undefined;
     }

@@ -124,6 +124,11 @@ describe("getLineInfo checkbox tests", () => {
             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: false },
         },
         {
+            name: "Test checkbox with more spaces between the numbering and the checkbox",
+            input: "123.    [ ] text",
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: false },
+        },
+        {
             name: "Test with checked checkbox in numbered list",
             input: "123. [x] text",
             expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: true },

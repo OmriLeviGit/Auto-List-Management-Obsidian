@@ -66,28 +66,28 @@ function getLineInfo(line: string): LineInfo {
 }
 
 function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean) {
-    const EMPTY_CHECKBOX_NUMBERED = /^\[ \] /; // unchecked checkbox inside a numbered item
-    const FULL_CHECKBOX_NUMBERED = /^\[.\] /; // checked checkbox inside a numbered item
+    const EMPTY_CHECKBOX_NUMBERED = /^\s*\[ \] /; // unchecked checkbox inside a numbered item
+    const FULL_CHECKBOX_NUMBERED = /^\s*\[.\] /; // checked checkbox inside a numbered item
 
     const EMPTY_CHECKBOX = /^\s*- \[ \] /; // unchecked checkbox, indented or not
     const FULL_CHECKBOX = /^\s*- \[.\] /; // unchecked checkbox, indented or not
 
     if (isNumberDetected) {
-        const s = line.slice(index); // slice out the number
+        const s = line.slice(index); // slice out the number and its space
         if (EMPTY_CHECKBOX_NUMBERED.test(s)) {
             return false;
         }
         if (FULL_CHECKBOX_NUMBERED.test(s)) {
             return true;
         }
-    }
+    } else {
+        if (EMPTY_CHECKBOX.test(line)) {
+            return false;
+        }
 
-    if (EMPTY_CHECKBOX.test(line)) {
-        return false;
-    }
-
-    if (FULL_CHECKBOX.test(line)) {
-        return true;
+        if (FULL_CHECKBOX.test(line)) {
+            return true;
+        }
     }
 
     return undefined;
