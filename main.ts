@@ -5,6 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
+import { getLineInfo } from "src/utils";
 
 const mutex = new Mutex();
 
@@ -50,7 +51,18 @@ export default class AutoRenumbering extends Plugin {
                             const currIndex = Math.min(anchor.line, head.line);
                             this.renumberer.renumberAtIndex(editor, currIndex);
 
-                            editor.setCursor(originalPos);
+                            // if something is selected, restoring cursor position interferes with the selection
+                            if (!editor.somethingSelected()) {
+                                // return the cursor location to how it was before checkbox re-ordering
+                                const newLineInOriginalPos = editor.getLine(originalPos.line);
+
+                                const newPos: EditorPosition = {
+                                    line: originalPos.line,
+                                    ch: Math.min(originalPos.ch, newLineInOriginalPos.length),
+                                };
+
+                                editor.setCursor(newPos);
+                            }
                         });
                         this.isProccessing = false;
                     }, 0);
