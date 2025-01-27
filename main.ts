@@ -53,14 +53,18 @@ export default class AutoRenumbering extends Plugin {
                             reorderCheckboxes(editor, currIndex);
                             this.renumberer.renumberAtIndex(editor, currIndex);
 
-                            const newLineLen = editor.getLine(originalPos.line).length;
+                            // if something is selected, restoring cursor position interferes with the selection
+                            if (!editor.somethingSelected()) {
+                                // return the cursor location to how it was before checkbox re-ordering
+                                const newLineInOriginalPos = editor.getLine(originalPos.line);
 
-                            const newPos: EditorPosition = {
-                                line: originalPos.line,
-                                ch: Math.min(originalPos.ch, newLineLen),
-                            };
+                                const newPos: EditorPosition = {
+                                    line: originalPos.line,
+                                    ch: Math.min(originalPos.ch, newLineInOriginalPos.length),
+                                };
 
-                            editor.setCursor(newPos);
+                                editor.setCursor(newPos);
+                            }
                         });
                         this.isProccessing = false;
                     }, 0);
