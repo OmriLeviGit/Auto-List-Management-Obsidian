@@ -4,195 +4,17 @@ import "./__mocks__/main";
 import { getCheckboxEndIndex } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
-describe.only("getCheckboxEndIndex - unchecked end detection tests", () => {
+describe.only("getCheckboxEndIndex", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
     const testCases = [
-        {
-            name: "Test with a single non-checkbox line",
-            content: ["a"],
-            index: 0,
-            expected: undefined,
-        },
-        {
-            name: "Test with numbered list containing a single item",
-            content: ["1. a"],
-            index: 0,
-            expected: undefined,
-        },
         {
             name: "Test with a single unchecked checkbox",
             content: ["- [ ] a"],
             index: 0,
-            expected: 1,
+            expected: undefined,
         },
-        {
-            name: "Test with two unchecked checkboxes",
-            content: ["- [ ] a", "- [ ] b"],
-            index: 0,
-            expected: 2,
-        },
-        {
-            name: "Test with two unchecked checkboxes, selecting second checkbox",
-            content: ["- [ ] a", "- [ ] b"],
-            index: 1,
-            expected: 2,
-        },
-        {
-            name: "Test with mixed checkboxes and non-checkbox lines",
-            content: ["- [ ] a", "- [ ] b", "c", "- [ ] d"],
-            index: 0,
-            expected: 2,
-        },
-        {
-            name: "Test with space indented checkbox and text",
-            content: ["- [ ] a", " text", "- [ ] c"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test with tab indented checkbox and text",
-            content: ["- [ ] a", "\ttext", "- [ ] c"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test with space nested checkbox and item",
-            content: ["- [ ] a", " - [ ] b", "- [ ] c", "d"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test with tab nested checkbox and item",
-            content: ["- [ ] a", "\t- [ ] b", "- [ ] c", "d"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test with space nested numbers and checkboxes",
-            content: ["1. [ ] a", "2. [ ] b", " t1. [ ] c", "3. [ ] d"],
-            index: 0,
-            expected: 2,
-        },
-        {
-            name: "Test with tab nested numbers and checkboxes",
-            content: ["1. [ ] a", "2. [ ] b", "\t1. [ ] c", "3. [ ] d"],
-            index: 0,
-            expected: 2,
-        },
-        {
-            name: "Test with space nested checkboxes and multiple levels",
-            content: ["1. [ ] a", " 1. [ ] b", " 2. [ ] c", "2. [ ] d"],
-            index: 1,
-            expected: 3,
-        },
-        {
-            name: "Test with tab nested checkboxes and multiple levels",
-            content: ["1. [ ] a", "\t1. [ ] b", "\t2. [ ] c", "2. [ ] d"],
-            index: 1,
-            expected: 3,
-        },
-        {
-            name: "Test with nested checkboxes and text",
-            content: ["1. [ ] a", "\t1. [ ] b", "\t2. [ ] c", "\ttext", "2. [ ] d"],
-            index: 1,
-            expected: 3,
-        },
-        {
-            name: "Test with nested checkboxes and numbered text",
-            content: ["1. [ ] a", "\t1. [ ] b", "\t2. [ ] c", "\t3. text", "\ttext", "2. [ ] d"],
-            index: 1,
-            expected: 3,
-        },
-    ];
-
-    testCases.forEach(({ name, content, index, expected }) => {
-        test(name, () => {
-            const editor = createMockEditor(content);
-            const res = getCheckboxEndIndex(editor, index);
-            expect(res).toBe(expected);
-        });
-    });
-});
-
-// describe("getCheckboxEndIndex - sort to bottom tests", () => {
-//     beforeEach(() => {
-//         jest.clearAllMocks();
-//     });
-//     const testCases = [
-//         {
-//             name: "Test index 0 checked",
-//             content: ["- [x] a"],
-//             index: 0,
-//             expected: 1,
-//         },
-//         {
-//             name: "Test index 0 unchecked",
-//             content: ["- [ ] a"],
-//             index: 0,
-//             expected: 1,
-//         },
-//         {
-//             name: "Test default",
-//             content: ["- [ ] a", "- [x] b", "- [x] c"],
-//             index: 0,
-//             expected: 3,
-//         },
-//         {
-//             name: "Test sort to bottom with indent",
-//             content: ["- [ ] a", "- [x] b", "\t- [x] c", "- [ ] d"],
-//             index: 0,
-//             expected: 2,
-//         },
-//         {
-//             name: "Test indented sort to bottom",
-//             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\t- [x] d", "- [x] e"],
-//             index: 1,
-//             expected: 4,
-//         },
-//         {
-//             name: "Test indented text sort to bottom",
-//             content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\ttext", "\t- [x] d", "- [x] e"],
-//             index: 1,
-//             expected: 3,
-//         },
-//         {
-//             name: "Test no checked item",
-//             content: ["- [ ] a", "- [ ] b", "- [ ] c"],
-//             index: 0,
-//             expected: 3,
-//         },
-//         {
-//             name: "Test all items checked",
-//             content: ["- [x] a", "- [x] b", "- [x] c"],
-//             index: 0,
-//             expected: 3,
-//         },
-//         {
-//             name: "Should stop on text all items checked",
-//             content: ["- [ ] a", "- [ ] b", "text"],
-//             index: 0,
-//             expected: 2,
-//         },
-//     ];
-
-//     testCases.forEach(({ name, content, index, expected }) => {
-//         test(name, () => {
-//             SettingsManager.getInstance().setSortCheckboxesBottom(true);
-//             const editor = createMockEditor(content);
-//             const res = getCheckboxEndIndex(editor, index);
-
-//             expect(res).toBe(expected);
-//         });
-//     });
-// });
-
-describe("getCheckboxEndIndex - sort to top tests", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-    const testCases = [
         {
             name: "Test index 0 checked",
             content: ["- [x] a"],
@@ -200,52 +22,77 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
             expected: 0,
         },
         {
-            name: "Test index 0 unchecked",
-            content: ["- [ ] a"],
-            index: 0,
-            expected: 1,
-        },
-        {
             name: "Test default",
-            content: ["- [ ] a", "- [x] b", "- [x] c"],
-            index: 0,
-            expected: 1,
-        },
-        {
-            name: "Test no checked item",
-            content: ["- [ ] a", "- [ ] b", "- [ ] c"],
-            index: 0,
-            expected: 3,
-        },
-        {
-            name: "Test all items checked",
-            content: ["- [x] a", "- [x] b", "- [x] c"],
+            content: ["- [x] a", "- [x] b"],
             index: 0,
             expected: 0,
         },
         {
-            name: "Should stop on text all items checked",
-            content: ["- [ ] a", "- [ ] b", "text"],
+            name: "Should stop at the first checked checkbox",
+            content: ["- [x] a", "- [ ] b", "- [x] c"],
+            index: 0,
+            expected: 1,
+        },
+
+        {
+            name: "Should stop on text",
+            content: ["- [x] a", "- [ ] b", "- [ ] c", "text"],
             index: 0,
             expected: 2,
         },
         {
-            name: "Test sort to top with indent",
-            content: ["- [ ] a", "- [x] b", "\t- [x] c", "- [ ] d"],
+            name: "Should stop before indent",
+            content: ["- [x] a", "- [ ] b", "\t- [ ] c", "- [ ] d"],
             index: 0,
             expected: 1,
         },
         {
-            name: "Test indented sort to top",
-            content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\t- [x] d", "- [x] e"],
+            name: "Test indented stop on checked",
+            content: ["- [ ] a", "\t- [x] b", "\t- [ ] c", "\t- [x] d", "- [ ] e"],
             index: 1,
             expected: 2,
         },
         {
-            name: "Test indented text sort to top",
-            content: ["- [ ] a", "\t- [ ] b", "\t- [x] c", "\ttext", "\t- [x] d", "- [x] e"],
+            name: "Test indented stop at the end of indentation",
+            content: ["- [ ] a", "\t- [x] b", "\t- [ ] c", "- [ ] d"],
             index: 1,
             expected: 2,
+        },
+        {
+            name: "Test indented stop at text on the same indentation",
+            content: ["- [ ] a", "\t- [x] b", "\ttext", "\t- [ ] c", "- [ ] d"],
+            index: 1,
+            expected: 1,
+        },
+        {
+            name: "Checkbox with numbering",
+            content: ["1. [x] a"],
+            index: 0,
+            expected: 0,
+        },
+        {
+            name: "Stop correctly in checked numbered checkboxes",
+            content: ["1. [x] a", "2. [x] b"],
+            index: 0,
+            expected: 0,
+        },
+        {
+            name: "Should stop at the first numbered and checked checkbox",
+            content: ["1. [x] a", "2. [ ] b", "3. [x] c"],
+            index: 0,
+            expected: 1,
+        },
+        {
+            name: "Should stop at checkbox that is not numbered",
+            content: ["1. [x] a", "2. [ ] b", "- [ ] c", "3. [ ] c"],
+            index: 0,
+            expected: 1,
+        },
+        {
+            name: "Should stop on numbered text",
+            content: ["1. [x] a", "2. [ ] b", "3. c", "4. [ ] d"],
+            index: 0,
+            expected: 1,
         },
     ];
 
@@ -260,6 +107,7 @@ describe("getCheckboxEndIndex - sort to top tests", () => {
     });
 });
 
+// requires proper mock
 // describe("moveLine", () => {
 //     beforeEach(() => {
 //         jest.clearAllMocks();
