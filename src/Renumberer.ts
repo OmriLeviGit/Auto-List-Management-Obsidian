@@ -1,30 +1,38 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo, getPrevItemIndex } from "./utils";
-import { ChangeResult, LineInfo, PendingChanges } from "./types";
+import { ChangeResult, LineInfo, PendingChanges, Range } from "./types";
 import SettingsManager from "./SettingsManager";
 
 // responsible for all renumbering actions
 export default class Renumberer {
-    renumberAtIndex(editor: Editor, index: number) {
-        const pendingChanges = this.renumber(editor, index);
+    renumber(editor: Editor, start: number, limit?: number) {
+        let pendingChanges;
+
+        if (limit !== undefined) {
+            pendingChanges = this.renumberAllListsInRange(editor, start, limit);
+        } else {
+            pendingChanges = this.renumberAtIndex(editor, start);
+        }
+
         this.applyChangesToEditor(editor, pendingChanges.changes);
         return pendingChanges.endIndex;
     }
 
     // renumbers all numbered lists in specified range
-    renumberAllListsInRange = (editor: Editor, startIndex: number, limit: number) => {
-        const isInvalidRange = startIndex < 0 || editor.lastLine() + 1 < limit || limit < startIndex;
+    private renumberAllListsInRange = (editor: Editor, start: number, limit: number): PendingChanges => {
+        const isInvalidRange = start < 0 || editor.lastLine() + 1 < limit || limit < start;
+        const newChanges: EditorChange[] = [];
+        let i = start;
 
         if (isInvalidRange) {
             console.debug(
-                `renumbering range is invalid with index=${startIndex}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
+                `renumbering range is invalid with index=${start}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
             );
-            return;
+
+            return { changes: newChanges, endIndex: i };
         }
 
-        const newChanges: EditorChange[] = [];
-
-        for (let i = startIndex; i < limit; i++) {
+        for (; i < limit; i++) {
             const line = editor.getLine(i);
 
             if (line === undefined) {
@@ -40,7 +48,7 @@ export default class Renumberer {
             const startIndex = getListStart(editor, i);
 
             if (startIndex !== undefined) {
-                const pendingChanges = this.renumber(editor, startIndex, false);
+                const pendingChanges = this.renumberAtIndex(editor, startIndex, false);
 
                 if (pendingChanges) {
                     newChanges.push(...pendingChanges.changes);
@@ -49,11 +57,11 @@ export default class Renumberer {
             }
         }
 
-        this.applyChangesToEditor(editor, newChanges);
+        return { changes: newChanges, endIndex: i };
     };
 
     // bfs where indents == junctions
-    public renumber(editor: Editor, index: number, isLocal = true): PendingChanges {
+    private renumberAtIndex(editor: Editor, index: number, isLocal = true): PendingChanges {
         const changes: EditorChange[] = [];
         const queue = [index]; // contains indices to revisit
         let endIndex = index;

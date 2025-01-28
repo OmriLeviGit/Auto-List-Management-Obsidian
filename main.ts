@@ -21,12 +21,7 @@ export default class AutoRenumbering extends Plugin {
         registerCommands(this);
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
         this.settingsManager = SettingsManager.getInstance();
-
-        if (this.settingsManager.getStartsFromOne()) {
-            this.renumberer = new Renumberer();
-        } else {
-            this.renumberer = new Renumberer();
-        }
+        this.renumberer = new Renumberer();
 
         // editor-change listener
         this.registerEvent(
@@ -46,12 +41,19 @@ export default class AutoRenumbering extends Plugin {
                             if (this.blockChanges) {
                                 return;
                             }
-                            console.log("@");
-                            this.blockChanges = true;
+                            this.blockChanges = true; // becomes false on the next keyboard stroke
+
                             const { anchor, head } = editor.listSelections()[0];
                             const currIndex = Math.min(anchor.line, head.line);
-                            reorderCheckboxes(editor, currIndex);
-                            this.renumberer.renumberAtIndex(editor, currIndex);
+                            console.log("@", editor.getLine(currIndex));
+
+                            // if reordered checkbox, renumber between the original location and the new one
+                            const range = reorderCheckboxes(editor, currIndex);
+                            if (range !== undefined) {
+                                this.renumberer.renumber(editor, range.start, range.limit);
+                            } else {
+                                this.renumberer.renumber(editor, currIndex);
+                            }
 
                             // if something is selected, restoring cursor position interferes with the selection
                             if (!editor.somethingSelected()) {

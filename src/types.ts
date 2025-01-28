@@ -32,4 +32,9 @@ interface RenumberListSettings {
     sortCheckboxesToBottom: boolean;
 }
 
-export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, RenumberListSettings };
+interface Range {
+    start: number;
+    limit: number;
+}
+
+export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, RenumberListSettings, Range };

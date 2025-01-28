@@ -1,8 +1,8 @@
 import { Editor, EditorChange } from "obsidian";
 import { getLineInfo } from "./utils";
-import { LineInfo } from "./types";
+import { LineInfo, Range } from "./types";
 
-function reorderCheckboxes(editor: Editor, index: number) {
+function reorderCheckboxes(editor: Editor, index: number): Range | undefined {
     const info = getLineInfo(editor.getLine(index)); // TODO make sure is not < 0
 
     // if not a checkbox, no need to reorder
@@ -12,9 +12,13 @@ function reorderCheckboxes(editor: Editor, index: number) {
 
     let toLine = info.isChecked === true ? getNewCheckedLoc(editor, index) : getNewUncheckedLoc(editor, index);
 
-    if (toLine !== undefined) {
-        moveLine(editor, index, toLine);
+    if (toLine === undefined || index === toLine) {
+        return;
     }
+
+    moveLine(editor, index, toLine);
+
+    return { start: index, limit: toLine };
 }
 
 // gets the index of the last item in a numbered list

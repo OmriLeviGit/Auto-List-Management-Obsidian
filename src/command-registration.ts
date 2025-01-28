@@ -10,7 +10,7 @@ export function registerCommands(plugin: AutoRenumbering) {
             const startLine = Math.min(anchor.line, head.line);
             const endLine = Math.max(anchor.line, head.line) + 1;
 
-            plugin.getRenumberer().renumberAllListsInRange(editor, startLine, endLine);
+            plugin.getRenumberer().renumber(editor, startLine, endLine);
         },
     });
 
@@ -18,7 +18,7 @@ export function registerCommands(plugin: AutoRenumbering) {
         id: "2-entire-note",
         name: "Renumber all numbered lists in note",
         editorCallback: (editor: Editor) => {
-            plugin.getRenumberer().renumberAllListsInRange(editor, 0, editor.lastLine() + 1);
+            plugin.getRenumberer().renumber(editor, 0, editor.lastLine() + 1);
         },
     });
 }
