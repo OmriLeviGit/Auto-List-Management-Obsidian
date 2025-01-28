@@ -5,12 +5,12 @@ import { LineInfo } from "./types";
 function reorderCheckboxes(editor: Editor, index: number) {
     const info = getLineInfo(editor.getLine(index)); // TODO make sure is not < 0
 
-    // if not a checkbox or not checked, no need to reorder
-    if (info.isChecked !== true) {
+    // if not a checkbox, no need to reorder
+    if (info.isChecked === undefined) {
         return;
     }
 
-    const toLine = getCheckboxEndIndex(editor, index);
+    let toLine = info.isChecked === true ? getNewCheckedLoc(editor, index) : getNewUncheckedLoc(editor, index);
 
     if (toLine !== undefined) {
         moveLine(editor, index, toLine);
@@ -18,7 +18,35 @@ function reorderCheckboxes(editor: Editor, index: number) {
 }
 
 // gets the index of the last item in a numbered list
-function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undefined {
+function getNewUncheckedLoc(editor: Editor, startIndex: number): number | undefined {
+    if (startIndex < 0 || editor.lastLine() < startIndex) {
+        return undefined;
+    }
+
+    const startInfo = getLineInfo(editor.getLine(startIndex));
+
+    if (startInfo.isChecked !== false) {
+        return undefined;
+    }
+
+    const startContainsNumber = startInfo.number !== undefined;
+
+    let index = startIndex - 1;
+    while (0 <= index) {
+        const currentInfo = getLineInfo(editor.getLine(index));
+
+        if (shouldBreak(currentInfo, startInfo, startContainsNumber, false)) {
+            break;
+        }
+
+        index--;
+    }
+
+    return index + 1;
+}
+
+// gets the index of the last item in a numbered list
+function getNewCheckedLoc(editor: Editor, startIndex: number): number | undefined {
     if (startIndex < 0 || editor.lastLine() < startIndex) {
         return undefined;
     }
@@ -31,23 +59,11 @@ function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undef
 
     const startContainsNumber = startInfo.number !== undefined;
 
-    const shouldBreak = (currentInfo: LineInfo): boolean => {
-        const currentContainsNumber = currentInfo.number !== undefined;
-        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
-        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
-
-        if (!hasSameNumberStatus || !hasSameIndentation) {
-            return true;
-        }
-
-        return currentInfo.isChecked === true || currentInfo.isChecked === undefined;
-    };
-
     let index = startIndex + 1;
     while (index <= editor.lastLine()) {
         const currentInfo = getLineInfo(editor.getLine(index));
 
-        if (shouldBreak(currentInfo)) {
+        if (shouldBreak(currentInfo, startInfo, startContainsNumber, true)) {
             break;
         }
 
@@ -55,6 +71,22 @@ function getCheckboxEndIndex(editor: Editor, startIndex: number): number | undef
     }
 
     return index - 1;
+}
+function shouldBreak(
+    currentInfo: LineInfo,
+    startInfo: LineInfo,
+    startContainsNumber: boolean,
+    breakOn: boolean
+): boolean {
+    const currentContainsNumber = currentInfo.number !== undefined;
+    const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+    const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+    if (!hasSameNumberStatus || !hasSameIndentation) {
+        return true;
+    }
+
+    return currentInfo.isChecked === breakOn || currentInfo.isChecked === undefined;
 }
 
 /*
@@ -161,4 +193,4 @@ function moveLine(editor: Editor, fromLine: number, toLine: number) {
     editor.transaction({ changes });
 }
 
-export { reorderCheckboxes, getCheckboxEndIndex };
+export { reorderCheckboxes, getNewCheckedLoc, getNewUncheckedLoc };
