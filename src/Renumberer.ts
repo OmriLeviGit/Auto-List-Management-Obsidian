@@ -1,6 +1,6 @@
 import { Editor, EditorChange } from "obsidian";
 import { getListStart, getLineInfo, getPrevItemIndex } from "./utils";
-import { ChangeResult, LineInfo, PendingChanges, Range } from "./types";
+import { ChangeResult, LineInfo, PendingChanges } from "./types";
 import SettingsManager from "./SettingsManager";
 
 // responsible for all renumbering actions

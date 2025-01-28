@@ -192,9 +192,8 @@ function moveLine(editor: Editor, fromLine: number, toLine: number) {
         };
     }
 
-    console.log(fromLine, toLine);
     changes.push(insertLine, removeLine);
     editor.transaction({ changes });
 }
 
-export { reorderCheckboxes, getNewCheckedLoc, getNewUncheckedLoc };
+export { reorderCheckboxes, getNewCheckedLoc, getNewUncheckedLoc, moveLine };
