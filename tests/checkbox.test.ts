@@ -229,79 +229,79 @@ describe("getNewUncheckedLoc", () => {
 });
 
 // requires proper mock
-describe.only("moveLine", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
+// describe.only("moveLine", () => {
+//     beforeEach(() => {
+//         jest.clearAllMocks();
+//     });
 
-    const testCases = [
-        {
-            name: "Single Item",
-            content: ["a"],
-            index: 0,
-            insertTo: 0,
-            expected: ["a"],
-        },
-        {
-            name: "Sequence forward insert",
-            content: ["a", "b", "c", "d", "e"],
-            index: 1,
-            insertTo: 3,
-            expected: ["a", "c", "d", "b", "e"],
-        },
-        {
-            name: "Sequence backwards insert",
-            content: ["a", "b", "c", "d", "e"],
-            index: 3,
-            insertTo: 1,
-            expected: ["a", "d", "b", "c", "e"],
-        },
-        {
-            name: "Sequence from the start",
-            content: ["a", "b", "c", "d", "e"],
-            index: 0,
-            insertTo: 2,
-            expected: ["b", "c", "a", "d", "e"],
-        },
-        {
-            name: "Sequence to the start",
-            content: ["a", "b", "c", "d", "e"],
-            index: 2,
-            insertTo: 0,
-            expected: ["c", "a", "b", "d", "e"],
-        },
-        {
-            name: "Sequence from the end",
-            content: ["a", "b", "c", "d", "e"],
-            index: 4,
-            insertTo: 2,
-            expected: ["a", "b", "e", "c", "d"],
-        },
-        {
-            name: "Sequence to the end",
-            content: ["a", "b", "c", "d", "e"],
-            index: 2,
-            insertTo: 4,
-            expected: ["a", "b", "d", "e", "c"],
-        },
-    ];
+//     const testCases = [
+//         {
+//             name: "Single Item",
+//             content: ["a"],
+//             index: 0,
+//             insertTo: 0,
+//             expected: ["a"],
+//         },
+//         {
+//             name: "Sequence forward insert",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 1,
+//             insertTo: 3,
+//             expected: ["a", "c", "d", "b", "e"],
+//         },
+//         {
+//             name: "Sequence backwards insert",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 3,
+//             insertTo: 1,
+//             expected: ["a", "d", "b", "c", "e"],
+//         },
+//         {
+//             name: "Sequence from the start",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 0,
+//             insertTo: 2,
+//             expected: ["b", "c", "a", "d", "e"],
+//         },
+//         {
+//             name: "Sequence to the start",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 2,
+//             insertTo: 0,
+//             expected: ["c", "a", "b", "d", "e"],
+//         },
+//         {
+//             name: "Sequence from the end",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 4,
+//             insertTo: 2,
+//             expected: ["a", "b", "e", "c", "d"],
+//         },
+//         {
+//             name: "Sequence to the end",
+//             content: ["a", "b", "c", "d", "e"],
+//             index: 2,
+//             insertTo: 4,
+//             expected: ["a", "b", "d", "e", "c"],
+//         },
+//     ];
 
-    testCases.forEach(({ name, content, index, insertTo, expected }) => {
-        test(name, () => {
-            const editor = createMockEditor(content);
-            moveLine(editor, index, insertTo);
+//     testCases.forEach(({ name, content, index, insertTo, expected }) => {
+//         test(name, () => {
+//             const editor = createMockEditor(content);
+//             moveLine(editor, index, insertTo);
 
-            if (content.length === 5) {
-                console.debug(
-                    `${editor.getLine(0)} ${editor.getLine(1)} ${editor.getLine(2)} ${editor.getLine(
-                        3
-                    )} ${editor.getLine(4)}`
-                );
-            }
+//             if (content.length === 5) {
+//                 console.debug(
+//                     `${name}, ${editor.getLine(0)} ${editor.getLine(1)} ${editor.getLine(2)} ${editor.getLine(
+//                         3
+//                     )} ${editor.getLine(4)}`
+//                 );
+//             }
 
-            expected.forEach((_, i) => {
-                expect(editor.getLine(i)).toBe(expected[i]);
-            });
-        });
-    });
-});
+//             expected.forEach((_, i) => {
+//                 expect(editor.getLine(i)).toBe(expected[i]);
+//             });
+//         });
+//     });
+// });

@@ -18,7 +18,7 @@ function reorderCheckboxes(editor: Editor, index: number): Range | undefined {
 
     moveLine(editor, index, toLine);
 
-    return { start: index, limit: toLine };
+    return { start: Math.min(index, toLine), limit: Math.max(index, toLine) };
 }
 
 // gets the index of the last item in a numbered list

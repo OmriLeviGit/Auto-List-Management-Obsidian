@@ -12,9 +12,9 @@ const mutex = new Mutex();
 export default class AutoRenumbering extends Plugin {
     private renumberer: Renumberer;
     private settingsManager: SettingsManager;
-    private isProccessing = false;
-    private blockChanges = false; // if the previous action was a special key
+    private blockChanges = false;
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
+    private handleMouseBound: (event: MouseEvent) => void;
 
     async onload() {
         await this.loadSettings();
@@ -26,51 +26,43 @@ export default class AutoRenumbering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                console.log("editor");
                 if (this.settingsManager.getLiveNumberingUpdate() === false) {
                     return;
                 }
 
-                if (!this.isProccessing) {
-                    this.isProccessing = true;
+                setTimeout(() => {
+                    mutex.runExclusive(() => {
+                        const originalPos: EditorPosition = editor.getCursor();
+                        if (this.blockChanges) {
+                            return;
+                        }
+                        this.blockChanges = true; // prevent several renumbering/checkbox calls, becomes false on each keyboard stroke
 
-                    setTimeout(() => {
-                        mutex.runExclusive(() => {
-                            const originalPos: EditorPosition = editor.getCursor();
+                        const { anchor, head } = editor.listSelections()[0];
+                        const currIndex = Math.min(anchor.line, head.line);
 
-                            if (this.blockChanges) {
-                                return;
-                            }
-                            this.blockChanges = true; // becomes false on the next keyboard stroke
+                        // if reordered checkbox, renumber between the original location and the new one
+                        const range = reorderCheckboxes(editor, currIndex);
+                        if (range !== undefined) {
+                            this.renumberer.renumber(editor, range.start, range.limit);
+                        } else {
+                            this.renumberer.renumber(editor, currIndex);
+                        }
 
-                            const { anchor, head } = editor.listSelections()[0];
-                            const currIndex = Math.min(anchor.line, head.line);
-                            console.log("@", editor.getLine(currIndex));
-
-                            // if reordered checkbox, renumber between the original location and the new one
-                            const range = reorderCheckboxes(editor, currIndex);
-                            if (range !== undefined) {
-                                this.renumberer.renumber(editor, range.start, range.limit);
-                            } else {
-                                this.renumberer.renumber(editor, currIndex);
-                            }
-
+                        // swapping lines in checkbox reordering sometimes moves the cursor to line beginning
+                        if (!editor.somethingSelected()) {
                             // if something is selected, restoring cursor position interferes with the selection
-                            if (!editor.somethingSelected()) {
-                                // return the cursor location to how it was before checkbox re-ordering
-                                const newLineInOriginalPos = editor.getLine(originalPos.line);
+                            const newLineInOriginalPos = editor.getLine(originalPos.line);
 
-                                const newPos: EditorPosition = {
-                                    line: originalPos.line,
-                                    ch: Math.min(originalPos.ch, newLineInOriginalPos.length),
-                                };
+                            const newPos: EditorPosition = {
+                                line: originalPos.line,
+                                ch: Math.min(originalPos.ch, newLineInOriginalPos.length),
+                            };
 
-                                editor.setCursor(newPos);
-                            }
-                        });
-                        this.isProccessing = false;
-                    }, 0);
-                }
+                            editor.setCursor(newPos); // restore the cursor location to how it was before checkbox reordering
+                        }
+                    });
+                }, 0);
             })
         );
 
@@ -91,18 +83,29 @@ export default class AutoRenumbering extends Plugin {
         // keyboard stroke listener
         this.handleKeystrokeBound = this.handleKeystroke.bind(this);
         window.addEventListener("keydown", this.handleKeystrokeBound); // Keystroke listener
+
+        // mouse listener
+        this.handleMouseBound = this.handleMouseClick.bind(this);
+        window.addEventListener("click", this.handleMouseBound); // mouse listener
     }
 
     handleKeystroke(event: KeyboardEvent) {
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
             this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
-            // console.debug("handlestroke", this.blockChanges);
+        });
+    }
+
+    handleMouseClick(event: MouseEvent) {
+        // if detected a mouse click, can renumber or checkbox (is used for checking with the mouse)
+        mutex.runExclusive(() => {
+            this.blockChanges = false;
         });
     }
 
     async onunload() {
         window.removeEventListener("keydown", this.handleKeystrokeBound);
+        window.removeEventListener("mouse", this.handleMouseBound);
     }
 
     async loadSettings() {
@@ -117,13 +120,5 @@ export default class AutoRenumbering extends Plugin {
 
     getRenumberer() {
         return this.renumberer;
-    }
-
-    getIsProcessing() {
-        return this.isProccessing;
-    }
-
-    setIsProcessing(value: boolean) {
-        this.isProccessing = value;
     }
 }

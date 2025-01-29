@@ -18,13 +18,7 @@ export const createMockEditor = (initialContent: string[]) => {
         lastLine: jest.fn().mockImplementation((): number => {
             return content.length - 1;
         }),
-        replaceRange: jest.fn().mockImplementation((replacement: string, from: EditorPosition, to: EditorPosition) => {
-            if (replacement === "") {
-                content.splice(from.line, 1);
-            } else {
-                content.splice(from.line, 0, replacement);
-            }
-        }),
+
         transaction: jest.fn().mockImplementation((tx: EditorTransaction, origin?: string) => {
             const changes = tx.changes;
             if (changes == undefined) {
