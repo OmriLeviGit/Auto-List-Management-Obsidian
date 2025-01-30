@@ -1,8 +1,5 @@
 import { Plugin, Editor, EditorPosition } from "obsidian";
 import { Mutex } from "async-mutex";
-import handlePasteAndDrop from "src/pasteAndDropHandler";
-import { registerCommands } from "src/command-registration";
-import Renumberer from "src/Renumberer";
 import AutoRenumberingSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderCheckboxes } from "src/checkbox";
@@ -10,7 +7,6 @@ import { reorderCheckboxes } from "src/checkbox";
 const mutex = new Mutex();
 
 export default class AutoRenumbering extends Plugin {
-    private renumberer: Renumberer;
     private settingsManager: SettingsManager;
     private blockChanges = false;
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
@@ -18,15 +14,13 @@ export default class AutoRenumbering extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        registerCommands(this);
         this.addSettingTab(new AutoRenumberingSettings(this.app, this));
         this.settingsManager = SettingsManager.getInstance();
-        this.renumberer = new Renumberer();
 
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                if (this.settingsManager.getLiveNumberingUpdate() === false) {
+                if (this.settingsManager.getLiveUpdate() === false) {
                     return;
                 }
 
@@ -42,12 +36,7 @@ export default class AutoRenumbering extends Plugin {
                         const currIndex = Math.min(anchor.line, head.line);
 
                         // if reordered checkbox, renumber between the original location and the new one
-                        const range = reorderCheckboxes(editor, currIndex);
-                        if (range !== undefined) {
-                            this.renumberer.renumber(editor, range.start, range.limit);
-                        } else {
-                            this.renumberer.renumber(editor, currIndex);
-                        }
+                        reorderCheckboxes(editor, currIndex);
 
                         // swapping lines in checkbox reordering sometimes moves the cursor to line beginning
                         if (!editor.somethingSelected()) {
@@ -63,20 +52,6 @@ export default class AutoRenumbering extends Plugin {
                         }
                     });
                 }, 0);
-            })
-        );
-
-        // editor-paste listener
-        this.registerEvent(
-            this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                handlePasteAndDrop.call(this, evt, editor, mutex);
-            })
-        );
-
-        // editor-drop listener
-        this.registerEvent(
-            this.app.workspace.on("editor-drop", (evt: DragEvent, editor: Editor) => {
-                handlePasteAndDrop.call(this, evt, editor, mutex);
             })
         );
 
@@ -116,9 +91,5 @@ export default class AutoRenumbering extends Plugin {
     async saveSettings() {
         const settingsManager = SettingsManager.getInstance();
         await this.saveData(settingsManager.getSettings());
-    }
-
-    getRenumberer() {
-        return this.renumberer;
     }
 }

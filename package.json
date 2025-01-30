@@ -1,7 +1,7 @@
 {
     "name": "automatic-renumbering",
     "version": "1.2.0",
-    "description": "Automatically renumber numbered lists as you edit them.",
+    "description": "Automatically reorder checklists as you edit them.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",

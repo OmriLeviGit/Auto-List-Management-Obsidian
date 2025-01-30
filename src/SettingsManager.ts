@@ -33,28 +33,12 @@ export default class SettingsManager {
         this.settings = settings;
     }
 
-    public getLiveNumberingUpdate(): boolean {
+    public getLiveUpdate(): boolean {
         return this.settings.liveNumberingUpdate;
     }
 
-    public setLiveNumberingUpdate(value: boolean): void {
+    public setLiveUpdate(value: boolean): void {
         this.settings.liveNumberingUpdate = value;
-    }
-
-    public getSmartPasting(): boolean {
-        return this.settings.smartPasting;
-    }
-
-    public setSmartPasting(value: boolean): void {
-        this.settings.smartPasting = value;
-    }
-
-    public getStartsFromOne(): boolean {
-        return this.settings.startsFromOne;
-    }
-
-    public setStartsFromOne(value: boolean): void {
-        this.settings.startsFromOne = value;
     }
 
     public getIndentSize(): number {
@@ -63,14 +47,6 @@ export default class SettingsManager {
 
     public setIndentSize(value: number): void {
         this.settings.indentSize = value;
-    }
-
-    public getLiveCheckboxUpdate(): boolean {
-        return this.settings.liveCheckboxUpdate;
-    }
-
-    public setLiveCheckboxUpdate(value: boolean): void {
-        this.settings.liveCheckboxUpdate = value;
     }
 
     public getSortCheckboxesBottom(): boolean {
