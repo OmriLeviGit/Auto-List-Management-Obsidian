@@ -1,5 +1,5 @@
 {
-    "name": "automatic-renumbering",
+    "name": "automatic-reordering",
     "version": "1.2.0",
     "description": "Automatically reorder checkbox lists as you edit them.",
     "main": "main.js",

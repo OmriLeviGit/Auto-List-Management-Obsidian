@@ -1,6 +1,6 @@
 # Automatic Checkbox Reordering Plugin for Obsidian
 
-> As of patch 1.8.3 of Obsidian, the automatic list renumbering this plugin was initially designed for has been removed, as numbered lists are updated automatically. This plugin now only supports automatic checkbox reordering.
+> As of Obsidian version 1.8.3, numbered lists are now automatically renumbered as a built-in feature. Therefore, this plugin now only supports automatic checkbox reordering.
 
 The Automatic Checkbox Reordering plugin automatically sorts checked items to the bottom.
 
