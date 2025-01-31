@@ -42,12 +42,15 @@ export default class AutoRenumbering extends Plugin {
                         const currIndex = Math.min(anchor.line, head.line);
 
                         // if reordered checkbox, renumber between the original location and the new one
-                        const range = reorderCheckboxes(editor, currIndex);
-                        if (range !== undefined) {
-                            this.renumberer.renumber(editor, range.start, range.limit);
-                        } else {
-                            this.renumberer.renumber(editor, currIndex);
-                        }
+                        // const range = reorderCheckboxes(editor, currIndex);
+                        // if (range !== undefined) {
+                        //     this.renumberer.renumber(editor, range.start, range.limit);
+                        // } else {
+                        //     this.renumberer.renumber(editor, currIndex);
+                        // }
+
+                        // const range = reorderCheckboxes(editor, currIndex);
+                        this.renumberer.renumber(editor, currIndex);
 
                         // swapping lines in checkbox reordering sometimes moves the cursor to line beginning
                         if (!editor.somethingSelected()) {
