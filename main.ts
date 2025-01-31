@@ -9,6 +9,7 @@ const mutex = new Mutex();
 export default class AutoRenumbering extends Plugin {
     private settingsManager: SettingsManager;
     private blockChanges = false;
+    private checkboxClickedAt: number | undefined = undefined;
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
     private handleMouseBound: (event: MouseEvent) => void;
 
@@ -30,10 +31,16 @@ export default class AutoRenumbering extends Plugin {
                         if (this.blockChanges) {
                             return;
                         }
+
                         this.blockChanges = true; // prevent several renumbering/checkbox calls, becomes false on each keyboard stroke
 
-                        const { anchor, head } = editor.listSelections()[0];
-                        const currIndex = Math.min(anchor.line, head.line);
+                        let currIndex: number;
+                        if (this.checkboxClickedAt !== undefined) {
+                            currIndex = this.checkboxClickedAt;
+                        } else {
+                            const { anchor, head } = editor.listSelections()[0];
+                            currIndex = Math.min(anchor.line, head.line);
+                        }
 
                         // if reordered checkbox, renumber between the original location and the new one
                         reorderCheckboxes(editor, currIndex);
@@ -72,8 +79,22 @@ export default class AutoRenumbering extends Plugin {
     }
 
     handleMouseClick(event: MouseEvent) {
-        // if detected a mouse click, can renumber or checkbox (is used for checking with the mouse)
+        // if clicked on a checkbox using the mouse (this is not the mouse location)
         mutex.runExclusive(() => {
+            this.checkboxClickedAt = undefined; // set undefiend as default, changed only if checked
+            const target = event.target as HTMLElement;
+            if (target.classList.contains("task-list-item-checkbox")) {
+                // Find the parent list line div
+                const listLine = target.closest(".HyperMD-list-line");
+                if (listLine) {
+                    // Get all list lines to determine index
+                    const editor = listLine.closest(".cm-editor");
+                    if (editor) {
+                        const allListLines = Array.from(editor.getElementsByClassName("HyperMD-list-line"));
+                        this.checkboxClickedAt = allListLines.indexOf(listLine);
+                    }
+                }
+            }
             this.blockChanges = false;
         });
     }
