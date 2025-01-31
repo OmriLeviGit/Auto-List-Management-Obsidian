@@ -1,6 +1,6 @@
 {
     "name": "automatic-reordering",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Automatically reorder checkbox lists as you edit them.",
     "main": "main.js",
     "scripts": {

@@ -1,11 +1,11 @@
 {
-    "id": "automatic-renumbering",
-    "name": "Automatic Checklist Reordering",
-    "author": "Omri Levi",
-    "description": "Automatically reorder checkbox lists as you edit them.",
-    "authorUrl": "https://github.com/OmriLeviGit/Automatic-Checklist-Reordering-Obsidian",
-    "fundingUrl": "https://buymeacoffee.com/omrilevi",
-    "version": "2.0.0",
-    "minAppVersion": "1.8.3",
-    "isDesktopOnly": true
+	"id": "automatic-renumbering",
+	"name": "Automatic Checklist Reordering",
+	"author": "Omri Levi",
+	"description": "Automatically reorder checkbox lists as you edit them.",
+	"authorUrl": "https://github.com/OmriLeviGit/Automatic-Checklist-Reordering-Obsidian",
+	"fundingUrl": "https://buymeacoffee.com/omrilevi",
+	"version": "2.0.1",
+	"minAppVersion": "1.8.3",
+	"isDesktopOnly": true
 }
