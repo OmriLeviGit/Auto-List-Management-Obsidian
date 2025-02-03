@@ -1,7 +1,7 @@
 {
-    "name": "automatic-reordering",
-    "version": "2.0.1",
-    "description": "Automatically reorder checkbox lists as you edit them.",
+    "name": "automatic-list-reordering",
+    "version": "2.0.2",
+    "description": "Automatically reorder checklists and numbered lists as you edit them.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
