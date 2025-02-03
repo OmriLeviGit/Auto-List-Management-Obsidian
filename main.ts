@@ -81,20 +81,18 @@ export default class AutoRenumbering extends Plugin {
     handleMouseClick(event: MouseEvent) {
         // if clicked on a checkbox using the mouse (this is not the mouse location)
         mutex.runExclusive(() => {
-            this.checkboxClickedAt = undefined; // set undefiend as default, changed only if checked
             const target = event.target as HTMLElement;
             if (target.classList.contains("task-list-item-checkbox")) {
-                // Find the parent list line div
-                const listLine = target.closest(".HyperMD-list-line");
+                const listLine = target.closest(".cm-line");
                 if (listLine) {
-                    // Get all list lines to determine index
                     const editor = listLine.closest(".cm-editor");
                     if (editor) {
-                        const allListLines = Array.from(editor.getElementsByClassName("HyperMD-list-line"));
-                        this.checkboxClickedAt = allListLines.indexOf(listLine);
+                        const allLines = Array.from(editor.getElementsByClassName("cm-line"));
+                        this.checkboxClickedAt = allLines.indexOf(listLine);
                     }
                 }
             }
+
             this.blockChanges = false;
         });
     }
