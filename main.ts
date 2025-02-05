@@ -39,7 +39,7 @@ export default class AutoReordering extends Plugin {
                             return;
                         }
 
-                        this.blockChanges = true; // prevent several renumbering/checkbox calls, becomes false on each keyboard stroke
+                        this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
 
                         let currIndex: number;
                         if (this.checkboxClickedAt !== undefined) {

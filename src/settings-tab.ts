@@ -18,6 +18,22 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         containerEl.empty();
 
+        new Setting(containerEl)
+            .setName("Tab size")
+            .setDesc(
+                "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size/Indent visual width."
+            )
+            .addSlider((slider) => {
+                slider
+                    .setValue(this.settingsManager.getIndentSize())
+                    .setLimits(2, 8, 1)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        this.settingsManager.setIndentSize(value);
+                        await this.plugin.saveSettings();
+                    });
+            });
+
         new Setting(containerEl).setHeading().setName("Numbered lists");
 
         new Setting(containerEl)
@@ -69,23 +85,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                 })
             );
 
-        new Setting(containerEl)
-            .setName("Indent visual width")
-            .setDesc(
-                "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size/Indent visual width."
-            )
-            .addSlider((slider) => {
-                slider
-                    .setValue(this.settingsManager.getIndentSize())
-                    .setLimits(2, 8, 1)
-                    .setDynamicTooltip()
-                    .onChange(async (value) => {
-                        this.settingsManager.setIndentSize(value);
-                        await this.plugin.saveSettings();
-                    });
-            });
-
-        new Setting(containerEl).setHeading().setName("Check lists");
+        new Setting(containerEl).setHeading().setName("Checklists");
 
         new Setting(containerEl)
             .setName("Automatically sort checklists")

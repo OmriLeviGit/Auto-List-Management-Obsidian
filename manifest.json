@@ -6,6 +6,6 @@
     "authorUrl": "https://github.com/OmriLeviGit/Auto-List-Reordering-Obsidian",
     "fundingUrl": "https://buymeacoffee.com/omrilevi",
     "version": "2.0.1",
-    "minAppVersion": "1.8.3",
+    "minAppVersion": "0.15.0",
     "isDesktopOnly": true
 }
