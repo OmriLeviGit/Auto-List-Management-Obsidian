@@ -33,7 +33,7 @@ The Automatic Renumbering plugin helps keep your numbered lists in sequential or
 
 1. In Obsidian, go to **Options → Community plugins → Browse** and search for **Automatic List Renumbering**.
 2. Click **Install** and enable the plugin.
-3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size**).
+3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size/Indent visual width**).
 
 Once installed, the plugin will automatically manage your numbered lists.
 

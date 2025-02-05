@@ -18,9 +18,11 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         containerEl.empty();
 
+        new Setting(containerEl).setHeading().setName("Numbered lists");
+
         new Setting(containerEl)
-            .setName("Live update")
-            .setDesc("Automatically update numbered lists as changes are made.")
+            .setName("Automatically update numbered lists")
+            .setDesc("Update numbered lists as changes are made.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
                     this.settingsManager.setLiveNumberingUpdate(value);
@@ -59,7 +61,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Start numbering from 1")
-            .setDesc("The first item of every numbered list is 1.")
+            .setDesc("Ensure that the first item of every numbered list is set to 1.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getStartsFromOne()).onChange(async (value) => {
                     this.settingsManager.setStartsFromOne(value);
@@ -68,9 +70,9 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName("Tab indent size")
+            .setName("Indent visual width")
             .setDesc(
-                "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size."
+                "Set the indent size to the same size as in the editor's settings. Can be found under: Options > Editor > Tab indent size/Indent visual width."
             )
             .addSlider((slider) => {
                 slider
@@ -83,9 +85,11 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     });
             });
 
+        new Setting(containerEl).setHeading().setName("Check lists");
+
         new Setting(containerEl)
-            .setName("Toggle checkbox reordering")
-            .setDesc("Automatically sorts checkboxes")
+            .setName("Automatically sort checklists")
+            .setDesc("Sort checklist items when boxes are checked")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveCheckboxUpdate()).onChange(async (value) => {
                     this.settingsManager.setLiveCheckboxUpdate(value);
