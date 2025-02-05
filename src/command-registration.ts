@@ -1,7 +1,7 @@
-import AutoRenumbering from "../main";
+import AutoReordering from "../main";
 import { Editor } from "obsidian";
 
-export function registerCommands(plugin: AutoRenumbering) {
+export function registerCommands(plugin: AutoReordering) {
     plugin.addCommand({
         id: "1-selection",
         name: "Renumber selected lists or at cursor position",

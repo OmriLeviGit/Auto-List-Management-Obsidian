@@ -58,15 +58,6 @@ export default class SettingsManager {
         this.settings.startsFromOne = value;
     }
 
-    public getLiveUpdate(): boolean {
-        // TODO
-        return this.settings.liveNumberingUpdate;
-    }
-
-    public setLiveUpdate(value: boolean): void {
-        this.settings.liveNumberingUpdate = value;
-    }
-
     public getIndentSize(): number {
         return this.settings.indentSize;
     }

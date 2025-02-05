@@ -1,13 +1,13 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import AutoRenumbering from "../main";
+import AutoReordering from "../main";
 import SettingsManager from "./SettingsManager";
 import "styles.css";
 
 export default class AutoRenumberingSettings extends PluginSettingTab {
-    plugin: AutoRenumbering;
+    plugin: AutoReordering;
     settingsManager: SettingsManager;
 
-    constructor(app: App, plugin: AutoRenumbering) {
+    constructor(app: App, plugin: AutoReordering) {
         super(app, plugin);
         this.plugin = plugin;
         this.settingsManager = SettingsManager.getInstance();
@@ -84,11 +84,11 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             });
 
         new Setting(containerEl)
-            .setName("Sort automatically")
+            .setName("Toggle checkbox reordering")
             .setDesc("Automatically sorts checkboxes")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getLiveUpdate()).onChange(async (value) => {
-                    this.settingsManager.setLiveUpdate(value);
+                toggle.setValue(this.settingsManager.getLiveCheckboxUpdate()).onChange(async (value) => {
+                    this.settingsManager.setLiveCheckboxUpdate(value);
                     await this.plugin.saveSettings();
                 })
             );

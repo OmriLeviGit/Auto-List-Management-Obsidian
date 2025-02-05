@@ -3,14 +3,14 @@ import { Mutex } from "async-mutex";
 import handlePasteAndDrop from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
-import AutoRenumberingSettings from "./src/settings-tab";
+import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderCheckboxes } from "src/checkbox";
 import { Range } from "src/types";
 
 const mutex = new Mutex();
 
-export default class AutoRenumbering extends Plugin {
+export default class AutoReordering extends Plugin {
     private renumberer: Renumberer;
     private settingsManager: SettingsManager;
     private blockChanges = false;
@@ -21,7 +21,7 @@ export default class AutoRenumbering extends Plugin {
     async onload() {
         await this.loadSettings();
         registerCommands(this);
-        this.addSettingTab(new AutoRenumberingSettings(this.app, this));
+        this.addSettingTab(new PluginSettings(this.app, this));
         this.settingsManager = SettingsManager.getInstance();
         this.renumberer = new Renumberer();
 
@@ -38,6 +38,7 @@ export default class AutoRenumbering extends Plugin {
                         if (this.blockChanges) {
                             return;
                         }
+
                         this.blockChanges = true; // prevent several renumbering/checkbox calls, becomes false on each keyboard stroke
 
                         let currIndex: number;
@@ -114,20 +115,18 @@ export default class AutoRenumbering extends Plugin {
     handleMouseClick(event: MouseEvent) {
         // if clicked on a checkbox using the mouse (this is not the mouse location)
         mutex.runExclusive(() => {
-            this.checkboxClickedAt = undefined; // set undefiend as default, changed only if checked
             const target = event.target as HTMLElement;
             if (target.classList.contains("task-list-item-checkbox")) {
-                // Find the parent list line div
-                const listLine = target.closest(".HyperMD-list-line");
+                const listLine = target.closest(".cm-line");
                 if (listLine) {
-                    // Get all list lines to determine index
                     const editor = listLine.closest(".cm-editor");
                     if (editor) {
-                        const allListLines = Array.from(editor.getElementsByClassName("HyperMD-list-line"));
-                        this.checkboxClickedAt = allListLines.indexOf(listLine);
+                        const allLines = Array.from(editor.getElementsByClassName("cm-line"));
+                        this.checkboxClickedAt = allLines.indexOf(listLine);
                     }
                 }
             }
+
             this.blockChanges = false;
         });
     }
@@ -145,5 +144,9 @@ export default class AutoRenumbering extends Plugin {
     async saveSettings() {
         const settingsManager = SettingsManager.getInstance();
         await this.saveData(settingsManager.getSettings());
+    }
+
+    getRenumberer(): Renumberer {
+        return this.renumberer;
     }
 }

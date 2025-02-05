@@ -35,11 +35,23 @@ function getNewUncheckedLoc(editor: Editor, startIndex: number): number | undefi
 
     const startContainsNumber = startInfo.number !== undefined;
 
+    function shouldBreak(currentInfo: LineInfo): boolean {
+        const currentContainsNumber = currentInfo.number !== undefined;
+        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+        if (!hasSameNumberStatus || !hasSameIndentation) {
+            return true;
+        }
+
+        return currentInfo.isChecked === false || currentInfo.isChecked === undefined;
+    }
+
     let index = startIndex - 1;
     while (0 <= index) {
         const currentInfo = getLineInfo(editor.getLine(index));
 
-        if (shouldBreak(currentInfo, startInfo, startContainsNumber, false)) {
+        if (shouldBreak(currentInfo)) {
             break;
         }
 
@@ -61,13 +73,25 @@ function getNewCheckedLoc(editor: Editor, startIndex: number): number | undefine
         return undefined;
     }
 
+    function shouldBreak(currentInfo: LineInfo): boolean {
+        const currentContainsNumber = currentInfo.number !== undefined;
+        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
+
+        if (!hasSameNumberStatus || !hasSameIndentation) {
+            return true;
+        }
+
+        return currentInfo.isChecked === true || currentInfo.isChecked === undefined;
+    }
+
     const startContainsNumber = startInfo.number !== undefined;
 
     let index = startIndex + 1;
     while (index <= editor.lastLine()) {
         const currentInfo = getLineInfo(editor.getLine(index));
 
-        if (shouldBreak(currentInfo, startInfo, startContainsNumber, true)) {
+        if (shouldBreak(currentInfo)) {
             break;
         }
 
@@ -75,22 +99,6 @@ function getNewCheckedLoc(editor: Editor, startIndex: number): number | undefine
     }
 
     return index - 1;
-}
-function shouldBreak(
-    currentInfo: LineInfo,
-    startInfo: LineInfo,
-    startContainsNumber: boolean,
-    breakOn: boolean
-): boolean {
-    const currentContainsNumber = currentInfo.number !== undefined;
-    const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
-    const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
-
-    if (!hasSameNumberStatus || !hasSameIndentation) {
-        return true;
-    }
-
-    return currentInfo.isChecked === breakOn || currentInfo.isChecked === undefined;
 }
 
 function moveLine(editor: Editor, fromLine: number, toLine: number) {
