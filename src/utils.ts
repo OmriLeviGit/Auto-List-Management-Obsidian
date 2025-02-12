@@ -94,7 +94,7 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
 }
 
 function hasCheckboxContent(line: string): boolean {
-    console.log(`line |${line}|`);
+    // console.log(`line |${line}|`);
     const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
     return CHECKBOX_WITH_CONTENT.test(line);
 }
