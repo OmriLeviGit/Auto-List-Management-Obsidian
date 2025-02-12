@@ -6,8 +6,7 @@ import Renumberer from "src/Renumberer";
 import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderCheckboxes } from "src/checkbox";
-import { Range } from "src/types";
-import { extractTextAfterCheckbox } from "src/utils";
+import { ReorderData } from "src/types";
 
 const mutex = new Mutex();
 
@@ -49,35 +48,22 @@ export default class AutoReordering extends Plugin {
                         }
 
                         // Handle checkbox updates
-                        let range: Range | undefined;
+                        let reorderData: ReorderData | undefined;
                         if (this.settingsManager.getLiveCheckboxUpdate() === true) {
-                            range = reorderCheckboxes(editor, currIndex);
+                            reorderData = reorderCheckboxes(editor, currIndex);
                         }
 
                         // Handle numbering updates
                         if (this.settingsManager.getLiveNumberingUpdate() === true) {
-                            if (range !== undefined) {
+                            if (reorderData !== undefined) {
                                 // if reordered checkbox, renumber between the original location and the new one
-                                this.renumberer.renumber(editor, range.start, range.limit);
+                                this.renumberer.renumber(editor, reorderData.start, reorderData.limit);
                             } else {
                                 this.renumberer.renumber(editor, currIndex);
                             }
                         }
 
-                        // Restore if the current line was reordered and no text was selected, place the cursor at the end of the line
-                        if (
-                            !editor.somethingSelected() &&
-                            range !== undefined &&
-                            range.start <= originalPos.line &&
-                            originalPos.line < range.limit
-                        ) {
-                            const newLineInOriginalPos = editor.getLine(originalPos.line);
-                            const newPos: EditorPosition = {
-                                line: originalPos.line,
-                                ch: newLineInOriginalPos.length,
-                            };
-                            editor.setCursor(newPos);
-                        }
+                        this.updateCursorPosition(editor, originalPos, reorderData);
                     });
                 }, 0);
             })
@@ -148,6 +134,32 @@ export default class AutoReordering extends Plugin {
     async saveSettings() {
         const settingsManager = SettingsManager.getInstance();
         await this.saveData(settingsManager.getSettings());
+    }
+
+    /*
+    if the current line was reordered and no text was selected:
+    if the line unchecked->checked, restore the cursor to the original position
+    if the line checked->unchecked, place the cursor at the newly unchecked line
+    */
+    updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderData): void {
+        if (editor.somethingSelected() || !reorderData) {
+            return;
+        }
+
+        let newPosition: EditorPosition;
+        if (originalPos.line < reorderData.lastUncheckedIndex) {
+            newPosition = {
+                line: originalPos.line,
+                ch: originalPos.ch,
+            };
+        } else {
+            newPosition = {
+                line: reorderData.lastUncheckedIndex,
+                ch: editor.getLine(reorderData.lastUncheckedIndex).length,
+            };
+        }
+
+        editor.setCursor(newPosition);
     }
 
     getRenumberer(): Renumberer {

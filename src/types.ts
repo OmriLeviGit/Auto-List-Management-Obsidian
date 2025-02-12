@@ -32,9 +32,10 @@ interface PluginSettings {
     sortCheckboxesToBottom: boolean;
 }
 
-interface Range {
+interface ReorderData {
     start: number;
     limit: number;
+    lastUncheckedIndex: number;
 }
 
-export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, PluginSettings, Range };
+export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, PluginSettings, ReorderData };

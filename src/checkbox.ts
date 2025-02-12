@@ -1,8 +1,8 @@
 import { Editor } from "obsidian";
-import { getLineInfo, hasCheckboxContent } from "./utils";
-import { LineInfo, Range } from "./types";
+import { getLineInfo } from "./utils";
+import { LineInfo, ReorderData } from "./types";
 
-function reorderCheckboxes(editor: Editor, index: number): Range | undefined {
+function reorderCheckboxes(editor: Editor, index: number): ReorderData | undefined {
     const line = editor.getLine(index);
     const startInfo = getLineInfo(line);
     const hasContent = hasCheckboxContent(line);
@@ -55,11 +55,21 @@ function reorderCheckboxes(editor: Editor, index: number): Range | undefined {
         return undefined; // no changes are needed
     }
 
+    // move the cursor to the last unchecked index if we go from checked to unchecked
+    const lastUncheckedIndex = startReorderingFrom + unCheckedItems.length - 1;
+
     unCheckedItems.push(...checkedItems); // push all changed to one list
-    const changes = unCheckedItems.join("\n") + "\n";
+
+    let changes: string;
+    if (i > editor.lastLine()) {
+        changes = unCheckedItems.join("\n");
+    } else {
+        changes = unCheckedItems.join("\n") + "\n";
+    }
+
     editor.replaceRange(changes, { line: startReorderingFrom, ch: 0 }, { line: i, ch: 0 });
 
-    return { start: startReorderingFrom, limit: i };
+    return { start: startReorderingFrom, limit: i, lastUncheckedIndex };
 }
 
 function getChecklistStart(editor: Editor, index: number): number {
@@ -92,6 +102,12 @@ function sameStatus(info1: LineInfo, info2: LineInfo): boolean {
     }
 
     return false;
+}
+
+// is a part of a checklist, and not an empty item
+function hasCheckboxContent(line: string): boolean {
+    const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
+    return CHECKBOX_WITH_CONTENT.test(line);
 }
 
 export { reorderCheckboxes, getChecklistStart };
