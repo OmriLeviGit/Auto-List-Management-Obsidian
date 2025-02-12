@@ -1,159 +1,100 @@
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo } from "./utils";
+import { getLineInfo, hasCheckboxContent } from "./utils";
 import { LineInfo, Range } from "./types";
 
 function reorderCheckboxes(editor: Editor, index: number): Range | undefined {
-    const info = getLineInfo(editor.getLine(index));
-
-    // if not a checkbox, no need to reorder
-    if (info.isChecked === undefined) {
+    const line = editor.getLine(index);
+    // console.log("lineoutside ", line, index);
+    const startInfo = getLineInfo(line);
+    const hasContent = hasCheckboxContent(line);
+    // console.log(hasContent);
+    // if not a checkbox or without any content, dont reorder
+    if (startInfo.isChecked === undefined || hasContent === false) {
         return;
     }
 
-    let toLine = info.isChecked === true ? getNewCheckedLoc(editor, index) : getNewUncheckedLoc(editor, index);
+    const checklistStartIndex = getChecklistStart(editor, index);
 
-    if (toLine === undefined || index === toLine) {
-        return;
-    }
-
-    moveLine(editor, index, toLine);
-
-    return { start: Math.min(index, toLine), limit: Math.max(index, toLine) };
-}
-
-// gets the index of the last item in a numbered list
-function getNewUncheckedLoc(editor: Editor, startIndex: number): number | undefined {
-    if (startIndex < 0 || editor.lastLine() < startIndex) {
-        return undefined;
-    }
-
-    const startInfo = getLineInfo(editor.getLine(startIndex));
-
-    if (startInfo.isChecked !== false) {
-        return undefined;
-    }
-
-    const startContainsNumber = startInfo.number !== undefined;
-
-    function shouldBreak(currentInfo: LineInfo): boolean {
-        const currentContainsNumber = currentInfo.number !== undefined;
-        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
-        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
-
-        if (!hasSameNumberStatus || !hasSameIndentation) {
-            return true;
-        }
-
-        return currentInfo.isChecked === false || currentInfo.isChecked === undefined;
-    }
-
-    let index = startIndex - 1;
-    while (0 <= index) {
-        const currentInfo = getLineInfo(editor.getLine(index));
-
-        if (shouldBreak(currentInfo)) {
+    // skip unchecked items at the beginning of the list
+    let i = checklistStartIndex;
+    while (i < editor.lastLine()) {
+        const currInfo = getLineInfo(editor.getLine(index));
+        const isSameStatus = sameStatus(startInfo, currInfo);
+        if (!isSameStatus || currInfo.isChecked !== false) {
             break;
         }
 
-        index--;
+        i++;
     }
 
+    let lastInUnchecked = i - 1;
+
+    const unCheckedItems = [];
+    const checkedItems = [];
+
+    // add items to the lists
+    while (i < editor.lastLine()) {
+        const line = editor.getLine(index);
+        const currInfo = getLineInfo(line);
+        const isSameStatus = sameStatus(startInfo, currInfo);
+        if (!isSameStatus) {
+            break;
+        }
+
+        if (currInfo.isChecked === false) {
+            unCheckedItems.push(line);
+        } else if (currInfo.isChecked === true) {
+            checkedItems.push(line);
+        } else {
+            break;
+        }
+
+        i++;
+    }
+
+    if (unCheckedItems.length === 0) {
+        return undefined; // no changes
+    }
+
+    const cursorLocation = lastInUnchecked + unCheckedItems.length;
+
+    unCheckedItems.push(...checkedItems);
+    const newList = unCheckedItems.join("\n");
+    editor.replaceRange(newList, { line: lastInUnchecked, ch: 0 }, { line: i, ch: 0 });
+
+    return { start: lastInUnchecked, limit: i - 1 };
+}
+
+function getChecklistStart(editor: Editor, index: number): number {
+    if (index === 0) {
+        return index;
+    }
+
+    const startInfo = getLineInfo(editor.getLine(index));
+    let i = index - 1;
+    while (0 <= i) {
+        const currInfo = getLineInfo(editor.getLine(index));
+        const isSameStatus = sameStatus(startInfo, currInfo);
+        if (!isSameStatus) {
+            break;
+        }
+        i++;
+    }
     return index + 1;
 }
 
-// gets the index of the last item in a numbered list
-function getNewCheckedLoc(editor: Editor, startIndex: number): number | undefined {
-    if (startIndex < 0 || editor.lastLine() < startIndex) {
-        return undefined;
+function sameStatus(info1: LineInfo, info2: LineInfo): boolean {
+    const startContainsNumber = info1.number !== undefined;
+    const currentContainsNumber = info2.number !== undefined;
+
+    const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
+    const hasSameIndentation = info2.spaceIndent === info1.spaceIndent;
+
+    if (hasSameNumberStatus && hasSameIndentation) {
+        return true;
     }
 
-    const startInfo = getLineInfo(editor.getLine(startIndex));
-
-    if (startInfo.isChecked !== true) {
-        return undefined;
-    }
-
-    function shouldBreak(currentInfo: LineInfo): boolean {
-        const currentContainsNumber = currentInfo.number !== undefined;
-        const hasSameNumberStatus = currentContainsNumber === startContainsNumber;
-        const hasSameIndentation = currentInfo.spaceIndent === startInfo.spaceIndent;
-
-        if (!hasSameNumberStatus || !hasSameIndentation) {
-            return true;
-        }
-
-        return currentInfo.isChecked === true || currentInfo.isChecked === undefined;
-    }
-
-    const startContainsNumber = startInfo.number !== undefined;
-
-    let index = startIndex + 1;
-    while (index <= editor.lastLine()) {
-        const currentInfo = getLineInfo(editor.getLine(index));
-
-        if (shouldBreak(currentInfo)) {
-            break;
-        }
-
-        index++;
-    }
-
-    return index - 1;
+    return false;
 }
 
-function moveLine(editor: Editor, fromLine: number, toLine: number) {
-    if (fromLine === toLine) {
-        return;
-    }
-
-    const changes: EditorChange[] = [];
-    const content = editor.getLine(fromLine);
-    const lastLine = editor.lastLine();
-
-    let removeLine: EditorChange;
-    let insertLine: EditorChange;
-
-    if (fromLine === lastLine) {
-        // Case 1: Moving from last line
-        removeLine = {
-            from: { line: fromLine - 1, ch: editor.getLine(fromLine - 1).length },
-            to: { line: fromLine + 1, ch: content.length },
-            text: "",
-        };
-        insertLine = {
-            from: { line: toLine, ch: 0 },
-            to: { line: toLine, ch: 0 },
-            text: content + "\n",
-        };
-    } else if (toLine === lastLine) {
-        // Case 2: Moving to last line
-        removeLine = {
-            from: { line: fromLine, ch: 0 },
-            to: { line: fromLine + 1, ch: 0 },
-            text: "",
-        };
-        insertLine = {
-            from: { line: toLine + 1, ch: 0 },
-            to: { line: toLine + 1, ch: 0 },
-            text: "\n" + content,
-        };
-    } else {
-        // Case 3: Moving between non-last lines
-        removeLine = {
-            from: { line: fromLine, ch: 0 },
-            to: { line: fromLine + 1, ch: 0 },
-            text: "",
-        };
-        const adjustedLine = toLine > fromLine ? toLine + 1 : toLine;
-        insertLine = {
-            from: { line: adjustedLine, ch: 0 },
-            to: { line: adjustedLine, ch: 0 },
-            text: content + "\n",
-        };
-    }
-
-    changes.push(insertLine, removeLine);
-    editor.transaction({ changes });
-}
-
-export { reorderCheckboxes, getNewCheckedLoc, getNewUncheckedLoc, moveLine };
+export { reorderCheckboxes };

@@ -93,6 +93,25 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
     return undefined;
 }
 
+function hasCheckboxContent(line: string): boolean {
+    console.log(`line |${line}|`);
+    const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
+    return CHECKBOX_WITH_CONTENT.test(line);
+}
+
+function extractTextAfterCheckbox(line: string): string {
+    // Match the checkbox pattern and capture everything after it
+    const regex = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+(.+)$/;
+    const match = line.match(regex);
+
+    if (match) {
+        return match[1]; // Return the captured text
+    }
+
+    // If no checkbox pattern found, return the original line
+    return line;
+}
+
 // TODO not perfect, does not take into account indents and im not sure if its intendend (it might be)
 // gets the index of the first item in a numbered list
 function getListStart(editor: Editor, currLineIndex: number): number | undefined {
@@ -153,4 +172,4 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, hasCheckboxContent, extractTextAfterCheckbox };

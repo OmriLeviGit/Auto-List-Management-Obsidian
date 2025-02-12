@@ -1,4 +1,4 @@
-import { Plugin, Editor, EditorPosition } from "obsidian";
+import { Plugin, Editor, EditorPosition, MarkdownView } from "obsidian";
 import { Mutex } from "async-mutex";
 import handlePasteAndDrop from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
@@ -7,6 +7,7 @@ import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderCheckboxes } from "src/checkbox";
 import { Range } from "src/types";
+import { extractTextAfterCheckbox } from "src/utils";
 
 const mutex = new Mutex();
 
@@ -28,13 +29,8 @@ export default class AutoReordering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                if (this.settingsManager.getLiveNumberingUpdate() === false) {
-                    return;
-                }
-
                 setTimeout(() => {
                     mutex.runExclusive(() => {
-                        const originalPos: EditorPosition = editor.getCursor();
                         if (this.blockChanges) {
                             return;
                         }
@@ -44,10 +40,26 @@ export default class AutoReordering extends Plugin {
                         let currIndex: number;
                         if (this.checkboxClickedAt !== undefined) {
                             currIndex = this.checkboxClickedAt;
+                            // console.log("currIndex", currIndex);
+                            // this.checkboxClickedAt = undefined;
                         } else {
                             const { anchor, head } = editor.listSelections()[0];
                             currIndex = Math.min(anchor.line, head.line);
                         }
+                        // console.log("this.checkboxClickedAt:", this.checkboxClickedAt);
+                        // console.log("index:", currIndex, editor.getCursor().line);
+
+                        const ind1 = this.checkboxClickedAt;
+                        const ind2 = editor.getCursor().line;
+
+                        // console.log("ind1", ind1);
+                        // console.log("ind2", ind2);
+
+                        // const l1 = editor.getLine(ind1!);
+                        // const l2 = editor.getLine(ind2);
+
+                        // console.log("l1", l1);
+                        // console.log("l2", l2);
 
                         // Handle checkbox updates
                         let range: Range | undefined;
@@ -67,16 +79,16 @@ export default class AutoReordering extends Plugin {
 
                         // Restore cursor position if no text is selected
                         // This prevents cursor from moving to line beginning after checkbox reordering
-                        if (!editor.somethingSelected()) {
-                            const newLineInOriginalPos = editor.getLine(originalPos.line);
-
+                        if (range !== undefined && !editor.somethingSelected()) {
+                            const newLineInOriginalPos = editor.getLine(range.start);
                             const newPos: EditorPosition = {
-                                line: originalPos.line,
-                                ch: Math.min(originalPos.ch, newLineInOriginalPos.length),
+                                line: range.start,
+                                ch: newLineInOriginalPos.length,
                             };
-
                             editor.setCursor(newPos);
                         }
+
+                        this.checkboxClickedAt = undefined;
                     });
                 }, 0);
             })
@@ -113,16 +125,31 @@ export default class AutoReordering extends Plugin {
     }
 
     handleMouseClick(event: MouseEvent) {
+        // TODO bug, does not release the listener on unload
         // if clicked on a checkbox using the mouse (this is not the mouse location)
         mutex.runExclusive(() => {
+            this.checkboxClickedAt = undefined;
+
             const target = event.target as HTMLElement;
             if (target.classList.contains("task-list-item-checkbox")) {
                 const listLine = target.closest(".cm-line");
-                if (listLine) {
-                    const editor = listLine.closest(".cm-editor");
-                    if (editor) {
-                        const allLines = Array.from(editor.getElementsByClassName("cm-line"));
-                        this.checkboxClickedAt = allLines.indexOf(listLine);
+                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (listLine && view) {
+                    const textContent = listLine.textContent;
+                    console.log("txt", textContent);
+
+                    const editor = view.editor;
+                    for (let i = 0; i < editor.lineCount(); i++) {
+                        // console.log("@in", textContent); // they dont end with the same
+                        const lineContent = editor.getLine(i);
+                        console.log("lin", lineContent);
+                        const noCheckbox = extractTextAfterCheckbox(lineContent);
+                        console.log(" cx", noCheckbox);
+                        if (textContent!.endsWith(noCheckbox)) {
+                            this.checkboxClickedAt = i;
+                            console.log("breaks at: ", i);
+                            break;
+                        }
                     }
                 }
             }
