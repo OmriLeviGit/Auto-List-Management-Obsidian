@@ -29,7 +29,6 @@ export default class AutoReordering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                console.log("hol");
                 setTimeout(() => {
                     mutex.runExclusive(() => {
                         const originalPos = editor.getCursor();
@@ -48,9 +47,6 @@ export default class AutoReordering extends Plugin {
                             const { anchor, head } = editor.listSelections()[0];
                             currIndex = Math.min(anchor.line, head.line);
                         }
-
-                        console.log("ind1", currIndex);
-                        console.log("ind2", editor.getCursor().line);
 
                         // Handle checkbox updates
                         let range: Range | undefined;
@@ -86,68 +82,6 @@ export default class AutoReordering extends Plugin {
                 }, 0);
             })
         );
-        // this.registerEvent(
-        //     this.app.workspace.on("editor-change", (editor: Editor) => {
-        //         console.log("hol");
-        //         setTimeout(() => {
-        //             mutex.runExclusive(() => {
-        //                 const originalPos = editor.getCursor();
-
-        //                 if (this.blockChanges) {
-        //                     return;
-        //                 }
-
-        //                 this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
-
-        //                 let currIndex: number;
-        //                 if (this.checkboxClickedAt !== undefined) {
-        //                     currIndex = this.checkboxClickedAt;
-        //                     this.checkboxClickedAt = undefined;
-        //                 } else {
-        //                     const { anchor, head } = editor.listSelections()[0];
-        //                     currIndex = Math.min(anchor.line, head.line);
-        //                 }
-
-        //                 const ind1 = this.checkboxClickedAt;
-        //                 const ind2 = editor.getCursor().line;
-
-        //                 console.log("ind1", currIndex);
-        //                 console.log("ind2", ind2);
-
-        //                 // Handle checkbox updates
-        //                 let range: Range | undefined;
-        //                 if (this.settingsManager.getLiveCheckboxUpdate() === true) {
-        //                     range = reorderCheckboxes(editor, currIndex);
-        //                 }
-
-        //                 // Handle numbering updates
-        //                 if (this.settingsManager.getLiveNumberingUpdate() === true) {
-        //                     if (range !== undefined) {
-        //                         // if reordered checkbox, renumber between the original location and the new one
-        //                         this.renumberer.renumber(editor, range.start, range.limit);
-        //                     } else {
-        //                         this.renumberer.renumber(editor, currIndex);
-        //                     }
-        //                 }
-
-        //                 // Restore if the current line was reordered and no text was selected, place the cursor at the end of the line
-        //                 if (
-        //                     !editor.somethingSelected() &&
-        //                     range !== undefined &&
-        //                     range.start <= originalPos.line &&
-        //                     originalPos.line < range.limit
-        //                 ) {
-        //                     const newLineInOriginalPos = editor.getLine(originalPos.line);
-        //                     const newPos: EditorPosition = {
-        //                         line: originalPos.line,
-        //                         ch: newLineInOriginalPos.length,
-        //                     };
-        //                     editor.setCursor(newPos);
-        //                 }
-        //             });
-        //         }, 0);
-        //     })
-        // );
 
         // editor-paste listener
         this.registerEvent(
@@ -179,29 +113,20 @@ export default class AutoReordering extends Plugin {
         });
     }
 
+    // mouse listener
     handleMouseClick(event: MouseEvent) {
-        // Attach event listener in your main class
-        // // TODO bug, does not release the listener on unload?
-        // if clicked on a checkbox using the mouse (this is not the mouse location)
-        console.log("bye");
+        // if clicked on a checkbox using the mouse (not the same as cursor location)
         mutex.runExclusive(() => {
             this.checkboxClickedAt = undefined;
 
             const target = event.target as HTMLElement;
             if (target.classList.contains("task-list-item-checkbox")) {
                 const listLine = target.closest(".cm-line");
-                const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (listLine && view) {
-                    const textContent = listLine.textContent;
-
-                    const editor = view.editor;
-                    for (let i = 0; i < editor.lineCount(); i++) {
-                        const lineContent = editor.getLine(i);
-                        const noCheckbox = extractTextAfterCheckbox(lineContent);
-                        if (textContent!.endsWith(noCheckbox)) {
-                            this.checkboxClickedAt = i;
-                            break;
-                        }
+                if (listLine) {
+                    const editor = listLine.closest(".cm-editor");
+                    if (editor) {
+                        const allLines = Array.from(editor.getElementsByClassName("cm-line"));
+                        this.checkboxClickedAt = allLines.indexOf(listLine);
                     }
                 }
             }

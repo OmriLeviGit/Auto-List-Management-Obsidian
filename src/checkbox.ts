@@ -94,4 +94,4 @@ function sameStatus(info1: LineInfo, info2: LineInfo): boolean {
     return false;
 }
 
-export { reorderCheckboxes, getChecklistStart, sameStatus };
+export { reorderCheckboxes, getChecklistStart };

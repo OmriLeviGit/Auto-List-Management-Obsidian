@@ -1,7 +1,7 @@
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
-import { reorderCheckboxes, getChecklistStart, sameStatus } from "src/checkbox";
+import { getChecklistStart } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
 describe("getChecklistStart", () => {
