@@ -29,13 +29,13 @@ interface PluginSettings {
     startsFromOne: boolean;
     indentSize: number;
     liveCheckboxUpdate: boolean;
-    sortCheckboxesToBottom: boolean;
+    checklistSortPosition: string;
 }
 
 interface ReorderData {
     start: number;
     limit: number;
-    lastUncheckedIndex: number;
+    placeCursorAt: number;
 }
 
 export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, PluginSettings, ReorderData };

@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     startsFromOne: true,
     indentSize: 4,
     liveCheckboxUpdate: true,
-    sortCheckboxesToBottom: true,
+    checklistSortPosition: "bottom",
 };
 
 // a singleton for the settings
@@ -74,11 +74,11 @@ export default class SettingsManager {
         this.settings.liveCheckboxUpdate = value;
     }
 
-    public getSortCheckboxesBottom(): boolean {
-        return this.settings.sortCheckboxesToBottom;
+    public getChecklistSortPosition(): string {
+        return this.settings.checklistSortPosition;
     }
 
-    public setSortCheckboxesBottom(value: boolean): void {
-        this.settings.sortCheckboxesToBottom = value;
+    public setChecklistSortPosition(value: string): void {
+        this.settings.checklistSortPosition = value;
     }
 }

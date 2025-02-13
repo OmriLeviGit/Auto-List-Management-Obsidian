@@ -5,7 +5,7 @@ import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
-import { reorderCheckboxes } from "src/checkbox";
+import { reorderChecklist } from "src/checkbox";
 import { ReorderData } from "src/types";
 
 const mutex = new Mutex();
@@ -50,7 +50,7 @@ export default class AutoReordering extends Plugin {
                         // Handle checkbox updates
                         let reorderData: ReorderData | undefined;
                         if (this.settingsManager.getLiveCheckboxUpdate() === true) {
-                            reorderData = reorderCheckboxes(editor, currIndex);
+                            reorderData = reorderChecklist(editor, currIndex);
                         }
 
                         // Handle numbering updates
@@ -128,7 +128,8 @@ export default class AutoReordering extends Plugin {
 
     async loadSettings() {
         const settingsManager = SettingsManager.getInstance();
-        settingsManager.setSettings(Object.assign({}, DEFAULT_SETTINGS, await this.loadData()));
+        const settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+        settingsManager.setSettings(settings);
     }
 
     async saveSettings() {
@@ -147,17 +148,21 @@ export default class AutoReordering extends Plugin {
         }
 
         let newPosition: EditorPosition;
-        if (originalPos.line < reorderData.lastUncheckedIndex) {
-            newPosition = {
-                line: originalPos.line,
-                ch: originalPos.ch,
-            };
-        } else {
-            newPosition = {
-                line: reorderData.lastUncheckedIndex,
-                ch: editor.getLine(reorderData.lastUncheckedIndex).length,
-            };
-        }
+        newPosition = {
+            line: originalPos.line,
+            ch: originalPos.ch, // TODO maybe not the same char
+        };
+        // if (originalPos.line < reorderData.CursorLine) {
+        //     newPosition = {
+        //         line: originalPos.line,
+        //         ch: originalPos.ch, // TODO maybe not the same char
+        //     };
+        // } else {
+        //     newPosition = {
+        //         line: reorderData.CursorLine,
+        //         ch: editor.getLine(reorderData.CursorLine).length,
+        //     };
+        // }
 
         editor.setCursor(newPosition);
     }

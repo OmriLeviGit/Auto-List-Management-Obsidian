@@ -73,7 +73,7 @@ describe("getChecklistStart", () => {
 
     testCases.forEach(({ name, content, index, expected }) => {
         test(name, () => {
-            SettingsManager.getInstance().setSortCheckboxesBottom(false);
+            SettingsManager.getInstance().setChecklistSortPosition("bottom");
             const editor = createMockEditor(content);
             const res = getChecklistStart(editor, index);
 

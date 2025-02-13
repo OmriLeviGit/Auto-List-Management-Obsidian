@@ -96,5 +96,16 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 })
             );
+
+        new Setting(containerEl).setName("Where items should be placed").addDropdown((dropdown) =>
+            dropdown
+                .addOption("top", "Top")
+                .addOption("bottom", "Bottom")
+                .setValue(this.settingsManager.getChecklistSortPosition())
+                .onChange(async (value) => {
+                    this.settingsManager.setChecklistSortPosition(value);
+                    await this.plugin.saveSettings();
+                })
+        );
     }
 }
