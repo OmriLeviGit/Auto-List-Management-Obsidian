@@ -1,6 +1,6 @@
 {
     "name": "automatic-list-reordering",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "description": "Automatically reorder checklists and numbered lists as you edit them.",
     "main": "main.js",
     "scripts": {

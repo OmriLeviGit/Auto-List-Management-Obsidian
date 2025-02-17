@@ -12,11 +12,9 @@ This plugin automatically maintains numbered lists and sorts checklists as you e
 2. Click **Install** and enable the plugin.
 3. In the plugin settings, adjust the **tab size** to match your editor's settings (found under **Options → Editor → Tab indent size/Indent visual width**).
 
-Once installed, the plugin will automatically manage your numbered lists.
-
 ## Configuration Options
 
-### Checklist
+### Checklists
 
 -   **Automatically sort checklists**: Sorts checklist items automatically when they are checked.
 
