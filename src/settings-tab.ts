@@ -78,6 +78,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Start numbering from 1")
             .setDesc("Ensure that the first item of every numbered list is set to 1.")
+            .setDesc("Whether lists always start from 1 or preserve their original starting numbers")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getStartsFromOne()).onChange(async (value) => {
                     this.settingsManager.setStartsFromOne(value);
@@ -97,15 +98,18 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                 })
             );
 
-        new Setting(containerEl).setName("Where items should be placed").addDropdown((dropdown) =>
-            dropdown
-                .addOption("top", "Top")
-                .addOption("bottom", "Bottom")
-                .setValue(this.settingsManager.getChecklistSortPosition())
-                .onChange(async (value) => {
-                    this.settingsManager.setChecklistSortPosition(value);
-                    await this.plugin.saveSettings();
-                })
-        );
+        new Setting(containerEl)
+            .setName("Sort position")
+            .setDesc("Choose where completed items should be placed (top or bottom of the list)")
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOption("top", "Top")
+                    .addOption("bottom", "Bottom")
+                    .setValue(this.settingsManager.getChecklistSortPosition())
+                    .onChange(async (value) => {
+                        this.settingsManager.setChecklistSortPosition(value);
+                        await this.plugin.saveSettings();
+                    })
+            );
     }
 }

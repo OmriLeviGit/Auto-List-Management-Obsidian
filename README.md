@@ -1,6 +1,6 @@
 # Automatic List Reordering Plugin for Obsidian
 
-The Automatic List Reordering plugin automatically reorders checklists and numbered lists as you edit them. Additionally, supports a numbering-from-one option.
+This plugin automatically maintains numbered lists and sorts checklists as you edit. Features include automatic renumbering and reordering, control of whether lists always start from 1 or preserve their original starting numbers, and support for checklist reordering when using the mouse.
 
 ![Example](resources/example.gif)
 
@@ -15,6 +15,12 @@ The Automatic List Reordering plugin automatically reorders checklists and numbe
 Once installed, the plugin will automatically manage your numbered lists.
 
 ## Configuration Options
+
+### Checklist
+
+-   **Automatically sort checklists**: Sorts checklist items automatically when they are checked.
+
+-   **Sort position**: Choose where completed items should be placed (top or bottom of the list).
 
 ### Numbered lists
 
@@ -45,13 +51,10 @@ Once installed, the plugin will automatically manage your numbered lists.
   </table>
 </div>
 
-### Checklist
-
--   **Automatically sort checklists**: Sorts checklist items automatically when they are checked.
-
 ## Available Commands
 
 -   **Renumber selected lists or at cursor position**: This command renumbers the list that the cursor is within, regardless of where the cursor is placed. If multiple lists are highlighted, renumbers both of them separately.
+
 -   **Renumber all numbered lists in note**: Renumbers every numbered list in your active note.
 
 ## Performance
@@ -60,6 +63,6 @@ The plugin was tested with documents containing lists with over 10,000 lines, an
 
 ## Limitations
 
--   **Undo behavior**: Updates are treated as separate actions in the editor's history, as I couldn't find a reliable way to fully control the edit history.
+-   **Undo behavior**: Updates are treated as a separate action in the editor's history, as I couldn't find a reliable way to fully control the edit history.
 
 -   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the _live update_ feature is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
