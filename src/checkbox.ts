@@ -19,50 +19,41 @@ function reorderChecklist(editor: Editor, index: number): ReorderData | undefine
 }
 
 function reorder(editor: Editor, index: number, checkedAtTop: boolean): ReorderData | undefined {
-    const startInfo = getLineInfo(editor.getLine(index));
     const checklistStartIndex = getChecklistStart(editor, index);
+    const startInfo = getLineInfo(editor.getLine(index));
 
-    // Find where to start reordering by skipping items that are already in the correct position
-    let i = checklistStartIndex;
-    const skipStatus = checkedAtTop ? true : false;
-    while (i < editor.lastLine()) {
-        const currInfo = getLineInfo(editor.getLine(i));
-        if (currInfo.isChecked !== skipStatus || !isSameStatus(startInfo, currInfo)) {
-            break;
-        }
-        i++;
-    }
-
-    const startReorderingFrom = i;
-    const { uncheckedItems, checkedItems, endIndex } = collectChecklistItems(editor, i, startInfo, checkedAtTop);
-
-    i = endIndex;
+    const { uncheckedItems, checkedItems, startIndex, endIndex, placeCursorAt } = getChecklistDetails(
+        editor,
+        checklistStartIndex,
+        startInfo,
+        checkedAtTop
+    );
 
     if (uncheckedItems.length === 0 || checkedItems.length === 0) {
         return undefined; // no changes are needed
     }
 
-    // Combine items in the desired order
     const orderedItems = checkedAtTop ? [...checkedItems, ...uncheckedItems] : [...uncheckedItems, ...checkedItems];
 
-    // Calculate the last unchecked index based on ordering
-    const placeCursorAt = checkedAtTop
-        ? startReorderingFrom + checkedItems.length
-        : startReorderingFrom + uncheckedItems.length - 1;
-
     // Apply the changes
-    const changes = i > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n";
-    editor.replaceRange(changes, { line: startReorderingFrom, ch: 0 }, { line: i, ch: 0 });
-    // TODO cursor is not placed correctly
+    const changes = endIndex > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n";
+    editor.replaceRange(changes, { line: startIndex, ch: 0 }, { line: endIndex, ch: 0 });
 
-    return { start: startReorderingFrom, limit: i, placeCursorAt };
+    return { start: startIndex, limit: endIndex, placeCursorAt };
 }
 
-// optimized version for fun
-function collectChecklistItems(editor: Editor, startIndex: number, startInfo: LineInfo, checkedAtTop: boolean) {
+function getChecklistDetails(
+    editor: Editor,
+    index: number,
+    startInfo: LineInfo,
+    checkedAtTop: boolean
+): { uncheckedItems: string[]; checkedItems: string[]; startIndex: number; endIndex: number; placeCursorAt: number } {
+    const startIndex = findReorderStartPosition(editor, index, startInfo, checkedAtTop);
+
     const uncheckedItems: string[] = [];
     const checkedItems: string[] = [];
     const groupStartMap: Map<number, number> = new Map(); // Tracks start of new groups
+
     let i = startIndex;
     let lastGroupStart = i;
     let groupIsChecked = checkedAtTop;
@@ -106,47 +97,29 @@ function collectChecklistItems(editor: Editor, startIndex: number, startInfo: Li
 
     // If the end of the checklist does not require reordering, reset i back to the last group
     if ((checkedAtTop && !groupIsChecked) || (!checkedAtTop && groupIsChecked)) {
-        const ind = groupStartMap.get(lastGroupStart);
-        if (ind !== undefined) {
+        const endIndex = groupStartMap.get(lastGroupStart);
+        if (endIndex !== undefined) {
+            const itemsToModify = checkedAtTop ? uncheckedItems : checkedItems;
+            itemsToModify.splice(endIndex);
             i = lastGroupStart;
-            uncheckedItems.splice(i);
         } else {
             // should never happen
             console.log("Automatic List Reordering: error, index not found in checkbox reordering");
+            return {
+                uncheckedItems,
+                checkedItems,
+                startIndex,
+                endIndex: i,
+                placeCursorAt: startIndex + checkedItems.length,
+            };
         }
     }
 
-    return { uncheckedItems, checkedItems, endIndex: i };
+    const placeCursorAt = checkedAtTop ? startIndex + checkedItems.length : startIndex + uncheckedItems.length - 1;
+
+    return { uncheckedItems, checkedItems, startIndex, endIndex: i, placeCursorAt };
+    // return { uncheckedItems, checkedItems, startIndex, endIndex: i, placeCursorAt: Math.max(0, placeCursorAt) };
 }
-
-/*
-// simple version
-function collectChecklistItems(editor: Editor, startIndex: number, startInfo: LineInfo, checkedAtTop: boolean) {
-    const uncheckedItems: string[] = [];
-    const checkedItems: string[] = [];
-    let i = startIndex;
-
-    while (i <= editor.lastLine()) {
-        const line = editor.getLine(i);
-        const currInfo = getLineInfo(line);
-        if (!isSameStatus(startInfo, currInfo)) {
-            break;
-        }
-
-        if (currInfo.isChecked === false) {
-            uncheckedItems.push(line);
-        } else if (currInfo.isChecked === true) {
-            checkedItems.push(line);
-        } else {
-            break; // can be undefined
-        }
-
-        i++;
-    }
-
-    return { uncheckedItems, checkedItems, endIndex: i };
-}
-*/
 
 // get the start of the checklist
 function getChecklistStart(editor: Editor, index: number): number {
@@ -168,6 +141,25 @@ function getChecklistStart(editor: Editor, index: number): number {
     return i + 1;
 }
 
+function findReorderStartPosition(
+    editor: Editor,
+    startIndex: number,
+    startInfo: LineInfo,
+    checkedAtTop: boolean
+): number {
+    let i = startIndex;
+    const skipStatus = checkedAtTop ? true : false;
+
+    while (i <= editor.lastLine()) {
+        const currInfo = getLineInfo(editor.getLine(i));
+        if (currInfo.isChecked !== skipStatus || !isSameStatus(startInfo, currInfo)) {
+            break;
+        }
+        i++;
+    }
+    return i;
+}
+
 function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
     const hasSameNumberStatus = (info1.number !== undefined) === (info2.number !== undefined);
     const hasSameIndentation = info1.spaceIndent === info2.spaceIndent;
@@ -186,4 +178,4 @@ function hasCheckboxContent(line: string): boolean {
     return CHECKBOX_WITH_CONTENT.test(line);
 }
 
-export { reorderChecklist, getChecklistStart, collectChecklistItems };
+export { reorderChecklist, getChecklistStart, getChecklistDetails };

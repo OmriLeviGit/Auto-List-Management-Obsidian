@@ -7,6 +7,7 @@ import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderChecklist } from "src/checkbox";
 import { ReorderData } from "src/types";
+import { getLineInfo } from "src/utils";
 
 const mutex = new Mutex();
 
@@ -137,32 +138,27 @@ export default class AutoReordering extends Plugin {
         await this.saveData(settingsManager.getSettings());
     }
 
-    /*
-    if the current line was reordered and no text was selected:
-    if the line unchecked->checked, restore the cursor to the original position
-    if the line checked->unchecked, place the cursor at the newly unchecked line
-    */
     updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderData): void {
         if (editor.somethingSelected() || !reorderData) {
             return;
         }
 
+        //  if the line where the cursor is was not reordered, leave it as it was
+        //  else, put it at the end of the same line
+        // ideal but not implemented: follow the original line to its new locaiton
         let newPosition: EditorPosition;
-        newPosition = {
-            line: originalPos.line,
-            ch: originalPos.ch, // TODO maybe not the same char
-        };
-        // if (originalPos.line < reorderData.CursorLine) {
-        //     newPosition = {
-        //         line: originalPos.line,
-        //         ch: originalPos.ch, // TODO maybe not the same char
-        //     };
-        // } else {
-        //     newPosition = {
-        //         line: reorderData.CursorLine,
-        //         ch: editor.getLine(reorderData.CursorLine).length,
-        //     };
-        // }
+        if (originalPos.line < reorderData.start || reorderData.limit <= originalPos.line) {
+            newPosition = {
+                line: originalPos.line,
+                ch: originalPos.ch,
+            };
+        } else {
+            const line = editor.getLine(originalPos.line);
+            newPosition = {
+                line: originalPos.line,
+                ch: line.length,
+            };
+        }
 
         editor.setCursor(newPosition);
     }
