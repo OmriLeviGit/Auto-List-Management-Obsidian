@@ -31,10 +31,10 @@ export default class AutoReordering extends Plugin {
             this.app.workspace.on("editor-change", (editor: Editor) => {
                 mutex.runExclusive(() => {
                     setTimeout(() => {
-                        const posToReturn = editor.getCursor();
                         if (this.blockChanges) {
                             return;
                         }
+                        const posToReturn = editor.getCursor();
 
                         this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
 
