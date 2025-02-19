@@ -7,7 +7,7 @@ import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderChecklist } from "src/checkbox";
 import { ReorderData } from "src/types";
-import { getLineInfo } from "src/utils";
+import { EditorView } from "@codemirror/view";
 
 const mutex = new Mutex();
 
@@ -102,22 +102,20 @@ export default class AutoReordering extends Plugin {
 
     // mouse listener
     handleMouseClick(event: MouseEvent) {
-        // if clicked on a checkbox using the mouse (not the same as cursor location)
+        // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
         mutex.runExclusive(() => {
             this.checkboxClickedAt = undefined;
-
             const target = event.target as HTMLElement;
-            if (target.classList.contains("task-list-item-checkbox")) {
-                const listLine = target.closest(".cm-line");
-                if (listLine) {
-                    const editor = listLine.closest(".cm-editor");
-                    if (editor) {
-                        const allLines = Array.from(editor.getElementsByClassName("cm-line"));
-                        this.checkboxClickedAt = allLines.indexOf(listLine);
-                    }
+            if (target.matches('[type="checkbox"]')) {
+                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (activeView) {
+                    // @ts-expect-error, not typed
+                    const editorView = activeView.editor.cm as EditorView;
+                    const pos = editorView.posAtDOM(target);
+                    const line = editorView.state.doc.lineAt(pos);
+                    this.checkboxClickedAt = line.number - 1;
                 }
             }
-
             this.blockChanges = false;
         });
     }
@@ -145,7 +143,7 @@ export default class AutoReordering extends Plugin {
 
         //  if the line where the cursor is was not reordered, leave it as it was
         //  else, put it at the end of the same line
-        // ideal but not implemented: follow the original line to its new locaiton
+        // ideal but not implemented: follow the original line to its new location
         let newPosition: EditorPosition;
         if (originalPos.line < reorderData.start || reorderData.limit <= originalPos.line) {
             newPosition = {
@@ -156,7 +154,7 @@ export default class AutoReordering extends Plugin {
             const line = editor.getLine(originalPos.line);
             newPosition = {
                 line: originalPos.line,
-                ch: line.length,
+                ch: line.length, // not keeping the originalPos.ch bad ux on new lines after checked items
             };
         }
 
