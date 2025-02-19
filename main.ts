@@ -1,4 +1,4 @@
-import { Plugin, Editor, EditorPosition, MarkdownView, MarkdownFileInfo, EditorChange } from "obsidian";
+import { Plugin, Editor, EditorPosition, MarkdownView } from "obsidian";
 import { Mutex } from "async-mutex";
 import handlePasteAndDrop from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
@@ -29,23 +29,19 @@ export default class AutoReordering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                setTimeout(() => {
-                    mutex.runExclusive(() => {
-                        const originalPos = editor.getCursor();
-
+                mutex.runExclusive(() => {
+                    setTimeout(() => {
+                        const posToReturn = editor.getCursor();
                         if (this.blockChanges) {
                             return;
                         }
 
                         this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
 
-                        let currIndex: number;
-                        if (this.checkboxClickedAt !== undefined) {
-                            currIndex = this.checkboxClickedAt;
-                            this.checkboxClickedAt = undefined;
-                        } else {
-                            const { anchor, head } = editor.listSelections()[0];
-                            currIndex = Math.min(anchor.line, head.line);
+                        const { index: currIndex, mouseAt: newLine } = this.getCurrIndex(editor);
+                        if (newLine !== undefined) {
+                            // if the cursor is outside the screen, place it in the same line the mouse just clicked at
+                            posToReturn.line = newLine;
                         }
 
                         // Handle checkbox updates
@@ -64,7 +60,7 @@ export default class AutoReordering extends Plugin {
                             }
                         }
 
-                        this.updateCursorPosition(editor, originalPos, reorderData);
+                        this.updateCursorPosition(editor, posToReturn, reorderData);
                     });
                 }, 0);
             })
@@ -136,6 +132,10 @@ export default class AutoReordering extends Plugin {
         await this.saveData(settingsManager.getSettings());
     }
 
+    getRenumberer(): Renumberer {
+        return this.renumberer;
+    }
+
     updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderData): void {
         if (editor.somethingSelected() || !reorderData) {
             return;
@@ -157,11 +157,39 @@ export default class AutoReordering extends Plugin {
                 ch: line.length, // not keeping the originalPos.ch bad ux on new lines after checked items
             };
         }
-
         editor.setCursor(newPosition);
     }
 
-    getRenumberer(): Renumberer {
-        return this.renumberer;
+    isCursorInView(): boolean {
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView) {
+            // @ts-expect-error, not typed
+            const editorView = activeView.editor.cm as EditorView;
+            const pos = editorView.state.selection.main.head;
+            const coords = editorView.coordsAtPos(pos);
+            if (coords) {
+                const editorRect = editorView.dom.getBoundingClientRect();
+                return coords.top >= editorRect.top && coords.bottom <= editorRect.bottom;
+            }
+        }
+
+        return true;
+    }
+
+    getCurrIndex(editor: Editor): { index: number; mouseAt?: number } {
+        const isInView = this.isCursorInView();
+
+        if (this.checkboxClickedAt !== undefined) {
+            const index = this.checkboxClickedAt;
+            this.checkboxClickedAt = undefined;
+
+            if (!isInView) {
+                return { index, mouseAt: index };
+            }
+            return { index };
+        }
+
+        const selection = editor.listSelections()[0];
+        return { index: Math.min(selection.anchor.line, selection.head.line) };
     }
 }

@@ -118,7 +118,6 @@ function getChecklistDetails(
     const placeCursorAt = checkedAtTop ? startIndex + checkedItems.length : startIndex + uncheckedItems.length - 1;
 
     return { uncheckedItems, checkedItems, startIndex, endIndex: i, placeCursorAt };
-    // return { uncheckedItems, checkedItems, startIndex, endIndex: i, placeCursorAt: Math.max(0, placeCursorAt) };
 }
 
 // get the start of the checklist
