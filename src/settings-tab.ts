@@ -37,7 +37,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         new Setting(containerEl).setHeading().setName("Numbered lists");
 
         new Setting(containerEl)
-            .setName("Automatically update numbered lists")
+            .setName("Automatic update")
             .setDesc("Update numbered lists as changes are made.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
@@ -58,7 +58,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Smart pasting")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getSmartPasting()).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getRenumberingSmartPasting()).onChange(async (value) => {
                     this.settingsManager.setSmartPasting(value);
                     await this.plugin.saveSettings();
                 })
@@ -77,8 +77,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Start numbering from 1")
-            .setDesc("Ensure that the first item of every numbered list is set to 1.")
-            .setDesc("Whether lists always start from 1 or preserve their original starting numbers")
+            .setDesc("Whether lists always start from 1 or preserve their original starting numbers.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getStartsFromOne()).onChange(async (value) => {
                     this.settingsManager.setStartsFromOne(value);
@@ -89,8 +88,8 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         new Setting(containerEl).setHeading().setName("Checklists");
 
         new Setting(containerEl)
-            .setName("Automatically sort checklists")
-            .setDesc("Sort checklist items when boxes are checked")
+            .setName("Automatic update")
+            .setDesc("Sort checklist items when boxes are checked.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveCheckboxUpdate()).onChange(async (value) => {
                     this.settingsManager.setLiveCheckboxUpdate(value);
@@ -100,7 +99,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Sort position")
-            .setDesc("Choose where completed items should be placed (top or bottom of the list)")
+            .setDesc("Choose where completed items should be placed (top or bottom of the list).")
             .addDropdown((dropdown) =>
                 dropdown
                     .addOption("top", "Top")

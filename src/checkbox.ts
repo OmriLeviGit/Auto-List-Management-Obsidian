@@ -1,9 +1,71 @@
-import { Editor } from "obsidian";
+import { Editor, EditorChange } from "obsidian";
 import { getLineInfo } from "./utils";
-import { LineInfo, ReorderData } from "./types";
+import { LineInfo, ReorderResult } from "./types";
 import SettingsManager from "./SettingsManager";
 
-function reorderChecklist(editor: Editor, index: number): ReorderData | undefined {
+function reorderChecklist(editor: Editor, start: number, limit?: number): ReorderResult | undefined {
+    const result = limit === undefined ? reorderAtIndex(editor, start) : reorderAllListsInRange(editor, start, limit);
+
+    if (!result) {
+        return undefined;
+    }
+
+    const { changes, reorderResult } = result;
+    applyChangesToEditor(editor, changes);
+
+    return reorderResult;
+}
+
+// renumbers all numbered lists in specified range
+function reorderAllListsInRange(
+    editor: Editor,
+    start: number,
+    limit: number
+): { reorderResult: ReorderResult; changes: EditorChange[] } | undefined {
+    const isInvalidRange = start < 0 || editor.lastLine() + 1 < limit || limit < start;
+    const changes: EditorChange[] = [];
+
+    let i = start;
+    let end = i;
+
+    if (isInvalidRange) {
+        console.debug(
+            `reorderAllListsInRange is invalid with index=${start}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
+        );
+
+        return;
+    }
+
+    for (; i < limit; i++) {
+        const reorderData = reorderAtIndex(editor, i);
+
+        if (reorderData === undefined || reorderData.changes === undefined) {
+            continue;
+        }
+
+        changes.push(...reorderData.changes);
+
+        end = reorderData.reorderResult.limit;
+        i = end;
+
+        while (getLineInfo(editor.getLine(i)).isChecked !== undefined) {
+            i++;
+        }
+    }
+
+    return {
+        reorderResult: {
+            start,
+            limit: end,
+        },
+        changes,
+    };
+}
+
+function reorderAtIndex(
+    editor: Editor,
+    index: number
+): { reorderResult: ReorderResult; changes: EditorChange[] } | undefined {
     const line = editor.getLine(index);
     const startInfo = getLineInfo(line);
     const hasContent = hasCheckboxContent(line);
@@ -13,33 +75,38 @@ function reorderChecklist(editor: Editor, index: number): ReorderData | undefine
         return;
     }
 
+    const checklistStartIndex = getChecklistStart(editor, index);
     const checkedAtTop = SettingsManager.getInstance().getChecklistSortPosition() === "top";
 
-    return reorder(editor, index, checkedAtTop);
-}
-
-function reorder(editor: Editor, index: number, checkedAtTop: boolean): ReorderData | undefined {
-    const checklistStartIndex = getChecklistStart(editor, index);
-    const startInfo = getLineInfo(editor.getLine(index));
-
-    const { uncheckedItems, checkedItems, startIndex, endIndex, placeCursorAt } = getChecklistDetails(
+    const { uncheckedItems, checkedItems, reorderResult } = getChecklistDetails(
         editor,
         checklistStartIndex,
         startInfo,
         checkedAtTop
     );
+    const { start: startIndex, limit: endIndex, placeCursorAt } = reorderResult;
 
     if (uncheckedItems.length === 0 || checkedItems.length === 0) {
-        return undefined; // no changes are needed
+        return; // no changes are needed
     }
 
     const orderedItems = checkedAtTop ? [...checkedItems, ...uncheckedItems] : [...uncheckedItems, ...checkedItems];
+    const newText = endIndex > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n"; // adjust for last line in note
 
-    // Apply the changes
-    const changes = endIndex > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n";
-    editor.replaceRange(changes, { line: startIndex, ch: 0 }, { line: endIndex, ch: 0 });
+    const change: EditorChange = {
+        from: { line: startIndex, ch: 0 },
+        to: { line: endIndex, ch: 0 },
+        text: newText,
+    };
 
-    return { start: startIndex, limit: endIndex, placeCursorAt };
+    return {
+        changes: [change],
+        reorderResult: {
+            start: startIndex,
+            limit: endIndex,
+            placeCursorAt,
+        },
+    };
 }
 
 function getChecklistDetails(
@@ -47,7 +114,7 @@ function getChecklistDetails(
     index: number,
     startInfo: LineInfo,
     checkedAtTop: boolean
-): { uncheckedItems: string[]; checkedItems: string[]; startIndex: number; endIndex: number; placeCursorAt: number } {
+): { uncheckedItems: string[]; checkedItems: string[]; reorderResult: ReorderResult } {
     const startIndex = findReorderStartPosition(editor, index, startInfo, checkedAtTop);
 
     const uncheckedItems: string[] = [];
@@ -108,16 +175,26 @@ function getChecklistDetails(
             return {
                 uncheckedItems,
                 checkedItems,
-                startIndex,
-                endIndex: i,
-                placeCursorAt: startIndex + checkedItems.length,
+                reorderResult: {
+                    start: startIndex,
+                    limit: i,
+                    placeCursorAt: startIndex + checkedItems.length,
+                },
             };
         }
     }
 
     const placeCursorAt = checkedAtTop ? startIndex + checkedItems.length : startIndex + uncheckedItems.length - 1;
 
-    return { uncheckedItems, checkedItems, startIndex, endIndex: i, placeCursorAt };
+    return {
+        uncheckedItems,
+        checkedItems,
+        reorderResult: {
+            start: startIndex,
+            limit: i,
+            placeCursorAt,
+        },
+    };
 }
 
 // get the start of the checklist
@@ -175,6 +252,12 @@ function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
 function hasCheckboxContent(line: string): boolean {
     const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
     return CHECKBOX_WITH_CONTENT.test(line);
+}
+
+function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
+    if (changes.length > 0) {
+        editor.transaction({ changes });
+    }
 }
 
 export { reorderChecklist, getChecklistStart, getChecklistDetails };

@@ -1,12 +1,20 @@
-import { PluginSettings } from "./types";
+import { PluginSettings, RenumberingSettings, ChecklistSettings } from "./types";
 
-export const DEFAULT_SETTINGS: PluginSettings = {
-    liveNumberingUpdate: true,
+const DEFAULT_RENUMBERING_SETTINGS: RenumberingSettings = {
+    liveUpdate: true,
     smartPasting: true,
     startsFromOne: true,
+};
+
+const DEFAULT_CHECKLIST_SETTINGS: ChecklistSettings = {
+    liveUpdate: true,
+    sortPosition: "bottom",
+};
+
+export const DEFAULT_SETTINGS: PluginSettings = {
+    renumbering: DEFAULT_RENUMBERING_SETTINGS,
+    checklist: DEFAULT_CHECKLIST_SETTINGS,
     indentSize: 4,
-    liveCheckboxUpdate: true,
-    checklistSortPosition: "bottom",
 };
 
 // a singleton for the settings
@@ -35,27 +43,27 @@ export default class SettingsManager {
     }
 
     public getLiveNumberingUpdate(): boolean {
-        return this.settings.liveNumberingUpdate;
+        return this.settings.renumbering.liveUpdate;
     }
 
     public setLiveNumberingUpdate(value: boolean): void {
-        this.settings.liveNumberingUpdate = value;
+        this.settings.renumbering.liveUpdate = value;
     }
 
-    public getSmartPasting(): boolean {
-        return this.settings.smartPasting;
+    public getRenumberingSmartPasting(): boolean {
+        return this.settings.renumbering.smartPasting;
     }
 
     public setSmartPasting(value: boolean): void {
-        this.settings.smartPasting = value;
+        this.settings.renumbering.smartPasting = value;
     }
 
     public getStartsFromOne(): boolean {
-        return this.settings.startsFromOne;
+        return this.settings.renumbering.startsFromOne;
     }
 
     public setStartsFromOne(value: boolean): void {
-        this.settings.startsFromOne = value;
+        this.settings.renumbering.startsFromOne = value;
     }
 
     public getIndentSize(): number {
@@ -67,18 +75,18 @@ export default class SettingsManager {
     }
 
     public getLiveCheckboxUpdate(): boolean {
-        return this.settings.liveCheckboxUpdate;
+        return this.settings.checklist.liveUpdate;
     }
 
     public setLiveCheckboxUpdate(value: boolean): void {
-        this.settings.liveCheckboxUpdate = value;
+        this.settings.checklist.liveUpdate = value;
     }
 
     public getChecklistSortPosition(): string {
-        return this.settings.checklistSortPosition;
+        return this.settings.checklist.sortPosition;
     }
 
     public setChecklistSortPosition(value: string): void {
-        this.settings.checklistSortPosition = value;
+        this.settings.checklist.sortPosition = value;
     }
 }

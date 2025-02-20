@@ -2,6 +2,7 @@ import { Editor } from "obsidian";
 import { getLineInfo, getLastListStart } from "src/utils";
 import SettingsManager from "src/SettingsManager";
 import { Mutex } from "async-mutex";
+import { reorderChecklist } from "./checkbox";
 
 interface PastingRange {
     baseIndex: number;
@@ -14,7 +15,10 @@ interface TextModification {
 }
 
 export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, editor: Editor, mutex: Mutex) {
-    if (!this.settingsManager.getLiveNumberingUpdate()) {
+    const updateNumbering = SettingsManager.getInstance().getLiveNumberingUpdate();
+    const updateChecklist = SettingsManager.getInstance().getLiveCheckboxUpdate();
+
+    if (!updateNumbering && !updateChecklist) {
         return;
     }
 
@@ -35,7 +39,14 @@ export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, edit
     mutex.runExclusive(() => {
         this.blockChanges = true;
         const { baseIndex, offset } = processTextInput(editor, content);
-        this.renumberer.renumberAllListsInRange(editor, baseIndex, baseIndex + offset);
+        const lineToReturn = editor.getCursor().line;
+        if (updateChecklist) {
+            reorderChecklist(editor, baseIndex, baseIndex + offset);
+            editor.setCursor({ line: lineToReturn, ch: editor.getLine(lineToReturn).length });
+        }
+        if (updateNumbering) {
+            this.renumberer.renumberAllListsInRange(editor, baseIndex, baseIndex + offset);
+        }
     });
 }
 
@@ -45,7 +56,7 @@ function processTextInput(editor: Editor, textFromClipboard: string): PastingRan
     const baseIndex = Math.min(anchor.line, head.line);
     let numOfLines: number;
 
-    const smartPasting = SettingsManager.getInstance().getSmartPasting();
+    const smartPasting = SettingsManager.getInstance().getRenumberingSmartPasting();
     if (smartPasting) {
         const afterPastingIndex = Math.max(anchor.line, head.line) + 1;
         const line = editor.getLine(afterPastingIndex);

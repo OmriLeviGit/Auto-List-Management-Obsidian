@@ -24,18 +24,35 @@ interface LineInfo {
 }
 
 interface PluginSettings {
-    liveNumberingUpdate: boolean;
+    renumbering: RenumberingSettings;
+    checklist: ChecklistSettings;
+    indentSize: number;
+}
+
+interface RenumberingSettings {
+    liveUpdate: boolean;
     smartPasting: boolean;
     startsFromOne: boolean;
-    indentSize: number;
-    liveCheckboxUpdate: boolean;
-    checklistSortPosition: string;
 }
 
-interface ReorderData {
+interface ChecklistSettings {
+    liveUpdate: boolean;
+    sortPosition: string;
+}
+
+interface ReorderResult {
     start: number;
     limit: number;
-    placeCursorAt: number;
+    placeCursorAt?: number;
 }
 
-export type { RenumberingStrategy, PendingChanges, ChangeResult, LineInfo, PluginSettings, ReorderData };
+export type {
+    RenumberingStrategy,
+    PendingChanges,
+    ChangeResult,
+    LineInfo,
+    PluginSettings,
+    RenumberingSettings,
+    ChecklistSettings,
+    ReorderResult,
+};

@@ -1,8 +1,29 @@
 # Automatic List Reordering Plugin for Obsidian
 
-This plugin automatically maintains numbered lists and sorts checklists as you edit. Features include automatic renumbering and reordering, control of whether lists always start from 1 or preserve their original starting numbers, and support for checklist reordering when using the mouse.
+This plugin automatically manages your lists in Obsidian, handling both numbered lists and checklists.
 
 ![Example](resources/example.gif)
+
+## Features
+
+### Numbered Lists
+
+-   Automatic renumbering as you type
+-   Smart pasting that preserves list context
+-   Option to maintain or reset starting numbers
+
+### Checklists
+
+-   Automatic reordering of checked/unchecked items
+-   Configurable sorting (checked items to top or bottom)
+-   Smart handling when pasting or dragging content
+-   Works with mouse and keyboard interactions
+
+### General
+
+-   Handles deeply nested lists
+-   High performance even with large documents
+-   Manual commands for control
 
 ## Installation Steps
 
@@ -18,7 +39,7 @@ This plugin automatically maintains numbered lists and sorts checklists as you e
 
 -   **Automatically sort checklists**: Sorts checklist items automatically when they are checked.
 
--   **Sort position**: Choose where completed items should be placed (top or bottom of the list).
+-   **Sorting position**: Choose where completed items should be placed (top or bottom of the list).
 
 ### Numbered lists
 
@@ -51,9 +72,10 @@ This plugin automatically maintains numbered lists and sorts checklists as you e
 
 ## Available Commands
 
--   **Renumber selected lists or at cursor position**: This command renumbers the list that the cursor is within, regardless of where the cursor is placed. If multiple lists are highlighted, renumbers both of them separately.
-
--   **Renumber all numbered lists in note**: Renumbers every numbered list in your active note.
+-   **Renumber lists: In selection or at cursor**: Renumbers the list that the cursor is within. If multiple lists are highlighted, renumbers both of them separately.
+-   **Renumber lists: Entire note**: Renumbers every numbered list in your note.
+-   **Reorder checkboxes: In selection or at cursor**: Reorders checked/unchecked items within the checklist at your cursor position. If multiple checklists are selected, reorders all of them.
+-   **Reorder checkboxes: Entire note**: Reorders all checked/unchecked items in every checklist throughout your note.
 
 ## Performance
 
@@ -61,6 +83,4 @@ The plugin was tested with documents containing lists with over 10,000 lines, an
 
 ## Limitations
 
--   **Undo behavior**: Updates are treated as a separate action in the editor's history, as I couldn't find a reliable way to fully control the edit history.
-
--   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the _live update_ feature is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
+-   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the _automatic update_ is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.

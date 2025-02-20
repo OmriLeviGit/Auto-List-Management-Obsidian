@@ -6,7 +6,7 @@ import Renumberer from "src/Renumberer";
 import PluginSettings from "./src/settings-tab";
 import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderChecklist } from "src/checkbox";
-import { ReorderData } from "src/types";
+import { ReorderResult } from "src/types";
 import { EditorView } from "@codemirror/view";
 
 const mutex = new Mutex();
@@ -40,12 +40,11 @@ export default class AutoReordering extends Plugin {
 
                         const { index: currIndex, mouseAt: newLine } = this.getCurrIndex(editor);
                         if (newLine !== undefined) {
-                            // if the cursor is outside the screen, place it in the same line the mouse just clicked at
-                            posToReturn.line = newLine;
+                            posToReturn.line = newLine; // if the cursor is outside the screen, place it in the same line the mouse just clicked at
                         }
 
                         // Handle checkbox updates
-                        let reorderData: ReorderData | undefined;
+                        let reorderData: ReorderResult | undefined;
                         if (this.settingsManager.getLiveCheckboxUpdate() === true) {
                             reorderData = reorderChecklist(editor, currIndex);
                         }
@@ -90,6 +89,9 @@ export default class AutoReordering extends Plugin {
     }
 
     handleKeystroke(event: KeyboardEvent) {
+        if (!this.settingsManager.getLiveNumberingUpdate()) {
+            return;
+        }
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
             this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
@@ -98,23 +100,53 @@ export default class AutoReordering extends Plugin {
 
     // mouse listener
     handleMouseClick(event: MouseEvent) {
-        // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
-        mutex.runExclusive(() => {
-            this.checkboxClickedAt = undefined;
-            const target = event.target as HTMLElement;
-            if (target.matches('[type="checkbox"]')) {
-                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (activeView) {
-                    // @ts-expect-error, not typed
-                    const editorView = activeView.editor.cm as EditorView;
-                    const pos = editorView.posAtDOM(target);
-                    const line = editorView.state.doc.lineAt(pos);
-                    this.checkboxClickedAt = line.number - 1;
+        if (!this.settingsManager.getLiveCheckboxUpdate()) {
+            return;
+        }
+
+        try {
+            // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
+            mutex.runExclusive(() => {
+                this.checkboxClickedAt = undefined;
+                const target = event.target as HTMLElement;
+                if (target.matches('[type="checkbox"]')) {
+                    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                    if (activeView) {
+                        // @ts-expect-error, not typed
+                        const editorView = activeView.editor.cm as EditorView;
+                        const pos = editorView.posAtDOM(target);
+                        const line = editorView.state.doc.lineAt(pos);
+                        this.checkboxClickedAt = line.number - 1;
+                    }
                 }
-            }
+                this.blockChanges = false;
+            });
+        } catch (error) {
+            console.error("Error in handleMouseClick:", error);
             this.blockChanges = false;
-        });
+            this.checkboxClickedAt = undefined;
+        }
     }
+
+    // mouse listener
+    // handleMouseClick(event: MouseEvent) {
+    //     // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
+    //     mutex.runExclusive(() => {
+    //         this.checkboxClickedAt = undefined;
+    //         const target = event.target as HTMLElement;
+    //         if (target.matches('[type="checkbox"]')) {
+    //             const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    //             if (activeView) {
+    //                 // @ts-expect-error, not typed
+    //                 const editorView = activeView.editor.cm as EditorView;
+    //                 const pos = editorView.posAtDOM(target);
+    //                 const line = editorView.state.doc.lineAt(pos);
+    //                 this.checkboxClickedAt = line.number - 1;
+    //             }
+    //         }
+    //         this.blockChanges = false;
+    //     });
+    // }
 
     async onunload() {
         window.removeEventListener("keydown", this.handleKeystrokeBound);
@@ -136,7 +168,7 @@ export default class AutoReordering extends Plugin {
         return this.renumberer;
     }
 
-    updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderData): void {
+    updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderResult): void {
         if (editor.somethingSelected() || !reorderData) {
             return;
         }
@@ -160,22 +192,6 @@ export default class AutoReordering extends Plugin {
         editor.setCursor(newPosition);
     }
 
-    isCursorInView(): boolean {
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (activeView) {
-            // @ts-expect-error, not typed
-            const editorView = activeView.editor.cm as EditorView;
-            const pos = editorView.state.selection.main.head;
-            const coords = editorView.coordsAtPos(pos);
-            if (coords) {
-                const editorRect = editorView.dom.getBoundingClientRect();
-                return coords.top >= editorRect.top && coords.bottom <= editorRect.bottom;
-            }
-        }
-
-        return true;
-    }
-
     getCurrIndex(editor: Editor): { index: number; mouseAt?: number } {
         const isInView = this.isCursorInView();
 
@@ -191,5 +207,21 @@ export default class AutoReordering extends Plugin {
 
         const selection = editor.listSelections()[0];
         return { index: Math.min(selection.anchor.line, selection.head.line) };
+    }
+
+    isCursorInView(): boolean {
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (activeView) {
+            // @ts-expect-error, not typed
+            const editorView = activeView.editor.cm as EditorView;
+            const pos = editorView.state.selection.main.head;
+            const coords = editorView.coordsAtPos(pos);
+            if (coords) {
+                const editorRect = editorView.dom.getBoundingClientRect();
+                return coords.top >= editorRect.top && coords.bottom <= editorRect.bottom;
+            }
+        }
+
+        return true;
     }
 }

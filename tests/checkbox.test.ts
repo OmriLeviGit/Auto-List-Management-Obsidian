@@ -1,4 +1,4 @@
-import { getLastListStart, getLineInfo } from "src/utils";
+import { getLineInfo } from "src/utils";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
@@ -206,9 +206,11 @@ describe("getChecklistDetails", () => {
                 expect(result).toEqual({
                     uncheckedItems: expected.unchecked,
                     checkedItems: expected.checked,
-                    startIndex: expected.startIndex,
-                    endIndex: expected.endIndex,
-                    placeCursorAt: expected.cursorAt,
+                    reorderResult: {
+                        start: expected.startIndex,
+                        limit: expected.endIndex,
+                        placeCursorAt: expected.cursorAt,
+                    },
                 });
             });
         });
@@ -336,9 +338,11 @@ describe("getChecklistDetails", () => {
                 expect(result).toEqual({
                     uncheckedItems: expected.unchecked,
                     checkedItems: expected.checked,
-                    startIndex: expected.startIndex,
-                    endIndex: expected.endIndex,
-                    placeCursorAt: expected.cursorAt,
+                    reorderResult: {
+                        start: expected.startIndex,
+                        limit: expected.endIndex,
+                        placeCursorAt: expected.cursorAt,
+                    },
                 });
             });
         });
