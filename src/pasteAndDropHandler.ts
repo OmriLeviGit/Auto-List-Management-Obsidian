@@ -101,7 +101,7 @@ function modifyText(text: string, newNumber: number): TextModification {
     const targetLine = lines[lineIndex];
     const info = getLineInfo(targetLine);
 
-    const newLine = targetLine.slice(0, info.spaceCharsNum) + newNumber + ". " + targetLine.slice(info.textIndex);
+    const newLine = targetLine.slice(0, info.spaceCharsNum) + newNumber + ". " + targetLine.slice(info.textOffset);
 
     lines[lineIndex] = newLine;
     const modifiedText = lines.join("\n");

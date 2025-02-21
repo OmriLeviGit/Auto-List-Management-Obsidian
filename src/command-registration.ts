@@ -1,6 +1,6 @@
 import AutoReordering from "../main";
 import { Editor } from "obsidian";
-import { reorderChecklist } from "./checkbox";
+import { reorderChecklist, deleteChecked } from "./checkbox";
 import SettingsManager from "./SettingsManager";
 
 export function registerCommands(plugin: AutoReordering) {
@@ -35,15 +35,15 @@ export function registerCommands(plugin: AutoReordering) {
             const startLine = Math.min(anchor.line, head.line);
             const endLine = Math.max(anchor.line, head.line) + 1;
 
-            const reorderData = reorderChecklist(editor, startLine, endLine);
+            const reorderResult = reorderChecklist(editor, startLine, endLine);
 
             if (SettingsManager.getInstance().getLiveNumberingUpdate() === true) {
-                if (reorderData !== undefined) {
-                    renumberer.renumber(editor, reorderData.start, reorderData.limit);
+                if (reorderResult !== undefined) {
+                    renumberer.renumber(editor, reorderResult.start, reorderResult.limit);
                 }
             }
 
-            plugin.updateCursorPosition(editor, posToReturn, reorderData);
+            plugin.updateCursorPosition(editor, posToReturn, reorderResult);
         },
     });
 
@@ -54,12 +54,29 @@ export function registerCommands(plugin: AutoReordering) {
             const lineToReturn = editor.getCursor().line;
             const renumberer = plugin.getRenumberer();
 
-            const reorderData = reorderChecklist(editor, 0, editor.lastLine() + 1);
+            const reorderResult = reorderChecklist(editor, 0, editor.lastLine() + 1);
 
             if (SettingsManager.getInstance().getLiveNumberingUpdate() === true) {
-                if (reorderData !== undefined) {
-                    renumberer.renumber(editor, reorderData.start, reorderData.limit);
+                if (reorderResult !== undefined) {
+                    renumberer.renumber(editor, reorderResult.start, reorderResult.limit);
                 }
+            }
+
+            editor.setCursor({ line: lineToReturn, ch: editor.getLine(lineToReturn).length });
+        },
+    });
+
+    plugin.addCommand({
+        id: "5-checklist-delete-checked-items",
+        name: "Delete checked Items",
+        editorCallback: (editor: Editor) => {
+            const lineToReturn = editor.getCursor().line;
+            const renumberer = plugin.getRenumberer();
+
+            const deleteResult = deleteChecked(editor);
+
+            if (SettingsManager.getInstance().getLiveNumberingUpdate() === true) {
+                renumberer.renumber(editor, deleteResult.start, deleteResult.limit);
             }
 
             editor.setCursor({ line: lineToReturn, ch: editor.getLine(lineToReturn).length });

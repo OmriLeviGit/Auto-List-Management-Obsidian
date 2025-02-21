@@ -1,5 +1,5 @@
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo } from "./utils";
+import { getLineInfo, isLineChecked } from "./utils";
 import { LineInfo, ReorderResult } from "./types";
 import SettingsManager from "./SettingsManager";
 
@@ -48,7 +48,7 @@ function reorderAllListsInRange(
         end = reorderData.reorderResult.limit;
         i = end;
 
-        while (getLineInfo(editor.getLine(i)).isChecked !== undefined) {
+        while (isLineChecked(getLineInfo(editor.getLine(i))) !== undefined) {
             i++;
         }
     }
@@ -71,7 +71,7 @@ function reorderAtIndex(
     const hasContent = hasCheckboxContent(line);
 
     // if not a checkbox or without any content, dont reorder
-    if (startInfo.isChecked === undefined || hasContent === false) {
+    if (isLineChecked(startInfo) === undefined || hasContent === false) {
         return;
     }
 
@@ -134,7 +134,7 @@ function getChecklistDetails(
             break;
         }
 
-        const isChecked = currInfo.isChecked;
+        const isChecked = isLineChecked(currInfo);
         if (isChecked === undefined) {
             break; // Can be undefined
         }
@@ -228,7 +228,7 @@ function findReorderStartPosition(
 
     while (i <= editor.lastLine()) {
         const currInfo = getLineInfo(editor.getLine(i));
-        if (currInfo.isChecked !== skipStatus || !isSameStatus(startInfo, currInfo)) {
+        if (isLineChecked(currInfo) !== skipStatus || !isSameStatus(startInfo, currInfo)) {
             break;
         }
         i++;
@@ -239,7 +239,7 @@ function findReorderStartPosition(
 function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
     const hasSameNumberStatus = (info1.number !== undefined) === (info2.number !== undefined);
     const hasSameIndentation = info1.spaceIndent === info2.spaceIndent;
-    const hasSameCheckboxStatus = (info1.isChecked !== undefined) === (info2.isChecked !== undefined);
+    const hasSameCheckboxStatus = (isLineChecked(info1) !== undefined) === (isLineChecked(info2) !== undefined);
 
     if (hasSameNumberStatus && hasSameIndentation && hasSameCheckboxStatus) {
         return true;
@@ -254,10 +254,48 @@ function hasCheckboxContent(line: string): boolean {
     return CHECKBOX_WITH_CONTENT.test(line);
 }
 
+function deleteChecked(editor: Editor): ReorderResult {
+    const lastLine = editor.lastLine();
+    const changes: EditorChange[] = [];
+
+    let start = 0;
+    let limit = 0;
+
+    for (let i = 0; i <= lastLine; i++) {
+        const currLine = getLineInfo(editor.getLine(i));
+        if (isLineChecked(currLine) === true) {
+            if (start === 0) {
+                start = i;
+            }
+            changes.push({
+                from: { line: i, ch: 0 },
+                to: { line: i + 1, ch: 0 },
+                text: "",
+            });
+            limit = i;
+        }
+    }
+
+    applyChangesToEditor(editor, changes);
+
+    // last line is done separately becasue it has no new line after it
+    if (limit === lastLine && limit !== 0) {
+        const lastIndex = editor.lastLine();
+
+        editor.replaceRange(
+            "",
+            { line: lastIndex - 1, ch: editor.getLine(lastIndex - 1).length },
+            { line: lastIndex, ch: 0 }
+        );
+    }
+
+    return { start, limit };
+}
+
 function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
     if (changes.length > 0) {
         editor.transaction({ changes });
     }
 }
 
-export { reorderChecklist, getChecklistStart, getChecklistDetails };
+export { reorderChecklist, getChecklistStart, getChecklistDetails, deleteChecked };

@@ -12,12 +12,12 @@ describe("getLineInfo numbering tests", () => {
         {
             name: "single digit line",
             input: "1. text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textIndex: 3, isChecked: undefined },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 1, textOffset: 3, checkboxChar: undefined },
         },
         {
             name: "multiple digits line",
             input: "123. text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: undefined },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textOffset: 5, checkboxChar: undefined },
         },
         {
             name: "no digits line",
@@ -26,29 +26,29 @@ describe("getLineInfo numbering tests", () => {
                 spaceCharsNum: 0,
                 spaceIndent: 0,
                 number: undefined,
-                textIndex: 0,
-                isChecked: undefined,
+                textOffset: 0,
+                checkboxChar: undefined,
             },
         },
         {
             name: "line with leading spaces",
             input: "  1. test",
-            expected: { spaceCharsNum: 2, spaceIndent: 2, number: 1, textIndex: 5, isChecked: undefined },
+            expected: { spaceCharsNum: 2, spaceIndent: 2, number: 1, textOffset: 5, checkboxChar: undefined },
         },
         {
             name: "line with leading tab",
             input: "\t1. test",
-            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 1, textIndex: 4, isChecked: undefined },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 1, textOffset: 4, checkboxChar: undefined },
         },
         {
             name: "line with leading two spaces and a tab",
             input: "  \t12. test",
-            expected: { spaceCharsNum: 3, spaceIndent: 6, number: 12, textIndex: 7, isChecked: undefined },
+            expected: { spaceCharsNum: 3, spaceIndent: 6, number: 12, textOffset: 7, checkboxChar: undefined },
         },
         {
             name: "line with leading space and two tab",
             input: " \t\t12. test",
-            expected: { spaceCharsNum: 3, spaceIndent: 9, number: 12, textIndex: 7, isChecked: undefined },
+            expected: { spaceCharsNum: 3, spaceIndent: 9, number: 12, textOffset: 7, checkboxChar: undefined },
         },
         {
             name: "line without number and with trailing spaceCharsNum",
@@ -57,8 +57,8 @@ describe("getLineInfo numbering tests", () => {
                 spaceCharsNum: 2,
                 spaceIndent: 2,
                 number: undefined,
-                textIndex: 2,
-                isChecked: undefined,
+                textOffset: 2,
+                checkboxChar: undefined,
             },
         },
         {
@@ -68,8 +68,8 @@ describe("getLineInfo numbering tests", () => {
                 spaceCharsNum: 0,
                 spaceIndent: 0,
                 number: undefined,
-                textIndex: 0,
-                isChecked: undefined,
+                textOffset: 0,
+                checkboxChar: undefined,
             },
         },
     ];
@@ -91,67 +91,67 @@ describe("getLineInfo checkbox tests", () => {
         {
             name: "Test with unchecked checkbox at the start of a line",
             input: "- [ ] text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textIndex: 0, isChecked: false },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox at the start of a line",
             input: "- [x] text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textIndex: 0, isChecked: true },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: "x" },
         },
         {
             name: "Test with unchecked checkbox with space at the start",
             input: " - [ ] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 1, number: undefined, textIndex: 1, isChecked: false },
+            expected: { spaceCharsNum: 1, spaceIndent: 1, number: undefined, textOffset: 1, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox with space at the start",
             input: " - [x] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 1, number: undefined, textIndex: 1, isChecked: true },
+            expected: { spaceCharsNum: 1, spaceIndent: 1, number: undefined, textOffset: 1, checkboxChar: "x" },
         },
         {
             name: "Test with unchecked checkbox with tab indentation",
             input: "\t- [ ] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 4, number: undefined, textIndex: 1, isChecked: false },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: undefined, textOffset: 1, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox with tab indentation",
             input: "\t- [x] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 4, number: undefined, textIndex: 1, isChecked: true },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: undefined, textOffset: 1, checkboxChar: "x" },
         },
         {
             name: "Test with unchecked checkbox in numbered list",
             input: "123. [ ] text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: false },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textOffset: 5, checkboxChar: " " },
         },
         {
             name: "Test checkbox with more spaces between the numbering and the checkbox",
             input: "123.    [ ] text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: false },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textOffset: 5, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox in numbered list",
             input: "123. [x] text",
-            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textIndex: 5, isChecked: true },
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: 123, textOffset: 5, checkboxChar: "x" },
         },
         {
             name: "Test with unchecked checkbox and leading space in numbered list",
             input: " 123. [ ] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 1, number: 123, textIndex: 6, isChecked: false },
+            expected: { spaceCharsNum: 1, spaceIndent: 1, number: 123, textOffset: 6, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox and leading space in numbered list",
             input: " 123. [x] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 1, number: 123, textIndex: 6, isChecked: true },
+            expected: { spaceCharsNum: 1, spaceIndent: 1, number: 123, textOffset: 6, checkboxChar: "x" },
         },
         {
             name: "Test with unchecked checkbox and tab indentation in numbered list",
             input: "\t123. [ ] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 123, textIndex: 6, isChecked: false },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 123, textOffset: 6, checkboxChar: " " },
         },
         {
             name: "Test with checked checkbox and tab indentation in numbered list",
             input: "\t123. [x] text",
-            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 123, textIndex: 6, isChecked: true },
+            expected: { spaceCharsNum: 1, spaceIndent: 4, number: 123, textOffset: 6, checkboxChar: "x" },
         },
     ];
 

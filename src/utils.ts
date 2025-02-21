@@ -5,89 +5,103 @@ import { LineInfo } from "./types";
 // extract information from a line of text
 function getLineInfo(line: string): LineInfo {
     const length = line.length;
-    let index = 0;
+    let offset = 0;
     let numOfSpaceIndents = 0;
 
     const indentSize = SettingsManager.getInstance().getIndentSize();
 
     // num of spaces
-    while (index < length && (line[index] === " " || line[index] === "\t")) {
-        // console.debug("linevalue: ", line[i].charCodeAt(0));
-        numOfSpaceIndents += line[index] === " " ? 1 : indentSize;
-        index++;
+    while (offset < length && (line[offset] === " " || line[offset] === "\t")) {
+        numOfSpaceIndents += line[offset] === " " ? 1 : indentSize;
+        offset++;
     }
 
-    const spaceCharsNum = index;
+    const spaceCharsNum = offset;
 
     // number indices
     while (
-        index < length &&
-        "0".charCodeAt(0) <= line.charCodeAt(index) &&
-        line.charCodeAt(index) <= "9".charCodeAt(0)
+        offset < length &&
+        "0".charCodeAt(0) <= line.charCodeAt(offset) &&
+        line.charCodeAt(offset) <= "9".charCodeAt(0)
     ) {
-        index++;
+        offset++;
     }
 
-    const isNumberDetected = spaceCharsNum !== index && line[index] === "." && line[index + 1] === " ";
+    // const isNumberDetected = spaceCharsNum !== index && line[index] === "." && line[index + 1] === " ";
+
+    // if (!isNumberDetected) {
+    //     const checkboxChar = getCheckboxInfo(line, index, isNumberDetected);
+    //     return {
+    //         spaceCharsNum,
+    //         spaceIndent: numOfSpaceIndents,
+    //         number: undefined,
+    //         textIndex: index,
+    //         checkboxChar,
+    //     };
+    // }
+
+    // const number = parseInt(line.slice(spaceCharsNum, index));
+
+    // index += 2;
+    // const checkboxChar = getCheckboxInfo(line, index, isNumberDetected);
+
+    // if (isNaN(number)) {
+    //     return {
+    //         spaceCharsNum,
+    //         spaceIndent: numOfSpaceIndents,
+    //         number: undefined,
+    //         textIndex: 0,
+    //         checkboxChar,
+    //     };
+    // }
+
+    // return {
+    //     spaceCharsNum,
+    //     spaceIndent: numOfSpaceIndents,
+    //     number,
+    //     textIndex: index,
+    //     checkboxChar,
+    // };
+
+    const isNumberDetected = spaceCharsNum !== offset && line[offset] === "." && line[offset + 1] === " ";
+
+    let number = undefined;
 
     if (!isNumberDetected) {
-        const isChecked = getCheckboxInfo(line, index, isNumberDetected);
-        return {
-            spaceCharsNum,
-            spaceIndent: numOfSpaceIndents,
-            number: undefined,
-            textIndex: index,
-            isChecked,
-        };
+        offset = spaceCharsNum;
+    } else {
+        const parsedNum = parseInt(line.slice(spaceCharsNum, offset));
+
+        if (isNaN(parsedNum)) {
+            offset = spaceCharsNum;
+        } else {
+            number = parsedNum;
+            offset += 2;
+        }
     }
 
-    const number = parseInt(line.slice(spaceCharsNum, index));
-
-    index += 2;
-    const isChecked = getCheckboxInfo(line, index, isNumberDetected);
-
-    if (isNaN(number)) {
-        return {
-            spaceCharsNum,
-            spaceIndent: numOfSpaceIndents,
-            number: undefined,
-            textIndex: 0,
-            isChecked,
-        };
-    }
+    const checkboxChar = getCheckboxInfo(line, offset, isNumberDetected);
 
     return {
         spaceCharsNum,
         spaceIndent: numOfSpaceIndents,
         number,
-        textIndex: index,
-        isChecked,
+        textOffset: offset,
+        checkboxChar,
     };
 }
 
-function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean) {
-    const EMPTY_CHECKBOX_NUMBERED = /^\s*\[ \] /; // unchecked checkbox inside a numbered item
-    const FULL_CHECKBOX_NUMBERED = /^\s*\[.\] /; // checked checkbox inside a numbered item
+function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean): string | undefined {
+    const NUMBERED_CHECKBOX = /^\s*\[(.)\] /; // checkbox inside a numbered item
+    const UNNUMBERED_CHECKBOX = /^\s*- \[(.)\] /; // unnumbered checkbox, indented or not
 
-    const EMPTY_CHECKBOX = /^\s*- \[ \] /; // unchecked checkbox, indented or not
-    const FULL_CHECKBOX = /^\s*- \[.\] /; // unchecked checkbox, indented or not
+    const pattern = isNumberDetected ? NUMBERED_CHECKBOX : UNNUMBERED_CHECKBOX;
+    const stringToCheck = isNumberDetected ? line.slice(index) : line;
 
-    if (isNumberDetected) {
-        const s = line.slice(index); // slice out the number and its space
-        if (EMPTY_CHECKBOX_NUMBERED.test(s)) {
-            return false;
-        }
-        if (FULL_CHECKBOX_NUMBERED.test(s)) {
-            return true;
-        }
-    } else {
-        if (EMPTY_CHECKBOX.test(line)) {
-            return false;
-        }
-
-        if (FULL_CHECKBOX.test(line)) {
-            return true;
-        }
+    const match = stringToCheck.match(pattern);
+    if (match) {
+        const checkboxChar = match[1];
+        return checkboxChar;
     }
 
     return undefined;
@@ -153,4 +167,14 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };
+function isLineChecked(info: LineInfo) {
+    if (info.checkboxChar === undefined) {
+        return undefined;
+    }
+    if (info.checkboxChar === " ") {
+        return false;
+    }
+    return true;
+}
+
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isLineChecked };

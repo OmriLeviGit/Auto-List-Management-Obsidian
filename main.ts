@@ -89,9 +89,6 @@ export default class AutoReordering extends Plugin {
     }
 
     handleKeystroke(event: KeyboardEvent) {
-        if (!this.settingsManager.getLiveNumberingUpdate()) {
-            return;
-        }
         // if special key, dont renumber automatically
         mutex.runExclusive(() => {
             this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
@@ -128,26 +125,6 @@ export default class AutoReordering extends Plugin {
         }
     }
 
-    // mouse listener
-    // handleMouseClick(event: MouseEvent) {
-    //     // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
-    //     mutex.runExclusive(() => {
-    //         this.checkboxClickedAt = undefined;
-    //         const target = event.target as HTMLElement;
-    //         if (target.matches('[type="checkbox"]')) {
-    //             const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    //             if (activeView) {
-    //                 // @ts-expect-error, not typed
-    //                 const editorView = activeView.editor.cm as EditorView;
-    //                 const pos = editorView.posAtDOM(target);
-    //                 const line = editorView.state.doc.lineAt(pos);
-    //                 this.checkboxClickedAt = line.number - 1;
-    //             }
-    //         }
-    //         this.blockChanges = false;
-    //     });
-    // }
-
     async onunload() {
         window.removeEventListener("keydown", this.handleKeystrokeBound);
         window.removeEventListener("click", this.handleMouseBound);
@@ -173,8 +150,8 @@ export default class AutoReordering extends Plugin {
             return;
         }
 
-        //  if the line where the cursor is was not reordered, leave it as it was
-        //  else, put it at the end of the same line
+        // if the line where the cursor is was not reordered, leave it as it was
+        // else, put it at the end of the same line
         // ideal but not implemented: follow the original line to its new location
         let newPosition: EditorPosition;
         if (originalPos.line < reorderData.start || reorderData.limit <= originalPos.line) {

@@ -181,7 +181,7 @@ export default class Renumberer {
     }
 
     private getUpdatedLine(index: number, expectedNum: number, info: LineInfo, text: string): EditorChange {
-        const newText = `${text.slice(0, info.spaceCharsNum)}${expectedNum}. ${text.slice(info.textIndex)}`;
+        const newText = `${text.slice(0, info.spaceCharsNum)}${expectedNum}. ${text.slice(info.textOffset)}`;
         const updatedLine = {
             from: { line: index, ch: 0 },
             to: { line: index, ch: text.length },
