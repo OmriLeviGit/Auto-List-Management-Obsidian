@@ -170,17 +170,7 @@ function getChecklistDetails(
             itemsToModify.splice(endIndex);
             i = lastGroupStart;
         } else {
-            // should never happen
-            console.log("Automatic List Reordering: error, index not found in checkbox reordering");
-            return {
-                uncheckedItems,
-                checkedItems,
-                reorderResult: {
-                    start: startIndex,
-                    limit: i,
-                    placeCursorAt: startIndex + checkedItems.length,
-                },
-            };
+            console.log("Automatic List Reordering: error, index not found in checkbox reordering"); // should never happen
         }
     }
 
@@ -257,13 +247,15 @@ function hasCheckboxContent(line: string): boolean {
 function deleteChecked(editor: Editor): ReorderResult {
     const lastLine = editor.lastLine();
     const changes: EditorChange[] = [];
+    const charsToDelete = getFilteredCharsToDeleteSet();
 
     let start = 0;
     let limit = 0;
 
     for (let i = 0; i <= lastLine; i++) {
         const currLine = getLineInfo(editor.getLine(i));
-        if (isLineChecked(currLine) === true) {
+
+        if (currLine.checkboxChar !== undefined && charsToDelete.has(currLine.checkboxChar)) {
             if (start === 0) {
                 start = i;
             }
@@ -281,15 +273,32 @@ function deleteChecked(editor: Editor): ReorderResult {
     // last line is done separately becasue it has no new line after it
     if (limit === lastLine && limit !== 0) {
         const lastIndex = editor.lastLine();
-
-        editor.replaceRange(
-            "",
-            { line: lastIndex - 1, ch: editor.getLine(lastIndex - 1).length },
-            { line: lastIndex, ch: 0 }
-        );
+        if (lastIndex > 0) {
+            editor.replaceRange(
+                "",
+                { line: lastIndex - 1, ch: editor.getLine(lastIndex - 1).length },
+                { line: lastIndex, ch: 0 }
+            );
+        }
     }
 
     return { start, limit };
+}
+
+function getFilteredCharsToDeleteSet(): Set<string> {
+    const value = SettingsManager.getInstance().getCharsToDelete();
+    const defaultDelete = ["x"];
+    const filterChars = value
+        .trim()
+        .toLowerCase()
+        .split(" ")
+        .filter((char) => char.length === 1);
+
+    const charsToDelete = new Set([...defaultDelete, ...filterChars]);
+
+    console.log(charsToDelete);
+
+    return charsToDelete;
 }
 
 function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {

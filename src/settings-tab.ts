@@ -110,5 +110,24 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     })
             );
+
+        new Setting(containerEl)
+            .setName("Delete items by character")
+            .setDesc(
+                "Specify which checkbox characters determine which tasks should be deleted when using the deletion command. Enter single characters separated by spaces. Default: 'x'."
+            )
+            .addText((text) => {
+                text.setPlaceholder("x - /")
+                    .setValue(this.settingsManager.getCharsToDelete())
+                    .onChange(async (value) => {
+                        this.settingsManager.setCharsToDelete(value);
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        containerEl.createEl("div", {
+            text: "Example: 'x - /' means tasks with [x], [-], or [/] will be removed, while tasks with other characters like [a] will remain.",
+            cls: "setting-item-description",
+        });
     }
 }

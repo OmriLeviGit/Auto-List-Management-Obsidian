@@ -9,6 +9,7 @@ const DEFAULT_RENUMBERING_SETTINGS: RenumberingSettings = {
 const DEFAULT_CHECKLIST_SETTINGS: ChecklistSettings = {
     liveUpdate: true,
     sortPosition: "bottom",
+    charsToDelete: "",
 };
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -88,5 +89,13 @@ export default class SettingsManager {
 
     public setChecklistSortPosition(value: string): void {
         this.settings.checklist.sortPosition = value;
+    }
+
+    public getCharsToDelete(): string {
+        return this.settings.checklist.charsToDelete;
+    }
+
+    public setCharsToDelete(value: string): void {
+        this.settings.checklist.charsToDelete = value;
     }
 }

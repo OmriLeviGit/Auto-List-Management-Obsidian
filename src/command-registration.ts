@@ -68,7 +68,7 @@ export function registerCommands(plugin: AutoReordering) {
 
     plugin.addCommand({
         id: "5-checklist-delete-checked-items",
-        name: "Delete checked Items",
+        name: "Delete all checked Items in note",
         editorCallback: (editor: Editor) => {
             const lineToReturn = editor.getCursor().line;
             const renumberer = plugin.getRenumberer();

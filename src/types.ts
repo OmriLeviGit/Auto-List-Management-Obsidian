@@ -38,6 +38,7 @@ interface RenumberingSettings {
 interface ChecklistSettings {
     liveUpdate: boolean;
     sortPosition: string;
+    charsToDelete: string;
 }
 
 interface ReorderResult {
