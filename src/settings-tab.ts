@@ -18,6 +18,18 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         containerEl.empty();
 
+        const githubEl = createFragment();
+        githubEl.appendText("For more information, visit ");
+        githubEl.createEl("a", {
+            href: "https://github.com/OmriLeviGit/Auto-List-Reordering-Obsidian",
+            text: "Github",
+        });
+
+        githubEl.appendText(".");
+        containerEl.appendChild(githubEl);
+
+        new Setting(containerEl).setHeading();
+
         new Setting(containerEl)
             .setName("Tab size")
             .setDesc(
@@ -34,11 +46,77 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     });
             });
 
+        new Setting(containerEl).setHeading().setName("Checklists");
+
+        new Setting(containerEl)
+            .setName("Auto-sort on changes")
+            .setDesc("Automatically sort checklists whenever checkboxes are checked or unchecked.")
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.getLiveCheckboxUpdate()).onChange(async (value) => {
+                    this.settingsManager.setLiveCheckboxUpdate(value);
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName("Place checked items at bottom")
+            .setDesc(
+                "When enabled, checked tasks will be placed at the bottom. When disabled, they will be at the top."
+            )
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.isCheckedItemsAtBottom()).onChange(async (value) => {
+                    this.settingsManager.setCheckedItemsAtBottom(value);
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        const descEl = createFragment();
+        descEl.appendText("When enabled, tasks with any special checkbox characters will be sorted according to ");
+        descEl.createEl("a", {
+            href: "https://en.wikipedia.org/wiki/ASCII",
+            text: "ASCII",
+        });
+        descEl.appendText(". When disabled, only tasks marked for deletion will be sorted.");
+
+        new Setting(containerEl)
+            .setName("Sort all special checkboxes")
+            .setDesc(descEl)
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.getSortSpecialChars()).onChange(async (value) => {
+                    this.settingsManager.setSortSpecialChars(value);
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName("Checkbox delete-characters")
+            .setDesc(
+                "Specify which checkbox characters mark tasks for deletion. Tasks with these characters are always sorted below tasks with other characters, and can be removed by using the delete command."
+            )
+            .addText((text) => {
+                text.setPlaceholder("Enter characters")
+                    .setValue(this.settingsManager.getCharsToDelete())
+                    .onChange(async (value) => {
+                        this.settingsManager.setCharsToDelete(value);
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        containerEl.createEl("div", {
+            text: "Enter single characters separated by spaces (case-insensitive). Default: 'X'.",
+            cls: "setting-item-description",
+        });
+
+        containerEl.createEl("div", {
+            text: "Example: '- /' means tasks with [x], [-], or [/] will be removed, while tasks with other characters like [>] will remain.",
+            cls: "setting-item-description",
+        });
+
         new Setting(containerEl).setHeading().setName("Numbered lists");
 
         new Setting(containerEl)
-            .setName("Automatic update")
-            .setDesc("Update numbered lists as changes are made.")
+            .setName("Auto-renumber on changes")
+            .setDesc("Automatically sort numbered lists as changes are made.")
             .addToggle((toggle) =>
                 toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
                     this.settingsManager.setLiveNumberingUpdate(value);
@@ -84,46 +162,5 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 })
             );
-
-        new Setting(containerEl).setHeading().setName("Checklists");
-
-        new Setting(containerEl)
-            .setName("Automatic update")
-            .setDesc("Sort checklist items when boxes are checked.")
-            .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getLiveCheckboxUpdate()).onChange(async (value) => {
-                    this.settingsManager.setLiveCheckboxUpdate(value);
-                    await this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName("Place checked items at the top")
-            .setDesc("Choose where completed items should be placed (top or bottom of the list).")
-            .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getCheckedAtTop()).onChange(async (value) => {
-                    this.settingsManager.setCheckedAtTop(value);
-                    await this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName("Delete items by character")
-            .setDesc(
-                "Specify which checkbox characters determine which tasks should be deleted when using the deletion command. Enter single characters separated by spaces (case-insensitive). Default: 'x'."
-            )
-            .addText((text) => {
-                text.setPlaceholder("x - /")
-                    .setValue(this.settingsManager.getCharsToDelete())
-                    .onChange(async (value) => {
-                        this.settingsManager.setCharsToDelete(value);
-                        await this.plugin.saveSettings();
-                    });
-            });
-
-        containerEl.createEl("div", {
-            text: "Example: 'x - /' means tasks with [x], [-], or [/] will be removed, while tasks with other characters like [a] will remain.",
-            cls: "setting-item-description",
-        });
     }
 }

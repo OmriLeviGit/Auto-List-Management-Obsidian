@@ -8,7 +8,8 @@ const DEFAULT_RENUMBERING_SETTINGS: RenumberingSettings = {
 
 const DEFAULT_CHECKLIST_SETTINGS: ChecklistSettings = {
     liveUpdate: true,
-    sortToTop: false,
+    checkedItemsAtBottom: true,
+    sortSpecialChars: true,
     charsToDelete: "",
 };
 
@@ -83,12 +84,12 @@ export default class SettingsManager {
         this.settings.checklist.liveUpdate = value;
     }
 
-    public getCheckedAtTop(): boolean {
-        return this.settings.checklist.sortToTop;
+    public isCheckedItemsAtBottom(): boolean {
+        return this.settings.checklist.checkedItemsAtBottom;
     }
 
-    public setCheckedAtTop(value: boolean): void {
-        this.settings.checklist.sortToTop = value;
+    public setCheckedItemsAtBottom(value: boolean): void {
+        this.settings.checklist.checkedItemsAtBottom = value;
     }
 
     public getCharsToDelete(): string {
@@ -97,5 +98,13 @@ export default class SettingsManager {
 
     public setCharsToDelete(value: string): void {
         this.settings.checklist.charsToDelete = value;
+    }
+
+    public getSortSpecialChars(): boolean {
+        return this.settings.checklist.sortSpecialChars;
+    }
+
+    public setSortSpecialChars(value: boolean): void {
+        this.settings.checklist.sortSpecialChars = value;
     }
 }

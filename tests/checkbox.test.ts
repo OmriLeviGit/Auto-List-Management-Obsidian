@@ -8,8 +8,9 @@ import SettingsManager from "src/SettingsManager";
 describe("getChecklistStart", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        SettingsManager.getInstance().setCheckedAtTop(false);
+        SettingsManager.getInstance().setCheckedItemsAtBottom(true);
     });
+
     const testCases = [
         {
             name: "One item unchecked",
@@ -85,7 +86,11 @@ describe("getChecklistStart", () => {
 
 describe("reorder", () => {
     describe("with checked items at the top", () => {
-        const checkedAtTop = true;
+        beforeEach(() => {
+            jest.clearAllMocks();
+            SettingsManager.getInstance().setCheckedItemsAtBottom(false);
+        });
+
         const testCases = [
             {
                 name: "One item unchecked",
@@ -192,7 +197,7 @@ describe("reorder", () => {
             test(name, () => {
                 const editor = createMockEditor(content);
                 const info = getLineInfo(editor.getLine(index));
-                const result = reorder(editor, index, info, checkedAtTop);
+                const result = reorder(editor, index, info);
 
                 const expectedItems = [...expected.checked, ...expected.unchecked];
 
@@ -208,7 +213,11 @@ describe("reorder", () => {
     });
 
     describe("with checked items at the bottom", () => {
-        const checkedAtTop = false;
+        beforeEach(() => {
+            jest.clearAllMocks();
+            SettingsManager.getInstance().setCheckedItemsAtBottom(true);
+        });
+
         const testCases = [
             {
                 name: "One item unchecked",
@@ -315,7 +324,7 @@ describe("reorder", () => {
             test(name, () => {
                 const editor = createMockEditor(content);
                 const info = getLineInfo(editor.getLine(index));
-                const result = reorder(editor, index, info, checkedAtTop);
+                const result = reorder(editor, index, info);
 
                 const expectedItems = [...expected.unchecked, ...expected.checked];
 

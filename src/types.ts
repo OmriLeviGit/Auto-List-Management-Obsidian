@@ -37,7 +37,8 @@ interface RenumberingSettings {
 
 interface ChecklistSettings {
     liveUpdate: boolean;
-    sortToTop: boolean;
+    checkedItemsAtBottom: boolean;
+    sortSpecialChars: boolean;
     charsToDelete: string;
 }
 

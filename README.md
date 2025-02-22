@@ -6,18 +6,18 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 
 ## Features
 
+### Checklists
+
+-   Automatic reordering of checked/unchecked items
+-   Configurable sorting (checked items are sorted to the bottom or to the top)
+-   Smart handling when pasting or dragging content
+-   Works with mouse and keyboard interactions
+
 ### Numbered Lists
 
 -   Automatic renumbering as you type
 -   Smart pasting that preserves list context
 -   Option to maintain or reset starting numbers
-
-### Checklists
-
--   Automatic reordering of checked/unchecked items
--   Configurable sorting (checked items to top or bottom)
--   Smart handling when pasting or dragging content
--   Works with mouse and keyboard interactions
 
 ### General
 
@@ -37,13 +37,17 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 
 ### Checklists
 
--   **Automatically sort checklists**: Sorts checklist items automatically when they are checked.
+-   **Auto-sort on changes**: Sorts checklist items automatically when they are checked.
 
--   **Sorting position**: Choose where completed items should be placed (top or bottom of the list).
+-   **Sorting position**: Choose whether checked items should be placed at the top or bottom of the list.
+
+-   **Sort all special checkboxes**: When enabled, tasks with any special checkbox characters will be sorted by [ASCII](https://en.wikipedia.org/wiki/ASCII). When disabled, only tasks marked for deletion will be sorted.
+
+-   **Checkbox delete characters**: Specify which checkbox characters mark tasks for deletion. Tasks with these characters are always sorted below tasks with other characters, and can be removed by using the delete command.
 
 ### Numbered lists
 
--   **Automatically update numbered lists**: Automatically update numbered lists as you edit without manual adjustments. Additional commands are available if you prefer to manually control which lists to renumber.
+-   **Auto-renumber on changes**: Automatically update numbered lists as you edit without manual adjustments. Additional commands are available if you prefer to manually control which lists to renumber.
 
 -   **Smart pasting**: Keeps the numbering intact when pasting content into an existing list, rather than adopting the numbering from the pasted text.
 
@@ -72,10 +76,15 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 
 ## Available Commands
 
--   **Renumber lists: In selection or at cursor**: Renumbers the list that the cursor is within. If multiple lists are highlighted, renumbers both of them separately.
--   **Renumber lists: Entire note**: Renumbers every numbered list in your note.
 -   **Reorder checkboxes: In selection or at cursor**: Reorders checked/unchecked items within the checklist at your cursor position. If multiple checklists are selected, reorders all of them.
+
 -   **Reorder checkboxes: Entire note**: Reorders all checked/unchecked items in every checklist throughout your note.
+
+-   **Delete all checked Items in note**: Removes all tasks that contain the specified delete characters in their checkboxes throughout your note.
+
+-   **Renumber lists: In selection or at cursor**: Renumbers the list that the cursor is within. If multiple lists are highlighted, renumbers both of them separately.
+
+-   **Renumber lists: Entire note**: Renumbers every numbered list in your note.
 
 ## Performance
 
@@ -83,4 +92,4 @@ The plugin was tested with documents containing lists with over 10,000 lines, an
 
 ## Limitations
 
--   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the _automatic update_ is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
+-   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the automatic update is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.

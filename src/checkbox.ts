@@ -1,11 +1,10 @@
 import { Editor, EditorChange } from "obsidian";
-import { getLineInfo, isLineChecked } from "./utils";
+import { getLineInfo } from "./utils";
 import { LineInfo, ReorderResult } from "./types";
 import SettingsManager from "./SettingsManager";
 
 function reorderChecklist(editor: Editor, start: number, limit?: number): ReorderResult | undefined {
     // const startPerf = performance.now();
-
     const result = limit === undefined ? reorderAtIndex(editor, start) : reorderAllListsInRange(editor, start, limit);
 
     if (!result) {
@@ -14,6 +13,8 @@ function reorderChecklist(editor: Editor, start: number, limit?: number): Reorde
 
     const { changes, reorderResult } = result;
     applyChangesToEditor(editor, changes);
+
+    console.log("s", reorderResult);
 
     // console.log("time: ", (performance.now() - startPerf) / 1000);
 
@@ -52,7 +53,7 @@ function reorderAllListsInRange(
         end = reorderData.reorderResult.limit;
         i = end;
 
-        while (isLineChecked(getLineInfo(editor.getLine(i))) !== undefined) {
+        while (shouldBeSortedAsChecked(getLineInfo(editor.getLine(i)).checkboxChar) !== undefined) {
             i++;
         }
     }
@@ -75,14 +76,13 @@ function reorderAtIndex(
     const hasContent = hasCheckboxContent(line);
 
     // if not a checkbox or without any content, dont reorder
-    if (isLineChecked(startInfo) === undefined || hasContent === false) {
+    if (shouldBeSortedAsChecked(startInfo.checkboxChar) === undefined || hasContent === false) {
         return;
     }
 
     const checklistStartIndex = getChecklistStart(editor, index);
-    const checkedAtTop = SettingsManager.getInstance().getCheckedAtTop();
 
-    const { orderedItems, reorderResult } = reorder(editor, checklistStartIndex, startInfo, checkedAtTop);
+    const { orderedItems, reorderResult } = reorder(editor, checklistStartIndex, startInfo);
 
     if (orderedItems.length === 0) {
         return; // no changes are needed
@@ -110,12 +110,13 @@ function reorderAtIndex(
 function reorder(
     editor: Editor,
     index: number,
-    startInfo: LineInfo,
-    checkedAtTop: boolean
+    startInfo: LineInfo
 ): { orderedItems: string[]; reorderResult: ReorderResult } {
+    const checkedItemsAtBottom = SettingsManager.getInstance().isCheckedItemsAtBottom();
     const uncheckedItems: string[] = [];
     const checkedMap: Map<string, [string, LineInfo][]> = new Map();
-    const startIndex = findReorderStartPosition(editor, index, startInfo, checkedAtTop);
+
+    const startIndex = findReorderStartPosition(editor, index, startInfo, checkedItemsAtBottom);
 
     let prevChar = "";
     let transitionIndex = 0;
@@ -144,14 +145,13 @@ function reorder(
         }
 
         // add to the correct data structure
-        if (currentChar === " ") {
-            uncheckedItems.push(line);
-        } else {
+        if (shouldBeSortedAsChecked(currentChar)) {
             if (!checkedMap.has(currentChar)) {
                 checkedMap.set(currentChar, []);
             }
-
             checkedMap.get(currentChar)!.push([line, currInfo]);
+        } else {
+            uncheckedItems.push(line);
         }
 
         i++;
@@ -160,7 +160,7 @@ function reorder(
     const finishedAt = i;
 
     // phase 2 - sort checked items
-    const charsToDelete = getFilteredCharsToDeleteSet(); // defined by user
+    const charsToDelete = getCharsToDelete(); // defined by user
     const checkedItems = [];
     const checkedItemsDel = [];
     const keys = Array.from(checkedMap.keys()).sort();
@@ -173,7 +173,7 @@ function reorder(
 
         if (charsToDelete.has(lineInfo.checkboxChar)) {
             checkedItemsDel.push(s);
-        } else {
+        } else if (shouldBeSortedAsChecked(lineInfo.checkboxChar)) {
             checkedItems.push(s);
         }
     }
@@ -181,11 +181,13 @@ function reorder(
     checkedItems.push(...checkedItemsDel);
 
     // phase 3 - combine and remove unchanged lines
-    if (checkedAtTop) {
+    if (!checkedItemsAtBottom) {
         uncheckedItems.splice(transitionIndex); // remove unchanged unchecked lines from the end
     }
 
-    const orderedItems = checkedAtTop ? [...checkedItems, ...uncheckedItems] : [...uncheckedItems, ...checkedItems];
+    const orderedItems = checkedItemsAtBottom
+        ? [...uncheckedItems, ...checkedItems]
+        : [...checkedItems, ...uncheckedItems];
 
     // remove unchanged lines from the beginning
     let count = 0;
@@ -241,18 +243,16 @@ function findReorderStartPosition(
     editor: Editor,
     startIndex: number,
     startInfo: LineInfo,
-    checkedAtTop: boolean
+    checkedItemsAtBottom: boolean
 ): number {
-    let i = startIndex;
-    const skipStatus = checkedAtTop ? true : false;
-
-    if (checkedAtTop) {
-        return i;
+    if (!checkedItemsAtBottom) {
+        return startIndex;
     }
 
+    let i = startIndex;
     while (i <= editor.lastLine()) {
         const currInfo = getLineInfo(editor.getLine(i));
-        if (isLineChecked(currInfo) !== skipStatus || !isSameStatus(startInfo, currInfo)) {
+        if (shouldBeSortedAsChecked(currInfo.checkboxChar) !== false || !isSameStatus(startInfo, currInfo)) {
             break;
         }
         i++;
@@ -264,7 +264,9 @@ function findReorderStartPosition(
 function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
     const hasSameNumberStatus = (info1.number !== undefined) === (info2.number !== undefined);
     const hasSameIndentation = info1.spaceIndent === info2.spaceIndent;
-    const hasSameCheckboxStatus = (isLineChecked(info1) !== undefined) === (isLineChecked(info2) !== undefined);
+    const hasSameCheckboxStatus =
+        (shouldBeSortedAsChecked(info1.checkboxChar) !== undefined) ===
+        (shouldBeSortedAsChecked(info2.checkboxChar) !== undefined);
 
     if (hasSameNumberStatus && hasSameIndentation && hasSameCheckboxStatus) {
         return true;
@@ -273,19 +275,13 @@ function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
     return false;
 }
 
-// is a part of a checklist, and not an empty item
-function hasCheckboxContent(line: string): boolean {
-    const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
-    return CHECKBOX_WITH_CONTENT.test(line);
-}
-
-function deleteChecked(editor: Editor): ReorderResult {
+function deleteChecked(editor: Editor): { deleteResult: ReorderResult; deletedItemCount: number } {
     const lastLine = editor.lastLine();
     const changes: EditorChange[] = [];
-    const charsToDelete = getFilteredCharsToDeleteSet();
-
+    const charsToDelete = getCharsToDelete();
+    let deletedItemCount = 0;
     let start = 0;
-    let limit = 0;
+    let end = 0;
 
     for (let i = 0; i <= lastLine; i++) {
         const currLine = getLineInfo(editor.getLine(i));
@@ -294,19 +290,22 @@ function deleteChecked(editor: Editor): ReorderResult {
             if (start === 0) {
                 start = i;
             }
+
             changes.push({
                 from: { line: i, ch: 0 },
                 to: { line: i + 1, ch: 0 },
                 text: "",
             });
-            limit = i;
+
+            end = i;
+            deletedItemCount++;
         }
     }
 
     applyChangesToEditor(editor, changes);
 
     // last line is done separately becasue it has no new line after it
-    if (limit === lastLine && limit !== 0) {
+    if (end === lastLine && end !== 0) {
         const lastIndex = editor.lastLine();
         if (lastIndex > 0) {
             editor.replaceRange(
@@ -317,10 +316,28 @@ function deleteChecked(editor: Editor): ReorderResult {
         }
     }
 
-    return { start, limit };
+    const limit = end + 1 - deletedItemCount; //  index after the last deleted line
+
+    return { deleteResult: { start, limit }, deletedItemCount };
 }
 
-function getFilteredCharsToDeleteSet(): Set<string> {
+function shouldBeSortedAsChecked(char: string | undefined): boolean | undefined {
+    if (char === undefined) {
+        return undefined;
+    }
+
+    const sortSpecialChars = SettingsManager.getInstance().getSortSpecialChars();
+    const checkedItems = getCharsToDelete();
+    const isSpecialChar = char !== " ";
+
+    if ((isSpecialChar && sortSpecialChars) || checkedItems.has(char)) {
+        return true;
+    }
+
+    return false;
+}
+
+function getCharsToDelete(): Set<string> {
     const value = SettingsManager.getInstance().getCharsToDelete();
     const defaultDelete = ["x"];
     const filterChars = value
@@ -332,6 +349,12 @@ function getFilteredCharsToDeleteSet(): Set<string> {
     const charsToDelete = new Set([...defaultDelete, ...filterChars]);
 
     return charsToDelete;
+}
+
+// is a part of a checklist, and not an empty item
+function hasCheckboxContent(line: string): boolean {
+    const CHECKBOX_WITH_CONTENT = /^(?:\s*\d+\.\s*\[.\]|\s*-\s*\[.\])\s+\S+/;
+    return CHECKBOX_WITH_CONTENT.test(line);
 }
 
 function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {

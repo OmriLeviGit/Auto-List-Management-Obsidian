@@ -96,20 +96,19 @@ export default class AutoReordering extends Plugin {
         });
     }
 
-    // mouse listener
-    handleMouseClick(event: MouseEvent) {
+    //  mouse listener
+    async handleMouseClick(event: MouseEvent) {
         if (!this.settingsManager.getLiveCheckboxUpdate()) {
             return;
         }
 
         try {
-            // if clicked on a checkbox using the mouse (not the same as cursor location), use cm to find the line number
-            mutex.runExclusive(() => {
+            await mutex.runExclusive(async () => {
                 this.checkboxClickedAt = undefined;
                 const target = event.target as HTMLElement;
                 if (target.matches('[type="checkbox"]')) {
                     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                    if (activeView) {
+                    if (activeView?.editor.hasFocus()) {
                         // @ts-expect-error, not typed
                         const editorView = activeView.editor.cm as EditorView;
                         const pos = editorView.posAtDOM(target);

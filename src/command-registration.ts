@@ -1,5 +1,5 @@
 import AutoReordering from "../main";
-import { Editor } from "obsidian";
+import { Editor, Notice } from "obsidian";
 import { reorderChecklist, deleteChecked } from "./checkbox";
 import SettingsManager from "./SettingsManager";
 
@@ -73,11 +73,16 @@ export function registerCommands(plugin: AutoReordering) {
             const lineToReturn = editor.getCursor().line;
             const renumberer = plugin.getRenumberer();
 
-            const deleteResult = deleteChecked(editor);
+            const { deleteResult, deletedItemCount } = deleteChecked(editor);
 
             if (SettingsManager.getInstance().getLiveNumberingUpdate() === true) {
                 renumberer.renumber(editor, deleteResult.start, deleteResult.limit);
             }
+
+            const noticeString =
+                deletedItemCount > 0 ? `Deleted ${deletedItemCount} lines` : "No checked items to delete";
+
+            new Notice(noticeString);
 
             editor.setCursor({ line: lineToReturn, ch: editor.getLine(lineToReturn).length });
         },

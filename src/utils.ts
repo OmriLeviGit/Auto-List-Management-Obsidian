@@ -167,14 +167,4 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-function isLineChecked(info: LineInfo): boolean | undefined {
-    if (info.checkboxChar === undefined) {
-        return undefined;
-    }
-    if (info.checkboxChar === " ") {
-        return false;
-    }
-    return true;
-}
-
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex, isLineChecked };
+export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };
