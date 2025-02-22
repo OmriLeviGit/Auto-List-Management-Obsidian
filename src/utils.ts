@@ -167,7 +167,7 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-function isLineChecked(info: LineInfo) {
+function isLineChecked(info: LineInfo): boolean | undefined {
     if (info.checkboxChar === undefined) {
         return undefined;
     }

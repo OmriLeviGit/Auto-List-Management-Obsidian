@@ -4,6 +4,8 @@ import { LineInfo, ReorderResult } from "./types";
 import SettingsManager from "./SettingsManager";
 
 function reorderChecklist(editor: Editor, start: number, limit?: number): ReorderResult | undefined {
+    // const startPerf = performance.now();
+
     const result = limit === undefined ? reorderAtIndex(editor, start) : reorderAllListsInRange(editor, start, limit);
 
     if (!result) {
@@ -12,6 +14,8 @@ function reorderChecklist(editor: Editor, start: number, limit?: number): Reorde
 
     const { changes, reorderResult } = result;
     applyChangesToEditor(editor, changes);
+
+    // console.log("time: ", (performance.now() - startPerf) / 1000);
 
     return reorderResult;
 }
@@ -29,7 +33,7 @@ function reorderAllListsInRange(
     let end = i;
 
     if (isInvalidRange) {
-        console.debug(
+        console.error(
             `reorderAllListsInRange is invalid with index=${start}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
         );
 
@@ -76,22 +80,17 @@ function reorderAtIndex(
     }
 
     const checklistStartIndex = getChecklistStart(editor, index);
-    const checkedAtTop = SettingsManager.getInstance().getChecklistSortPosition() === "top";
+    const checkedAtTop = SettingsManager.getInstance().getCheckedAtTop();
 
-    const { uncheckedItems, checkedItems, reorderResult } = getChecklistDetails(
-        editor,
-        checklistStartIndex,
-        startInfo,
-        checkedAtTop
-    );
-    const { start: startIndex, limit: endIndex, placeCursorAt } = reorderResult;
+    const { orderedItems, reorderResult } = reorder(editor, checklistStartIndex, startInfo, checkedAtTop);
 
-    if (uncheckedItems.length === 0 || checkedItems.length === 0) {
+    if (orderedItems.length === 0) {
         return; // no changes are needed
     }
 
-    const orderedItems = checkedAtTop ? [...checkedItems, ...uncheckedItems] : [...uncheckedItems, ...checkedItems];
-    const newText = endIndex > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n"; // adjust for last line in note
+    const { start: startIndex, limit: endIndex } = reorderResult;
+
+    const newText = endIndex > editor.lastLine() ? orderedItems.join("\n") : orderedItems.join("\n") + "\n"; // adjust for the last line in note
 
     const change: EditorChange = {
         from: { line: startIndex, ch: 0 },
@@ -104,27 +103,25 @@ function reorderAtIndex(
         reorderResult: {
             start: startIndex,
             limit: endIndex,
-            placeCursorAt,
         },
     };
 }
 
-function getChecklistDetails(
+function reorder(
     editor: Editor,
     index: number,
     startInfo: LineInfo,
     checkedAtTop: boolean
-): { uncheckedItems: string[]; checkedItems: string[]; reorderResult: ReorderResult } {
+): { orderedItems: string[]; reorderResult: ReorderResult } {
+    const uncheckedItems: string[] = [];
+    const checkedMap: Map<string, [string, LineInfo][]> = new Map();
     const startIndex = findReorderStartPosition(editor, index, startInfo, checkedAtTop);
 
-    const uncheckedItems: string[] = [];
-    const checkedItems: string[] = [];
-    const groupStartMap: Map<number, number> = new Map(); // Tracks start of new groups
+    let prevChar = "";
+    let transitionIndex = 0;
 
+    // phase 1 - map items
     let i = startIndex;
-    let lastGroupStart = i;
-    let groupIsChecked = checkedAtTop;
-
     while (i <= editor.lastLine()) {
         const line = editor.getLine(i);
         const currInfo = getLineInfo(line);
@@ -134,55 +131,88 @@ function getChecklistDetails(
             break;
         }
 
-        const isChecked = isLineChecked(currInfo);
-        if (isChecked === undefined) {
-            break; // Can be undefined
+        const currentChar = currInfo.checkboxChar;
+
+        if (currentChar === undefined) {
+            break; // is not a checked line
         }
 
-        // Track the start of a new group if needed
-        const isStatusTransition = isChecked !== groupIsChecked;
-        if (isStatusTransition) {
-            // Update the current state
-            groupIsChecked = isChecked;
-
-            // Track the start of a new group if needed
-            const shouldTrackNewGroup = (checkedAtTop && !groupIsChecked) || (!checkedAtTop && groupIsChecked);
-            if (shouldTrackNewGroup) {
-                lastGroupStart = i;
-                groupStartMap.set(lastGroupStart, groupIsChecked ? checkedItems.length : uncheckedItems.length);
-            }
+        // get the max char so far
+        if (currentChar !== prevChar) {
+            prevChar = currentChar;
+            transitionIndex = uncheckedItems.length;
         }
 
-        if (isChecked === false) {
+        // add to the correct data structure
+        if (currentChar === " ") {
             uncheckedItems.push(line);
         } else {
-            checkedItems.push(line);
+            if (!checkedMap.has(currentChar)) {
+                checkedMap.set(currentChar, []);
+            }
+
+            checkedMap.get(currentChar)!.push([line, currInfo]);
         }
 
         i++;
     }
 
-    // If the end of the checklist does not require reordering, reset i back to the last group
-    if ((checkedAtTop && !groupIsChecked) || (!checkedAtTop && groupIsChecked)) {
-        const endIndex = groupStartMap.get(lastGroupStart);
-        if (endIndex !== undefined) {
-            const itemsToModify = checkedAtTop ? uncheckedItems : checkedItems;
-            itemsToModify.splice(endIndex);
-            i = lastGroupStart;
+    const finishedAt = i;
+
+    // phase 2 - sort checked items
+    const charsToDelete = getFilteredCharsToDeleteSet(); // defined by user
+    const checkedItems = [];
+    const checkedItemsDel = [];
+    const keys = Array.from(checkedMap.keys()).sort();
+    const KVpairs = keys.flatMap((k) => checkedMap.get(k)!);
+
+    for (const [s, lineInfo] of KVpairs) {
+        if (!lineInfo.checkboxChar) {
+            continue;
+        }
+
+        if (charsToDelete.has(lineInfo.checkboxChar)) {
+            checkedItemsDel.push(s);
         } else {
-            console.log("Automatic List Reordering: error, index not found in checkbox reordering"); // should never happen
+            checkedItems.push(s);
         }
     }
 
-    const placeCursorAt = checkedAtTop ? startIndex + checkedItems.length : startIndex + uncheckedItems.length - 1;
+    checkedItems.push(...checkedItemsDel);
+
+    // phase 3 - combine and remove unchanged lines
+    if (checkedAtTop) {
+        uncheckedItems.splice(transitionIndex); // remove unchanged unchecked lines from the end
+    }
+
+    const orderedItems = checkedAtTop ? [...checkedItems, ...uncheckedItems] : [...uncheckedItems, ...checkedItems];
+
+    // remove unchanged lines from the beginning
+    let count = 0;
+    for (; count < orderedItems.length; count++) {
+        if (orderedItems[count] !== editor.getLine(startIndex + count)) {
+            break;
+        }
+    }
+
+    orderedItems.splice(0, count);
+
+    const newStart = startIndex + count;
+
+    // remove unchanged lines from the end
+    const offsettedStart = finishedAt - (orderedItems.length - 1) - 1;
+    for (let i = orderedItems.length - 1; i >= 0; i--) {
+        if (orderedItems[i] !== editor.getLine(offsettedStart + i)) {
+            orderedItems.splice(i + 1);
+            break;
+        }
+    }
 
     return {
-        uncheckedItems,
-        checkedItems,
+        orderedItems,
         reorderResult: {
-            start: startIndex,
-            limit: i,
-            placeCursorAt,
+            start: newStart,
+            limit: newStart + orderedItems.length,
         },
     };
 }
@@ -216,6 +246,10 @@ function findReorderStartPosition(
     let i = startIndex;
     const skipStatus = checkedAtTop ? true : false;
 
+    if (checkedAtTop) {
+        return i;
+    }
+
     while (i <= editor.lastLine()) {
         const currInfo = getLineInfo(editor.getLine(i));
         if (isLineChecked(currInfo) !== skipStatus || !isSameStatus(startInfo, currInfo)) {
@@ -223,6 +257,7 @@ function findReorderStartPosition(
         }
         i++;
     }
+
     return i;
 }
 
@@ -296,8 +331,6 @@ function getFilteredCharsToDeleteSet(): Set<string> {
 
     const charsToDelete = new Set([...defaultDelete, ...filterChars]);
 
-    console.log(charsToDelete);
-
     return charsToDelete;
 }
 
@@ -307,4 +340,4 @@ function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
     }
 }
 
-export { reorderChecklist, getChecklistStart, getChecklistDetails, deleteChecked };
+export { reorderChecklist, getChecklistStart, reorder, deleteChecked };

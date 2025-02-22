@@ -25,7 +25,7 @@ export default class Renumberer {
         let i = start;
 
         if (isInvalidRange) {
-            console.debug(
+            console.error(
                 `renumbering range is invalid with index=${start}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
             );
 

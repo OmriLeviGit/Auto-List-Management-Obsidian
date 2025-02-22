@@ -34,6 +34,7 @@ export default class AutoReordering extends Plugin {
                         if (this.blockChanges) {
                             return;
                         }
+
                         const posToReturn = editor.getCursor();
 
                         this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input

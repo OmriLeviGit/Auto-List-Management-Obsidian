@@ -37,14 +37,13 @@ interface RenumberingSettings {
 
 interface ChecklistSettings {
     liveUpdate: boolean;
-    sortPosition: string;
+    sortToTop: boolean;
     charsToDelete: string;
 }
 
 interface ReorderResult {
     start: number;
     limit: number;
-    placeCursorAt?: number;
 }
 
 export type {

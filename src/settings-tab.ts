@@ -98,23 +98,19 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName("Sort position")
+            .setName("Place checked items at the top")
             .setDesc("Choose where completed items should be placed (top or bottom of the list).")
-            .addDropdown((dropdown) =>
-                dropdown
-                    .addOption("top", "Top")
-                    .addOption("bottom", "Bottom")
-                    .setValue(this.settingsManager.getChecklistSortPosition())
-                    .onChange(async (value) => {
-                        this.settingsManager.setChecklistSortPosition(value);
-                        await this.plugin.saveSettings();
-                    })
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.getCheckedAtTop()).onChange(async (value) => {
+                    this.settingsManager.setCheckedAtTop(value);
+                    await this.plugin.saveSettings();
+                })
             );
 
         new Setting(containerEl)
             .setName("Delete items by character")
             .setDesc(
-                "Specify which checkbox characters determine which tasks should be deleted when using the deletion command. Enter single characters separated by spaces. Default: 'x'."
+                "Specify which checkbox characters determine which tasks should be deleted when using the deletion command. Enter single characters separated by spaces (case-insensitive). Default: 'x'."
             )
             .addText((text) => {
                 text.setPlaceholder("x - /")

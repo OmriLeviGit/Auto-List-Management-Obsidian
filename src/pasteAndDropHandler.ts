@@ -73,7 +73,6 @@ function processTextInput(editor: Editor, textFromClipboard: string): PastingRan
         numOfLines = countNewlines(textFromClipboard);
     }
 
-    // console.debug("base: ", baseIndex, "last:", lastIndex);
     editor.replaceSelection(textFromClipboard); // paste
 
     return { baseIndex, offset: numOfLines };

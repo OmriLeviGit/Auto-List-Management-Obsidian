@@ -2,13 +2,13 @@ import { getLineInfo } from "src/utils";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
-import { getChecklistDetails, getChecklistStart } from "src/checkbox";
+import { reorder, getChecklistStart } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
 describe("getChecklistStart", () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        SettingsManager.getInstance().setChecklistSortPosition("bottom");
+        SettingsManager.getInstance().setCheckedAtTop(false);
     });
     const testCases = [
         {
@@ -83,7 +83,7 @@ describe("getChecklistStart", () => {
     });
 });
 
-describe("getChecklistDetails", () => {
+describe("reorder", () => {
     describe("with checked items at the top", () => {
         const checkedAtTop = true;
         const testCases = [
@@ -96,7 +96,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 0,
                     endIndex: 0,
-                    cursorAt: 0,
                 },
             },
             {
@@ -108,7 +107,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 1,
                     endIndex: 1,
-                    cursorAt: 1,
                 },
             },
             {
@@ -120,7 +118,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] b", "- [x] d"],
                     startIndex: 0,
                     endIndex: 4,
-                    cursorAt: 2,
                 },
             },
             {
@@ -132,7 +129,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] c"],
                     startIndex: 1,
                     endIndex: 3,
-                    cursorAt: 2,
                 },
             },
             {
@@ -144,7 +140,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 2,
                     endIndex: 2,
-                    cursorAt: 2,
                 },
             },
             {
@@ -156,7 +151,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] c", "- [x] d"],
                     startIndex: 0,
                     endIndex: 4,
-                    cursorAt: 2,
                 },
             },
             {
@@ -168,7 +162,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] c", "- [x] d", "- [x] e"],
                     startIndex: 0,
                     endIndex: 5,
-                    cursorAt: 3,
                 },
             },
             {
@@ -180,7 +173,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 2,
                     endIndex: 2,
-                    cursorAt: 2,
                 },
             },
             {
@@ -192,7 +184,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 0,
                     endIndex: 0,
-                    cursorAt: 0,
                 },
             },
         ];
@@ -201,15 +192,15 @@ describe("getChecklistDetails", () => {
             test(name, () => {
                 const editor = createMockEditor(content);
                 const info = getLineInfo(editor.getLine(index));
-                const result = getChecklistDetails(editor, index, info, checkedAtTop);
+                const result = reorder(editor, index, info, checkedAtTop);
+
+                const expectedItems = [...expected.checked, ...expected.unchecked];
 
                 expect(result).toEqual({
-                    uncheckedItems: expected.unchecked,
-                    checkedItems: expected.checked,
+                    orderedItems: expectedItems,
                     reorderResult: {
                         start: expected.startIndex,
                         limit: expected.endIndex,
-                        placeCursorAt: expected.cursorAt,
                     },
                 });
             });
@@ -228,7 +219,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 1,
                     endIndex: 1,
-                    cursorAt: 0,
                 },
             },
             {
@@ -238,9 +228,8 @@ describe("getChecklistDetails", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 0,
-                    endIndex: 0,
-                    cursorAt: -1,
+                    startIndex: 1,
+                    endIndex: 1,
                 },
             },
             {
@@ -252,7 +241,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] b"],
                     startIndex: 1,
                     endIndex: 3,
-                    cursorAt: 1,
                 },
             },
             {
@@ -264,7 +252,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] a", "- [x] c"],
                     startIndex: 0,
                     endIndex: 4,
-                    cursorAt: 1,
                 },
             },
             {
@@ -276,7 +263,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] a", "- [x] b"],
                     startIndex: 0,
                     endIndex: 4,
-                    cursorAt: 1,
                 },
             },
             {
@@ -286,9 +272,8 @@ describe("getChecklistDetails", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 2,
-                    endIndex: 2,
-                    cursorAt: 1,
+                    startIndex: 4,
+                    endIndex: 4,
                 },
             },
             {
@@ -298,9 +283,8 @@ describe("getChecklistDetails", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 2,
-                    endIndex: 2,
-                    cursorAt: 1,
+                    startIndex: 5,
+                    endIndex: 5,
                 },
             },
             {
@@ -312,7 +296,6 @@ describe("getChecklistDetails", () => {
                     checked: ["- [x] a", "- [x] b"],
                     startIndex: 0,
                     endIndex: 5,
-                    cursorAt: 2,
                 },
             },
             {
@@ -324,7 +307,6 @@ describe("getChecklistDetails", () => {
                     checked: [],
                     startIndex: 0,
                     endIndex: 0,
-                    cursorAt: -1,
                 },
             },
         ];
@@ -333,15 +315,15 @@ describe("getChecklistDetails", () => {
             test(name, () => {
                 const editor = createMockEditor(content);
                 const info = getLineInfo(editor.getLine(index));
-                const result = getChecklistDetails(editor, index, info, checkedAtTop);
+                const result = reorder(editor, index, info, checkedAtTop);
+
+                const expectedItems = [...expected.unchecked, ...expected.checked];
 
                 expect(result).toEqual({
-                    uncheckedItems: expected.unchecked,
-                    checkedItems: expected.checked,
+                    orderedItems: expectedItems,
                     reorderResult: {
                         start: expected.startIndex,
                         limit: expected.endIndex,
-                        placeCursorAt: expected.cursorAt,
                     },
                 });
             });
