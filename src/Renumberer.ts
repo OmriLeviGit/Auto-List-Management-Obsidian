@@ -20,18 +20,25 @@ export default class Renumberer {
 
     // renumbers all numbered lists in specified range
     private renumberAllListsInRange = (editor: Editor, start: number, limit: number): PendingChanges => {
-        const isInvalidRange = start < 0 || editor.lastLine() + 1 < limit || limit < start;
+        const isInvalidRange = start < 0 || limit < start;
+        const editorLastLine = editor.lastLine();
         const newChanges: EditorChange[] = [];
-        let i = start;
 
         if (isInvalidRange) {
             console.error(
-                `renumbering range is invalid with index=${start}, limit=${limit}. editor.lastLine()=${editor.lastLine()}`
+                `Invalid renumbering range: start=${start}, limit=${limit} (start must be >= 0 and limit must be >= start)`
             );
-
-            return { changes: newChanges, endIndex: i };
+            return { changes: newChanges, endIndex: start };
         }
 
+        if (editorLastLine + 1 < limit) {
+            console.error(
+                `Limit exceeds document bounds: limit=${limit}, document length=${editorLastLine + 1}. Adjusting limit.`
+            );
+            limit = editorLastLine + 1;
+        }
+
+        let i = start;
         for (; i < limit; i++) {
             const line = editor.getLine(i);
 
@@ -49,7 +56,6 @@ export default class Renumberer {
 
             if (startIndex !== undefined) {
                 const pendingChanges = this.renumberAtIndex(editor, startIndex, false);
-
                 if (pendingChanges) {
                     newChanges.push(...pendingChanges.changes);
                     i = pendingChanges.endIndex;

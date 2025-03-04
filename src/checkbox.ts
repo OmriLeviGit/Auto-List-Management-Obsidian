@@ -26,6 +26,7 @@ function reorderAllListsInRange(
     const changes: EditorChange[] = [];
 
     let i = start;
+    let currentStart: number | undefined = undefined;
     let end = i;
 
     if (isInvalidRange) {
@@ -45,6 +46,10 @@ function reorderAllListsInRange(
 
         changes.push(...reorderData.changes);
 
+        if (currentStart === undefined) {
+            currentStart = reorderData.reorderResult.start;
+        }
+
         end = reorderData.reorderResult.limit;
         i = end;
 
@@ -55,7 +60,7 @@ function reorderAllListsInRange(
 
     return {
         reorderResult: {
-            start,
+            start: currentStart ?? start,
             limit: end,
         },
         changes,
@@ -317,6 +322,7 @@ function deleteChecked(editor: Editor): { deleteResult: ReorderResult; deletedIt
     return { deleteResult: { start, limit }, deletedItemCount };
 }
 
+// char should be treated as checked
 function shouldBeSortedAsChecked(char: string | undefined): boolean | undefined {
     if (char === undefined) {
         return undefined;
@@ -358,5 +364,4 @@ function applyChangesToEditor(editor: Editor, changes: EditorChange[]) {
         editor.transaction({ changes });
     }
 }
-
-export { reorderChecklist, getChecklistStart, reorder, deleteChecked };
+export { reorderChecklist, reorder, getChecklistStart, deleteChecked };

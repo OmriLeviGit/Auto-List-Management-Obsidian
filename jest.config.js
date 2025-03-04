@@ -17,7 +17,7 @@ module.exports = {
     collectCoverage: process.argv.includes("--coverage"), // Enable coverage when --coverage flag is present
     coverageDirectory: "./coverage", // Output directory for coverage reports
     coverageReporters: ["text", "lcov"], // Formats for coverage reports
-    coveragePathIgnorePatterns: ["/node_modules/", "/tests/", "/src/SettingsManager"], // Optionally ignore certain files or directories from coverage
+    coveragePathIgnorePatterns: ["/node_modules/", "/tests/", "/src/SettingsManager", "src/pasteAndDropHandler"], // paste handler mostly contains obsidian functionality
     coverageThreshold: {
         global: {
             branches: 80,

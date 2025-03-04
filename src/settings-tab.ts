@@ -136,7 +136,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             .setName("Smart pasting")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
             .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getRenumberingSmartPasting()).onChange(async (value) => {
+                toggle.setValue(this.settingsManager.getSmartPasting()).onChange(async (value) => {
                     this.settingsManager.setSmartPasting(value);
                     await this.plugin.saveSettings();
                 })

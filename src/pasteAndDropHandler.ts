@@ -52,14 +52,15 @@ export default function handlePasteAndDrop(evt: ClipboardEvent | DragEvent, edit
 
 // ensures numbered lists in pasted text are numbered correctly
 function processTextInput(editor: Editor, textFromClipboard: string): PastingRange {
+    const a = editor.listSelections();
     const { anchor, head } = editor.listSelections()[0];
     const baseIndex = Math.min(anchor.line, head.line);
     let numOfLines: number;
 
-    const smartPasting = SettingsManager.getInstance().getRenumberingSmartPasting();
+    const smartPasting = SettingsManager.getInstance().getSmartPasting();
     if (smartPasting) {
-        const afterPastingIndex = Math.max(anchor.line, head.line) + 1;
-        const line = editor.getLine(afterPastingIndex);
+        const indexAfterPasting = Math.max(anchor.line, head.line) + 1;
+        const line = editor.getLine(indexAfterPasting);
         const info = getLineInfo(line);
 
         if (info.number !== undefined) {
@@ -76,16 +77,6 @@ function processTextInput(editor: Editor, textFromClipboard: string): PastingRan
     editor.replaceSelection(textFromClipboard); // paste
 
     return { baseIndex, offset: numOfLines };
-}
-
-function countNewlines(text: string) {
-    let count = 0;
-    for (const char of text) {
-        if (char === "\n") {
-            count++;
-        }
-    }
-    return count;
 }
 
 // change the first item of the last numbered list in text to newNumber
@@ -108,4 +99,14 @@ function modifyText(text: string, newNumber: number): TextModification {
     return { modifiedText, numOfLines: lines.length };
 }
 
-export { modifyText };
+function countNewlines(text: string) {
+    let count = 0;
+    for (const char of text) {
+        if (char === "\n") {
+            count++;
+        }
+    }
+    return count;
+}
+
+export { processTextInput, modifyText };

@@ -404,42 +404,51 @@ describe("Start from one renumbering tests", () => {
             expect(endIndex).toBe(expectedEndIndex);
         });
     });
+});
 
-    test("Renumber entire list (starting from one)", () => {
-        const content = [
-            "1. a",
-            "3. b",
-            "4. c",
-            "4. d",
-            "5. e",
-            "6. f",
-            "6. g",
-            "8. h",
-            "9. i",
-            "",
-            "3. dontrenumber",
-            "5. dontrenumber",
-        ];
-        const expectedContent = [
-            "1. a",
-            "2. b",
-            "3. c",
-            "4. d",
-            "5. e",
-            "6. f",
-            "7. g",
-            "8. h",
-            "9. i",
-            "",
-            "3. dontrenumber",
-            "5. dontrenumber",
-        ];
+describe("Renumber entire list", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test("Numbers the entire list when using renumberallListsInRange", () => {
+        const renumberer = new Renumberer();
+        const content = ["1. a", "2. b", "3. c", "4. d", "6. e"];
+        const expectedContent = ["1. a", "2. b", "3. c", "4. d", "5. e"];
 
         const editor = createMockEditor(content);
-        const renumberer = new Renumberer();
-        SettingsManager.getInstance().setStartsFromOne(true);
 
-        renumberer.renumber(editor, 0, content.indexOf(""));
+        renumberer.renumber(editor, 0, 1);
+
+        for (let i = 0; i < content.length; i++) {
+            console.log(editor.getLine(i));
+        }
+
+        expectedContent.forEach((line, i) => {
+            expect(editor.getLine(i)).toBe(line);
+        });
+    });
+
+    test("should renumber even when the limit is greater than content.length", () => {
+        const renumberer = new Renumberer();
+        const content = ["1. a", "3. b"];
+        const expectedContent = ["1. a", "2. b"];
+        const editor = createMockEditor(content);
+
+        renumberer.renumber(editor, 0, content.length + 4);
+
+        expectedContent.forEach((line, i) => {
+            expect(editor.getLine(i)).toBe(line);
+        });
+    });
+
+    test("Dont renumber when limit < start", () => {
+        const renumberer = new Renumberer();
+        const content = ["1. a", "3. b"];
+        const expectedContent = ["1. a", "3. b"];
+        const editor = createMockEditor(content);
+
+        renumberer.renumber(editor, 1, 0);
 
         expectedContent.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);

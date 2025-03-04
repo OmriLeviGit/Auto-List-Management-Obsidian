@@ -52,7 +52,7 @@ export default class SettingsManager {
         this.settings.renumbering.liveUpdate = value;
     }
 
-    public getRenumberingSmartPasting(): boolean {
+    public getSmartPasting(): boolean {
         return this.settings.renumbering.smartPasting;
     }
 

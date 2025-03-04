@@ -45,22 +45,22 @@ export default class AutoReordering extends Plugin {
                         }
 
                         // Handle checkbox updates
-                        let reorderData: ReorderResult | undefined;
+                        let reorderResult: ReorderResult | undefined;
                         if (this.settingsManager.getLiveCheckboxUpdate() === true) {
-                            reorderData = reorderChecklist(editor, currIndex);
+                            reorderResult = reorderChecklist(editor, currIndex);
                         }
 
                         // Handle numbering updates
                         if (this.settingsManager.getLiveNumberingUpdate() === true) {
-                            if (reorderData !== undefined) {
+                            if (reorderResult !== undefined) {
                                 // if reordered checkbox, renumber between the original location and the new one
-                                this.renumberer.renumber(editor, reorderData.start, reorderData.limit);
+                                this.renumberer.renumber(editor, reorderResult.start, reorderResult.limit);
                             } else {
                                 this.renumberer.renumber(editor, currIndex);
                             }
                         }
 
-                        this.updateCursorPosition(editor, posToReturn, reorderData);
+                        this.updateCursorPosition(editor, posToReturn, reorderResult);
                     });
                 }, 0);
             })
@@ -145,8 +145,8 @@ export default class AutoReordering extends Plugin {
         return this.renumberer;
     }
 
-    updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderData?: ReorderResult): void {
-        if (editor.somethingSelected() || !reorderData) {
+    updateCursorPosition(editor: Editor, originalPos: EditorPosition, reorderResult?: ReorderResult): void {
+        if (editor.somethingSelected() || !reorderResult) {
             return;
         }
 
@@ -154,7 +154,7 @@ export default class AutoReordering extends Plugin {
         // else, put it at the end of the same line
         // ideal but not implemented: follow the original line to its new location
         let newPosition: EditorPosition;
-        if (originalPos.line < reorderData.start || reorderData.limit <= originalPos.line) {
+        if (originalPos.line < reorderResult.start || reorderResult.limit <= originalPos.line) {
             newPosition = {
                 line: originalPos.line,
                 ch: originalPos.ch,
