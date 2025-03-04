@@ -2,7 +2,7 @@ import { getLineInfo } from "src/utils";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 import "./__mocks__/main";
 
-import { reorder, getChecklistStart } from "src/checkbox";
+import { reorder, getChecklistStart, deleteChecked } from "src/checkbox";
 import SettingsManager from "src/SettingsManager";
 
 describe("getChecklistStart", () => {
@@ -335,6 +335,69 @@ describe("reorder", () => {
                         limit: expected.endIndex,
                     },
                 });
+            });
+        });
+    });
+});
+
+describe("deleteChecked", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        SettingsManager.getInstance().setCharsToDelete("A $");
+    });
+
+    const testCases = [
+        {
+            name: "One item unchecked",
+            content: ["- [ ] a"],
+            expected: ["- [ ] a"],
+        },
+        {
+            name: "One item checked",
+            content: ["- [x] a"],
+            expected: [""],
+        },
+        {
+            name: "Several items with different characters",
+            content: ["- [x] x checked", "- [ ] unchecked", "- [A] A checked", "- [$] $ checked"],
+            expected: ["- [ ] unchecked"],
+        },
+        {
+            name: "Remove every checked character",
+            content: [
+                "text",
+                "- [ ] unchecked",
+                "- [A] A checked",
+                "1. numbered",
+                "- [$] $ checked",
+                "1. [a] numbered checked",
+                "2. [] numbered unchecked",
+                "\t- [$] indented checked",
+                "\t- [ ] indented unchecked",
+                "\t1. [$] indented numbered checked",
+                "\t2. [ ] indented numbered unchecked",
+                "\tindented text",
+            ],
+            expected: [
+                "text",
+                "- [ ] unchecked",
+                "1. numbered",
+                "2. [] numbered unchecked",
+                "\t- [ ] indented unchecked",
+                "\t2. [ ] indented numbered unchecked",
+                "\tindented text",
+            ],
+        },
+    ];
+
+    testCases.forEach(({ name, content, expected }) => {
+        test(name, () => {
+            const editor = createMockEditor(content);
+
+            deleteChecked(editor);
+
+            expected.forEach((line, i) => {
+                expect(editor.getLine(i)).toBe(line);
             });
         });
     });

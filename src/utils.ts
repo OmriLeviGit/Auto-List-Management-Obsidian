@@ -27,42 +27,6 @@ function getLineInfo(line: string): LineInfo {
         offset++;
     }
 
-    // const isNumberDetected = spaceCharsNum !== index && line[index] === "." && line[index + 1] === " ";
-
-    // if (!isNumberDetected) {
-    //     const checkboxChar = getCheckboxInfo(line, index, isNumberDetected);
-    //     return {
-    //         spaceCharsNum,
-    //         spaceIndent: numOfSpaceIndents,
-    //         number: undefined,
-    //         textIndex: index,
-    //         checkboxChar,
-    //     };
-    // }
-
-    // const number = parseInt(line.slice(spaceCharsNum, index));
-
-    // index += 2;
-    // const checkboxChar = getCheckboxInfo(line, index, isNumberDetected);
-
-    // if (isNaN(number)) {
-    //     return {
-    //         spaceCharsNum,
-    //         spaceIndent: numOfSpaceIndents,
-    //         number: undefined,
-    //         textIndex: 0,
-    //         checkboxChar,
-    //     };
-    // }
-
-    // return {
-    //     spaceCharsNum,
-    //     spaceIndent: numOfSpaceIndents,
-    //     number,
-    //     textIndex: index,
-    //     checkboxChar,
-    // };
-
     const isNumberDetected = spaceCharsNum !== offset && line[offset] === "." && line[offset + 1] === " ";
 
     let number = undefined;
@@ -100,8 +64,7 @@ function getCheckboxInfo(line: string, index: number, isNumberDetected: boolean)
 
     const match = stringToCheck.match(pattern);
     if (match) {
-        const checkboxChar = match[1];
-        return checkboxChar;
+        return match[1];
     }
 
     return undefined;

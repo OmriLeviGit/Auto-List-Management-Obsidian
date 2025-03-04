@@ -89,6 +89,11 @@ describe("getLineInfo checkbox tests", () => {
 
     const checkboxTestCases = [
         {
+            name: "Test without checkbox",
+            input: "text",
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: undefined },
+        },
+        {
             name: "Test with unchecked checkbox at the start of a line",
             input: "- [ ] text",
             expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: " " },
@@ -97,6 +102,21 @@ describe("getLineInfo checkbox tests", () => {
             name: "Test with checked checkbox at the start of a line",
             input: "- [x] text",
             expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: "x" },
+        },
+        {
+            name: "Test with uppercase character",
+            input: "- [A] text",
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: "A" },
+        },
+        {
+            name: "Test with unalphabet character",
+            input: "- [>] text",
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: ">" },
+        },
+        {
+            name: "Test with multiple characters",
+            input: "- [ab] text",
+            expected: { spaceCharsNum: 0, spaceIndent: 0, number: undefined, textOffset: 0, checkboxChar: undefined },
         },
         {
             name: "Test with unchecked checkbox with space at the start",

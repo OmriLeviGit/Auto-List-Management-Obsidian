@@ -4,7 +4,6 @@ import { LineInfo, ReorderResult } from "./types";
 import SettingsManager from "./SettingsManager";
 
 function reorderChecklist(editor: Editor, start: number, limit?: number): ReorderResult | undefined {
-    // const startPerf = performance.now();
     const result = limit === undefined ? reorderAtIndex(editor, start) : reorderAllListsInRange(editor, start, limit);
 
     if (!result) {
@@ -13,10 +12,6 @@ function reorderChecklist(editor: Editor, start: number, limit?: number): Reorde
 
     const { changes, reorderResult } = result;
     applyChangesToEditor(editor, changes);
-
-    console.log("s", reorderResult);
-
-    // console.log("time: ", (performance.now() - startPerf) / 1000);
 
     return reorderResult;
 }
@@ -219,7 +214,6 @@ function reorder(
     };
 }
 
-// get the start of the checklist
 function getChecklistStart(editor: Editor, index: number): number {
     if (index === 0) {
         return index;
@@ -261,6 +255,7 @@ function findReorderStartPosition(
     return i;
 }
 
+// Status = Both lines are numbered \ unnumbered
 function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
     const hasSameNumberStatus = (info1.number !== undefined) === (info2.number !== undefined);
     const hasSameIndentation = info1.spaceIndent === info2.spaceIndent;
@@ -279,6 +274,7 @@ function deleteChecked(editor: Editor): { deleteResult: ReorderResult; deletedIt
     const lastLine = editor.lastLine();
     const changes: EditorChange[] = [];
     const charsToDelete = getCharsToDelete();
+
     let deletedItemCount = 0;
     let start = 0;
     let end = 0;
@@ -286,7 +282,7 @@ function deleteChecked(editor: Editor): { deleteResult: ReorderResult; deletedIt
     for (let i = 0; i <= lastLine; i++) {
         const currLine = getLineInfo(editor.getLine(i));
 
-        if (currLine.checkboxChar !== undefined && charsToDelete.has(currLine.checkboxChar)) {
+        if (currLine.checkboxChar !== undefined && charsToDelete.has(currLine.checkboxChar.toLowerCase())) {
             if (start === 0) {
                 start = i;
             }
