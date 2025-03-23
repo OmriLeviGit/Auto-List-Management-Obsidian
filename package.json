@@ -1,6 +1,6 @@
 {
     "name": "automatic-list-management",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "description": "Automatically reorders checklists and numbered lists as you edit them.",
     "main": "main.js",
     "scripts": {

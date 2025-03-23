@@ -21,7 +21,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
         const githubEl = createFragment();
         githubEl.appendText("For more information, visit ");
         githubEl.createEl("a", {
-            href: "https://github.com/OmriLeviGit/Auto-List-Reordering-Obsidian",
+            href: "https://github.com/OmriLeviGit/Auto-List-Management-Obsidian",
             text: "Github",
         });
 
