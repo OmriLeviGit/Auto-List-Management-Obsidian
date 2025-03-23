@@ -1,7 +1,7 @@
 {
-    "name": "automatic-list-reordering",
+    "name": "automatic-list-management",
     "version": "2.0.8",
-    "description": "Automatically reorder checklists and numbered lists as you edit them.",
+    "description": "Automatically reorders checklists and numbered lists as you edit them.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",

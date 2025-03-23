@@ -19,6 +19,49 @@ export default class AutoReordering extends Plugin {
     private handleKeystrokeBound: (event: KeyboardEvent) => void;
     private handleMouseBound: (event: MouseEvent) => void;
 
+    applyReordering(editor: Editor, start?: number, end?: number) {
+        if (this.blockChanges) {
+            return;
+        }
+
+        const posToReturn = editor.getCursor();
+
+        this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
+
+        let startIndex = start;
+        let endIndex = end;
+        let newLine: number | undefined;
+
+        if (startIndex === undefined) {
+            const result = this.getCurrIndex(editor);
+            startIndex = result.index;
+            newLine = result.mouseAt;
+        }
+
+        if (newLine !== undefined) {
+            posToReturn.line = newLine; // if the cursor is outside the screen, place it in the same line the mouse just clicked at
+        }
+
+        // Handle checkbox updates
+        let reorderResult: ReorderResult | undefined;
+        if (this.settingsManager.getLiveCheckboxUpdate() === true) {
+            reorderResult = reorderChecklist(editor, startIndex, end);
+        }
+
+        // Handle numbering updates
+        if (this.settingsManager.getLiveNumberingUpdate() === true) {
+            // if reordered checkbox, renumber between the original location and the new one
+            if (reorderResult !== undefined) {
+                startIndex = reorderResult.start;
+                endIndex = reorderResult.limit;
+            }
+
+            this.renumberer.renumber(editor, startIndex, endIndex);
+        }
+
+        this.updateCursorPosition(editor, posToReturn, reorderResult);
+    }
+
     async onload() {
         await this.loadSettings();
         registerCommands(this);
@@ -29,54 +72,30 @@ export default class AutoReordering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                mutex.runExclusive(() => {
-                    setTimeout(() => {
-                        if (this.blockChanges) {
-                            return;
-                        }
-
-                        const posToReturn = editor.getCursor();
-
-                        this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
-
-                        const { index: currIndex, mouseAt: newLine } = this.getCurrIndex(editor);
-                        if (newLine !== undefined) {
-                            posToReturn.line = newLine; // if the cursor is outside the screen, place it in the same line the mouse just clicked at
-                        }
-
-                        // Handle checkbox updates
-                        let reorderResult: ReorderResult | undefined;
-                        if (this.settingsManager.getLiveCheckboxUpdate() === true) {
-                            reorderResult = reorderChecklist(editor, currIndex);
-                        }
-
-                        // Handle numbering updates
-                        if (this.settingsManager.getLiveNumberingUpdate() === true) {
-                            if (reorderResult !== undefined) {
-                                // if reordered checkbox, renumber between the original location and the new one
-                                this.renumberer.renumber(editor, reorderResult.start, reorderResult.limit);
-                            } else {
-                                this.renumberer.renumber(editor, currIndex);
-                            }
-                        }
-
-                        this.updateCursorPosition(editor, posToReturn, reorderResult);
-                    });
-                }, 0);
+                // prioritize other listeners
+                setTimeout(() => {
+                    mutex.runExclusive(() => {
+                        this.applyReordering(editor);
+                    }, 0);
+                });
             })
         );
 
         // editor-paste listener
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                handlePasteAndDrop.call(this, evt, editor, mutex);
+                const { start, end } = handlePasteAndDrop.call(this, evt, editor, mutex);
+                this.applyReordering(editor, start, end);
+                mutex.release();
             })
         );
 
         // editor-drop listener
         this.registerEvent(
             this.app.workspace.on("editor-drop", (evt: DragEvent, editor: Editor) => {
-                handlePasteAndDrop.call(this, evt, editor, mutex);
+                const { start, end } = handlePasteAndDrop.call(this, evt, editor, mutex);
+                this.applyReordering(editor, start, end);
+                mutex.release();
             })
         );
 

@@ -25,15 +25,15 @@ export default class Renumberer {
         const newChanges: EditorChange[] = [];
 
         if (isInvalidRange) {
-            console.error(
-                `Invalid renumbering range: start=${start}, limit=${limit} (start must be >= 0 and limit must be >= start)`
-            );
+            console.error(`Invalid renumbering range: start=${start}, limit=${limit}. Requires (0 <= start <= limit).`);
             return { changes: newChanges, endIndex: start };
         }
 
         if (editorLastLine + 1 < limit) {
             console.error(
-                `Limit exceeds document bounds: limit=${limit}, document length=${editorLastLine + 1}. Adjusting limit.`
+                `Limit exceeds document bounds: attempted limit=${limit}, actual limit=${
+                    editorLastLine + 1
+                }. Adjusting limit.`
             );
             limit = editorLastLine + 1;
         }

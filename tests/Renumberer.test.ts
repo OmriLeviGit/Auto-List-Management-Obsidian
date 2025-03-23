@@ -420,10 +420,6 @@ describe("Renumber entire list", () => {
 
         renumberer.renumber(editor, 0, 1);
 
-        for (let i = 0; i < content.length; i++) {
-            console.log(editor.getLine(i));
-        }
-
         expectedContent.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);
         });
@@ -435,7 +431,7 @@ describe("Renumber entire list", () => {
         const expectedContent = ["1. a", "2. b"];
         const editor = createMockEditor(content);
 
-        renumberer.renumber(editor, 0, content.length + 4);
+        renumberer.renumber(editor, 0, content.length + 1);
 
         expectedContent.forEach((line, i) => {
             expect(editor.getLine(i)).toBe(line);

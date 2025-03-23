@@ -1,4 +1,4 @@
-# Automatic List Reordering Plugin for Obsidian
+# Automatic List Management Plugin for Obsidian
 
 This plugin automatically manages your lists in Obsidian, handling both numbered lists and checklists.
 
