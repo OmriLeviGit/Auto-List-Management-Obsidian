@@ -48,7 +48,7 @@ describe("modifyText tests", () => {
     testCases.forEach(({ name, content, newNumber, expectedResult }) => {
         test(name, () => {
             const res = modifyText(content, newNumber);
-            expect(res.modifiedText).toBe(expectedResult);
+            expect(res).toBe(expectedResult);
         });
     });
 });

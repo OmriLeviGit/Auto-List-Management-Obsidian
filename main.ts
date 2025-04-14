@@ -1,6 +1,5 @@
 import { Plugin, Editor, EditorPosition, MarkdownView } from "obsidian";
-import { Mutex } from "async-mutex";
-import handlePasteAndDrop from "src/pasteAndDropHandler";
+import { handlePaste, handleDrop } from "src/pasteAndDropHandler";
 import { registerCommands } from "src/command-registration";
 import Renumberer from "src/Renumberer";
 import PluginSettings from "./src/settings-tab";
@@ -8,8 +7,6 @@ import SettingsManager, { DEFAULT_SETTINGS } from "src/SettingsManager";
 import { reorderChecklist } from "src/checkbox";
 import { ReorderResult } from "src/types";
 import { EditorView } from "@codemirror/view";
-
-const mutex = new Mutex();
 
 export default class AutoReordering extends Plugin {
     private renumberer: Renumberer;
@@ -23,10 +20,9 @@ export default class AutoReordering extends Plugin {
         if (this.blockChanges) {
             return;
         }
+        this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
 
         const posToReturn = editor.getCursor();
-
-        this.blockChanges = true; // Prevents multiple renumbering/checkbox updates. Reset to false on mouse/keyboard input
 
         let startIndex = start;
         let endIndex = end;
@@ -72,11 +68,8 @@ export default class AutoReordering extends Plugin {
         // editor-change listener
         this.registerEvent(
             this.app.workspace.on("editor-change", (editor: Editor) => {
-                // prioritize other listeners
                 setTimeout(() => {
-                    mutex.runExclusive(() => {
-                        this.applyReordering(editor);
-                    }, 0);
+                    this.applyReordering(editor);
                 });
             })
         );
@@ -84,18 +77,18 @@ export default class AutoReordering extends Plugin {
         // editor-paste listener
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
-                const { start, end } = handlePasteAndDrop.call(this, evt, editor, mutex);
+                const { start, end } = handlePaste.call(this, evt, editor);
+                this.blockChanges = false;
                 this.applyReordering(editor, start, end);
-                mutex.release();
             })
         );
 
         // editor-drop listener
         this.registerEvent(
             this.app.workspace.on("editor-drop", (evt: DragEvent, editor: Editor) => {
-                const { start, end } = handlePasteAndDrop.call(this, evt, editor, mutex);
+                const { start, end } = handleDrop.call(this, evt, editor);
+                this.blockChanges = false;
                 this.applyReordering(editor, start, end);
-                mutex.release();
             })
         );
 
@@ -110,37 +103,35 @@ export default class AutoReordering extends Plugin {
 
     handleKeystroke(event: KeyboardEvent) {
         // if special key, dont renumber automatically
-        mutex.runExclusive(() => {
-            this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
-        });
+        this.blockChanges = event.ctrlKey || event.metaKey || event.altKey;
     }
 
     //  mouse listener
     async handleMouseClick(event: MouseEvent) {
-        if (!this.settingsManager.getLiveCheckboxUpdate()) {
-            return;
-        }
-
         try {
-            await mutex.runExclusive(async () => {
-                this.checkboxClickedAt = undefined;
-                const target = event.target as HTMLElement;
-                if (target.matches('[type="checkbox"]')) {
-                    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                    if (activeView?.editor.hasFocus()) {
-                        // @ts-expect-error, not typed
-                        const editorView = activeView.editor.cm as EditorView;
-                        const pos = editorView.posAtDOM(target);
-                        const line = editorView.state.doc.lineAt(pos);
-                        this.checkboxClickedAt = line.number - 1;
+            if (!this.settingsManager.getLiveCheckboxUpdate()) {
+                return;
+            }
+            this.checkboxClickedAt = undefined;
+            const target = event.target as HTMLElement;
+            if (target.matches('[type="checkbox"]')) {
+                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (activeView?.editor.hasFocus()) {
+                    // @ts-expect-error, not typed
+                    const editorView = activeView.editor.cm as EditorView;
+                    const editor = activeView.editor; // obsidian's editor
+                    const pos = editorView.posAtCoords({ x: event.clientX, y: event.clientY });
+
+                    if (pos) {
+                        this.checkboxClickedAt = editor.offsetToPos(pos).line;
                     }
                 }
-                this.blockChanges = false;
-            });
+            }
         } catch (error) {
             console.error("Error in handleMouseClick:", error);
-            this.blockChanges = false;
             this.checkboxClickedAt = undefined;
+        } finally {
+            this.blockChanges = false;
         }
     }
 

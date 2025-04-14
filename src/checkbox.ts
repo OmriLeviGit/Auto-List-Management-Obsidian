@@ -58,6 +58,8 @@ function reorderAllListsInRange(
         }
     }
 
+    if (changes.length === 0) return undefined;
+
     return {
         reorderResult: {
             start: currentStart ?? start,
