@@ -2,7 +2,16 @@
 
 This plugin automatically manages your lists in Obsidian, handling both numbered lists and checklists.
 
-![Example](resources/example.gif)
+  <table>
+  <tr>
+    <td style="text-align: center; vertical-align: middle;">
+      <img src="resources/renumbering_example.gif" alt="Regular paste" style="display: block; margin: auto; height: 300px; width: auto;" />
+    </td>
+    <td style="text-align: center; vertical-align: middle;">
+      <img src="resources/checkbox_example.gif" alt="Smart paste" style="display: block; margin: auto; height: 300px; width: auto;" />
+    </td>
+  </tr>
+</table>
 
 ## Features
 
@@ -56,18 +65,18 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 <br>
 <div>
   <em>Content in clipboard:</em>
-    <ol>
-      <li>Apple</li>
-      <li>Banana</li>
-    </ol>
+  <ol>
+    <li>Apple</li>
+    <li>Banana</li>
+  </ol>
   <table>
     <tr>
-      <td style="text-align: center;">
-        <img src="resources/regular_paste.gif" alt="Regular paste" style="display: block; margin: auto;" />
+      <td style="text-align: center; vertical-align: middle;">
+        <img src="resources/regular_paste.gif" alt="Regular paste" style="display: block; margin: auto; height: 300px; width: auto;" />
         <p><em>Regular pasting</em></p>
       </td>
-      <td style="text-align: center;">
-        <img src="resources/smart_paste.gif" alt="Smart paste" style="display: block; margin: auto;" />
+      <td style="text-align: center; vertical-align: middle;">
+        <img src="resources/smart_paste.gif" alt="Smart paste" style="display: block; margin: auto; height: 300px; width: auto;" />
         <p><em>Smart pasting</em></p>
       </td>
     </tr>
