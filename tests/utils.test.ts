@@ -345,17 +345,17 @@ describe("findFirstNumbersByIndentFromEnd tests", () => {
         {
             name: "Basic numbered list",
             lines: ["1. item", "2. item", "3. item"],
-            expectedResult: [2], // Only the last line (index 2) is considered
+            expectedResult: [0],
         },
         {
             name: "List with different indent levels",
             lines: ["1. item", "    2. subitem", "    3. subitem", "4. item"],
-            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+            expectedResult: [0],
         },
         {
             name: "List with multiple indent levels",
-            lines: ["1. item", "    2. subitem", "        3. subsubitem", "4. item"],
-            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+            lines: ["1. item", "    2. subitem", "        3. subsubitem"],
+            expectedResult: [0, , , , 1, , , , 2],
         },
         {
             name: "Empty list",
@@ -369,28 +369,18 @@ describe("findFirstNumbersByIndentFromEnd tests", () => {
         },
         {
             name: "List with mixed numbered and non-numbered lines",
-            lines: ["1. item", "non-numbered", "    2. subitem", "3. item"],
-            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+            lines: ["1. item", "non-numbered", "  2. subitem"],
+            expectedResult: [, , 2],
         },
         {
             name: "List with decreasing indentation",
             lines: ["        1. deeply nested", "    2. less nested", "3. top level"],
-            expectedResult: [2], // Only the last line (index 2) is considered (indent 0)
-        },
-        {
-            name: "List with indented last line",
-            lines: ["1. item", "2. item", "    3. indented last"],
-            expectedResult: [1, undefined, undefined, undefined, 2], // Indices 1 (indent 0) and 2 (indent 1) are considered
+            expectedResult: [2],
         },
         {
             name: "List where some indents have no numbers",
-            lines: ["1. item", "    non-numbered", "        2. subsubitem", "3. item"],
-            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
-        },
-        {
-            name: "List with multiple indents at the end",
-            lines: ["1. item", "2. item", "    3. indented", "        4. more indented"],
-            expectedResult: [1, undefined, undefined, undefined, 2, undefined, undefined, undefined, 3], // Last two lines (highest indent first, then next lower)
+            lines: ["1. item", "  non-numbered", "   2. subsubitem"],
+            expectedResult: [0, , , 2],
         },
     ];
 

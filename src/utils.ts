@@ -209,15 +209,8 @@ function findFirstNumbersByIndentFromEnd(lines: string[]): number[] {
             continue;
         }
 
-        // Store the number for this indent level if not already set
-        if (result[currentIndent] === undefined) {
-            result[currentIndent] = i;
-        }
-
-        // If we've found indent 0, we're done
-        if (currentIndent === 0 && result[0] !== undefined) {
-            break;
-        }
+        // Store the number for this indent level
+        result[currentIndent] = i;
     }
 
     return result;

@@ -2,6 +2,7 @@ import { Editor, EditorTransaction, MarkdownView } from "obsidian";
 import { getLineInfo, findFirstNumbersByIndentFromEnd, findFirstNumbersAfterIndex } from "src/utils";
 import SettingsManager from "src/SettingsManager";
 import { checkPrimeSync } from "crypto";
+import path from "path";
 
 function handlePaste(evt: ClipboardEvent, editor: Editor): { start?: number; end?: number } {
     const updateNumbering = SettingsManager.getInstance().getLiveNumberingUpdate();
@@ -127,16 +128,14 @@ function modifyText(editor: Editor, pastedText: string, pastePosition: number) {
     const sourceListNumbers = findFirstNumbersByIndentFromEnd(pastedLines);
     const targetListNumbers = findFirstNumbersAfterIndex(editor, pastePosition);
 
-    console.log(sourceListNumbers);
-    console.log(targetListNumbers);
-
     for (let indentLevel = 0; indentLevel < sourceListNumbers.length; indentLevel++) {
         const sourceLineIndex = sourceListNumbers[indentLevel];
-        if (sourceLineIndex === undefined) {
+        const newNumber = targetListNumbers[indentLevel];
+
+        if (sourceLineIndex === undefined || newNumber === undefined) {
             continue;
         }
 
-        const newNumber = targetListNumbers[indentLevel];
         const sourceLine = pastedLines[sourceLineIndex];
         const sourceLineInfo = getLineInfo(sourceLine);
 
@@ -148,7 +147,6 @@ function modifyText(editor: Editor, pastedText: string, pastePosition: number) {
     }
 
     const renumberedText = pastedLines.join("\n");
-    console.log(renumberedText);
 
     return renumberedText;
 }
