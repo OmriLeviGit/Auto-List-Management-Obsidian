@@ -1,7 +1,13 @@
 import "./__mocks__/main";
 import { createMockEditor } from "./__mocks__/createMockEditor";
 
-import { getLineInfo, getListStart, getLastListStart, getPrevItemIndex } from "src/utils";
+import {
+    getLineInfo,
+    getListStart,
+    findFirstNumbersByIndentFromEnd,
+    getPrevItemIndex,
+    findFirstNumbersAfterIndex,
+} from "src/utils";
 
 describe("getLineInfo numbering tests", () => {
     beforeEach(() => {
@@ -242,52 +248,6 @@ describe("getListStart tests", () => {
     });
 });
 
-describe("getLastListStart tests", () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
-    const testCases = [
-        {
-            name: "Does not end in numbered list",
-            content: ["1. b", "c"],
-            expected: undefined,
-        },
-        {
-            name: "Numbered lines at the end",
-            content: ["a", "b", "1. c", "2. d"],
-            expected: 2,
-        },
-        {
-            name: "Interrupted numbered list at the end",
-            content: ["a", "1. b", "2. c", "d", "3. e"],
-            expected: 4,
-        },
-        {
-            name: "Single number",
-            content: ["1. a"],
-            expected: 0,
-        },
-        {
-            name: "Single non number",
-            content: ["a"],
-            expected: undefined,
-        },
-        {
-            name: "Empty string",
-            content: [""],
-            expected: undefined,
-        },
-    ];
-
-    testCases.forEach(({ name, content, expected }) => {
-        test(name, () => {
-            const res = getLastListStart(content);
-            expect(res).toBe(expected);
-        });
-    });
-});
-
 describe("getPrevItemIndex tests", () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -373,6 +333,139 @@ describe("getPrevItemIndex tests", () => {
             const editor = createMockEditor(content);
             const res = getPrevItemIndex(editor, index);
             expect(res).toBe(expectedResult);
+        });
+    });
+});
+
+describe("findFirstNumbersByIndentFromEnd tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+    const testCases = [
+        {
+            name: "Basic numbered list",
+            lines: ["1. item", "2. item", "3. item"],
+            expectedResult: [2], // Only the last line (index 2) is considered
+        },
+        {
+            name: "List with different indent levels",
+            lines: ["1. item", "    2. subitem", "    3. subitem", "4. item"],
+            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+        },
+        {
+            name: "List with multiple indent levels",
+            lines: ["1. item", "    2. subitem", "        3. subsubitem", "4. item"],
+            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+        },
+        {
+            name: "Empty list",
+            lines: [],
+            expectedResult: [],
+        },
+        {
+            name: "List with no numbers",
+            lines: ["item", "subitem", "another item"],
+            expectedResult: [],
+        },
+        {
+            name: "List with mixed numbered and non-numbered lines",
+            lines: ["1. item", "non-numbered", "    2. subitem", "3. item"],
+            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+        },
+        {
+            name: "List with decreasing indentation",
+            lines: ["        1. deeply nested", "    2. less nested", "3. top level"],
+            expectedResult: [2], // Only the last line (index 2) is considered (indent 0)
+        },
+        {
+            name: "List with indented last line",
+            lines: ["1. item", "2. item", "    3. indented last"],
+            expectedResult: [1, undefined, undefined, undefined, 2], // Indices 1 (indent 0) and 2 (indent 1) are considered
+        },
+        {
+            name: "List where some indents have no numbers",
+            lines: ["1. item", "    non-numbered", "        2. subsubitem", "3. item"],
+            expectedResult: [3], // Only the last line (index 3) is considered (indent 0)
+        },
+        {
+            name: "List with multiple indents at the end",
+            lines: ["1. item", "2. item", "    3. indented", "        4. more indented"],
+            expectedResult: [1, undefined, undefined, undefined, 2, undefined, undefined, undefined, 3], // Last two lines (highest indent first, then next lower)
+        },
+    ];
+
+    testCases.forEach(({ name, lines, expectedResult }) => {
+        test(name, () => {
+            // This test directly calls the function with the lines array
+            const result = findFirstNumbersByIndentFromEnd(lines);
+            expect(result).toEqual(expectedResult);
+        });
+    });
+});
+
+describe("findFirstNumbersAfterIndex tests", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const testCases = [
+        {
+            name: "Basic numbered list",
+            content: "1. item\n2. item\n3. item",
+            startIndex: 0,
+            expectedResult: [1], // Now includes the startIndex line
+        },
+        {
+            name: "List with different indent levels",
+            content: "1. item\n    2. subitem\n    3. subitem\n4. item",
+            startIndex: 0,
+            expectedResult: [1], // Now includes the startIndex line
+        },
+        {
+            name: "Starting from middle of list",
+            content: "1. item\n    2. subitem\n    3. subitem\n4. item",
+            startIndex: 1,
+            expectedResult: [4, , , , 2], // Starts from line 1 ("2. subitem")
+        },
+        {
+            name: "Starting from last item",
+            content: "1. item\n    2. subitem\n    3. subitem\n4. item",
+            startIndex: 3,
+            expectedResult: [4], // Now includes the startIndex line itself
+        },
+        {
+            name: "Starting from indented item",
+            content: "1. item\n    2. subitem\n        3. subsubitem\n    4. subitem\n5. item",
+            startIndex: 1,
+            expectedResult: [5, , , , 2], // Starts from line 1 ("2. subitem")
+        },
+        {
+            name: "Multiple indent levels",
+            content: "1. item\n    2. subitem\n        3. subsubitem\n            4. deepitem\n5. item",
+            startIndex: 0,
+            expectedResult: [1], // Now includes the startIndex line
+        },
+        {
+            name: "Non-numbered lines in between",
+            content: "1. item\n    2. subitem\nnon-numbered\n    3. subitem\n4. item",
+            startIndex: 1,
+            expectedResult: [4, , , , 2], // Starts from line 1 ("2. subitem")
+        },
+        {
+            name: "Starting from non-numbered line",
+            content: "1. item\nnon-numbered\n2. item",
+            startIndex: 1,
+            expectedResult: [2], // Starts from a non-numbered line so only finds line 2
+        },
+    ];
+
+    testCases.forEach(({ name, content, startIndex, expectedResult }) => {
+        test(name, () => {
+            const lines = content.split("\n");
+            const editor = createMockEditor(lines);
+
+            const result = findFirstNumbersAfterIndex(editor, startIndex);
+            expect(result).toEqual(expectedResult);
         });
     });
 });

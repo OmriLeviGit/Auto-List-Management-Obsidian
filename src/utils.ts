@@ -1,6 +1,7 @@
 import { Editor } from "obsidian";
 import SettingsManager from "./SettingsManager";
 import { LineInfo } from "./types";
+import { resourceLimits } from "worker_threads";
 
 // extract information from a line of text
 function getLineInfo(line: string): LineInfo {
@@ -90,20 +91,6 @@ function getListStart(editor: Editor, currLineIndex: number): number | undefined
     return prevIndex + 1;
 }
 
-// index of the first item in the last numbered list
-function getLastListStart(lines: string[]): number | undefined {
-    const maxIndex = lines.length - 1;
-    let index: number | undefined = undefined;
-    for (let i = maxIndex; i >= 0; i--) {
-        const info = getLineInfo(lines[i]);
-        if (info.number === undefined) {
-            break;
-        }
-        index = i;
-    }
-    return index;
-}
-
 function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     if (index <= 0 || editor.lastLine() < index) {
         return undefined;
@@ -130,4 +117,110 @@ function getPrevItemIndex(editor: Editor, index: number): number | undefined {
     return undefined;
 }
 
-export { getLineInfo, getListStart, getLastListStart, getPrevItemIndex };
+function findFirstNumbersAfterIndex(editor: Editor, startIndex: number): number[] {
+    // Array to store the first number found for each indent level (going forward)
+    const result: number[] = [];
+
+    // Get the indent level of the current line to set our maximum tracking threshold
+    const currentLineInfo = getLineInfo(editor.getLine(startIndex));
+
+    if (!currentLineInfo || currentLineInfo.spaceIndent === undefined) {
+        return []; // Invalid start line
+    }
+
+    // Initial maximum indent level we care about
+    let maxIndentToTrack = Infinity;
+
+    for (let i = startIndex; i <= editor.lastLine(); i++) {
+        const line = editor.getLine(i);
+        const info = getLineInfo(line);
+
+        // Skip if we can't get info
+        if (info.spaceIndent === undefined) {
+            continue;
+        }
+
+        const currentIndent = info.spaceIndent;
+
+        // Skip if this indent is higher than what we care about
+        if (currentIndent > maxIndentToTrack) {
+            continue;
+        }
+
+        // If the line has no number, continue to next line
+        if (info.number === undefined) {
+            continue;
+        }
+
+        // Store the number for this indent level if not already set
+        if (result[currentIndent] === undefined) {
+            result[currentIndent] = info.number;
+        }
+
+        // Only update maxIndentToTrack AFTER we've stored the number
+        if (currentIndent < maxIndentToTrack) {
+            maxIndentToTrack = currentIndent;
+        }
+
+        // If we've found indent 0, we're done (reached the lowest level)
+        if (currentIndent === 0 && result[0] !== undefined) {
+            break;
+        }
+    }
+
+    return result;
+}
+
+// index of the first item in the last numbered list
+function findFirstNumbersByIndentFromEnd(lines: string[]): number[] {
+    // Array to store the first number found for each indent level (from the end)
+    const result = [];
+    // Track the maximum indent level we still care about, which is the minimum we have seen
+    let maxIndentToTrack = Infinity;
+
+    // Process lines in reverse order
+    for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        const info = getLineInfo(line);
+
+        // Skip if we can't get info
+        if (!info || info.spaceIndent === undefined) {
+            continue;
+        }
+
+        const currentIndent = info.spaceIndent;
+
+        // Skip if this indent is higher than what we care about
+        if (currentIndent > maxIndentToTrack) {
+            continue;
+        }
+
+        // Update the minimum indent we care about
+        maxIndentToTrack = currentIndent;
+
+        // If the line has no number, we don't need to process any more lines
+        // at this indent level or higher
+        if (info.number === undefined) {
+            if (currentIndent === 0) {
+                // If we're at indent 0 with no number, we can break entirely
+                break;
+            }
+
+            continue;
+        }
+
+        // Store the number for this indent level if not already set
+        if (result[currentIndent] === undefined) {
+            result[currentIndent] = i;
+        }
+
+        // If we've found indent 0, we're done
+        if (currentIndent === 0 && result[0] !== undefined) {
+            break;
+        }
+    }
+
+    return result;
+}
+
+export { getLineInfo, getListStart, getPrevItemIndex, findFirstNumbersByIndentFromEnd, findFirstNumbersAfterIndex };

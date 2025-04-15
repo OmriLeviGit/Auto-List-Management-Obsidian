@@ -1,6 +1,7 @@
 import { Editor, EditorTransaction, MarkdownView } from "obsidian";
-import { getLineInfo, getLastListStart } from "src/utils";
+import { getLineInfo, findFirstNumbersByIndentFromEnd, findFirstNumbersAfterIndex } from "src/utils";
 import SettingsManager from "src/SettingsManager";
+import { checkPrimeSync } from "crypto";
 
 function handlePaste(evt: ClipboardEvent, editor: Editor): { start?: number; end?: number } {
     const updateNumbering = SettingsManager.getInstance().getLiveNumberingUpdate();
@@ -27,11 +28,7 @@ function handlePaste(evt: ClipboardEvent, editor: Editor): { start?: number; end
     const smartPasting = SettingsManager.getInstance().getSmartPasting();
     if (smartPasting) {
         const indexAfterPasting = Math.max(anchor.line, head.line) + 1;
-        const line = editor.getLine(indexAfterPasting);
-        const info = getLineInfo(line);
-        if (info.number !== undefined) {
-            modifiedContent = modifyText(content, info.number) ?? content;
-        }
+        modifiedContent = modifyText(editor, content, indexAfterPasting) ?? content;
     }
 
     editor.replaceSelection(modifiedContent); // Paste the content
@@ -78,9 +75,12 @@ function handleDrop(evt: DragEvent, editor: Editor): { start?: number; end?: num
 
     // Get the current selection (what's being dragged)
     const { anchor, head } = editor.listSelections()[0];
-    const baseIndex = Math.min(anchor.line, head.line);
 
-    const finalText = modifyText(content, baseIndex) ?? content;
+    let modifiedContent = content;
+    const smartPasting = SettingsManager.getInstance().getSmartPasting();
+    if (smartPasting) {
+        modifiedContent = modifyText(editor, content, pos.line) ?? content;
+    }
 
     const selectionFrom = anchor.line < head.line || (anchor.line === head.line && anchor.ch < head.ch) ? anchor : head;
 
@@ -97,7 +97,7 @@ function handleDrop(evt: DragEvent, editor: Editor): { start?: number; end?: num
             {
                 from: pos,
                 to: pos,
-                text: finalText,
+                text: modifiedContent,
             },
         ],
     };
@@ -105,10 +105,10 @@ function handleDrop(evt: DragEvent, editor: Editor): { start?: number; end?: num
     editor.transaction(transaction);
 
     // Calculate end position of inserted text
-    const lines = finalText.split("\n");
+    const lines = modifiedContent.split("\n");
     const endPos = {
         line: pos.line + lines.length - 1,
-        ch: lines.length > 1 ? lines[lines.length - 1].length : pos.ch + finalText.length,
+        ch: lines.length > 1 ? lines[lines.length - 1].length : pos.ch + modifiedContent.length,
     };
 
     const start = Math.min(pos.line, selectionFrom.line);
@@ -117,27 +117,40 @@ function handleDrop(evt: DragEvent, editor: Editor): { start?: number; end?: num
     return { start, end };
 }
 
-function modifyText(text: string, newNumber: number) {
-    /*
-    if its a start of a list, edit the number to be the old starting number
-    not only the start of the pasting range, but anywhere in that range
-    */
-    const lines = text.split("\n");
-    const lineIndex = getLastListStart(lines);
-
-    if (lineIndex === undefined) {
-        return undefined;
+function modifyText(editor: Editor, pastedText: string, pastePosition: number) {
+    const currentLineInfo = getLineInfo(editor.getLine(pastePosition));
+    if (!currentLineInfo.number) {
+        return;
     }
 
-    const targetLine = lines[lineIndex];
-    const info = getLineInfo(targetLine);
+    const pastedLines = pastedText.split("\n");
+    const sourceListNumbers = findFirstNumbersByIndentFromEnd(pastedLines);
+    const targetListNumbers = findFirstNumbersAfterIndex(editor, pastePosition);
 
-    const newLine = targetLine.slice(0, info.spaceCharsNum) + newNumber + ". " + targetLine.slice(info.textOffset);
+    console.log(sourceListNumbers);
+    console.log(targetListNumbers);
 
-    lines[lineIndex] = newLine;
-    const modifiedText = lines.join("\n");
+    for (let indentLevel = 0; indentLevel < sourceListNumbers.length; indentLevel++) {
+        const sourceLineIndex = sourceListNumbers[indentLevel];
+        if (sourceLineIndex === undefined) {
+            continue;
+        }
 
-    return modifiedText;
+        const newNumber = targetListNumbers[indentLevel];
+        const sourceLine = pastedLines[sourceLineIndex];
+        const sourceLineInfo = getLineInfo(sourceLine);
+
+        pastedLines[sourceLineIndex] =
+            sourceLine.slice(0, sourceLineInfo.spaceCharsNum) +
+            newNumber +
+            ". " +
+            sourceLine.slice(sourceLineInfo.textOffset);
+    }
+
+    const renumberedText = pastedLines.join("\n");
+    console.log(renumberedText);
+
+    return renumberedText;
 }
 
 export { modifyText, handlePaste, handleDrop };

@@ -78,6 +78,7 @@ export default class AutoReordering extends Plugin {
         this.registerEvent(
             this.app.workspace.on("editor-paste", (evt: ClipboardEvent, editor: Editor) => {
                 const { start, end } = handlePaste.call(this, evt, editor);
+                // console.log(`start: ${start}, end: ${end}`);
                 this.blockChanges = false;
                 this.applyReordering(editor, start, end);
             })

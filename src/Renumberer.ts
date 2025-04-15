@@ -8,10 +8,10 @@ export default class Renumberer {
     renumber(editor: Editor, start: number, limit?: number) {
         let pendingChanges;
 
-        if (limit !== undefined) {
-            pendingChanges = this.renumberAllListsInRange(editor, start, limit);
-        } else {
+        if (limit === undefined || limit === start) {
             pendingChanges = this.renumberAtIndex(editor, start);
+        } else {
+            pendingChanges = this.renumberAllListsInRange(editor, start, limit);
         }
 
         this.applyChangesToEditor(editor, pendingChanges.changes);
