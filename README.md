@@ -99,6 +99,7 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 
 The plugin was tested with documents containing lists with over 10,000 lines, and no performance issues were found on my machine.
 
-## Limitations
+## Known bugs & Limitations
 
 -   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the automatic update is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
+-   [Reordering checklists items with their sub-items](https://github.com/OmriLeviGit/Auto-List-Management-Obsidian/issues/5)
