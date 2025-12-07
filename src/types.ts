@@ -40,11 +40,18 @@ interface ChecklistSettings {
     checkedItemsAtBottom: boolean;
     sortSpecialChars: boolean;
     charsToDelete: string;
+    hierarchicalReordering: boolean;
 }
 
 interface ReorderResult {
     start: number;
     limit: number;
+}
+
+interface ChecklistBlock {
+    parentLine: string;      // The checkbox line itself
+    parentInfo: LineInfo;    // Parsed info of the parent line
+    childLines: string[];    // All lines indented under this checkbox (any content type)
 }
 
 export type {
@@ -56,4 +63,5 @@ export type {
     RenumberingSettings,
     ChecklistSettings,
     ReorderResult,
+    ChecklistBlock,
 };

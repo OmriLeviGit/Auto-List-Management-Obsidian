@@ -11,6 +11,7 @@ const DEFAULT_CHECKLIST_SETTINGS: ChecklistSettings = {
     checkedItemsAtBottom: true,
     sortSpecialChars: true,
     charsToDelete: "",
+    hierarchicalReordering: true,
 };
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -106,5 +107,13 @@ export default class SettingsManager {
 
     public setSortSpecialChars(value: boolean): void {
         this.settings.checklist.sortSpecialChars = value;
+    }
+
+    public isHierarchicalReordering(): boolean {
+        return this.settings.checklist.hierarchicalReordering ?? true;
+    }
+
+    public setHierarchicalReordering(value: boolean): void {
+        this.settings.checklist.hierarchicalReordering = value;
     }
 }

@@ -162,8 +162,8 @@ describe("reorder", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 0,
-                    endIndex: 0,
+                    startIndex: 1,
+                    endIndex: 1,
                 },
             },
             {
@@ -193,10 +193,10 @@ describe("reorder", () => {
                 content: ["- [ ] a", "- [ ] b", "- [x] c", "\t- [x] d", "- [ ] e", "- [x] f"],
                 index: 0,
                 expected: {
-                    unchecked: ["- [ ] a", "- [ ] b"],
-                    checked: ["- [x] c"],
+                    unchecked: ["- [ ] a", "- [ ] b", "- [ ] e"],
+                    checked: ["- [x] c", "\t- [x] d", "- [x] f"],
                     startIndex: 0,
-                    endIndex: 3,
+                    endIndex: 6,
                 },
             },
             {
@@ -228,8 +228,8 @@ describe("reorder", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 2,
-                    endIndex: 2,
+                    startIndex: 4,
+                    endIndex: 4,
                 },
             },
             {
@@ -261,8 +261,8 @@ describe("reorder", () => {
                 expected: {
                     unchecked: [],
                     checked: [],
-                    startIndex: 2,
-                    endIndex: 2,
+                    startIndex: 5,
+                    endIndex: 5,
                 },
             },
             {
@@ -342,10 +342,10 @@ describe("reorder", () => {
                 content: ["- [x] a", "- [ ] b", "- [ ] c", "\t- [x] d", "- [ ] e", "- [x] f"],
                 index: 0,
                 expected: {
-                    unchecked: ["- [ ] b", "- [ ] c"],
+                    unchecked: ["- [ ] b", "- [ ] c", "\t- [x] d", "- [ ] e"],
                     checked: ["- [x] a"],
                     startIndex: 0,
-                    endIndex: 3,
+                    endIndex: 5,
                 },
             },
             {
@@ -499,10 +499,10 @@ describe("reorderChecklist", () => {
                 content: ["- [ ] a", "- [ ] b", "- [x] c", "\t- [x] d", "- [ ] e", "- [x] f"],
                 index: 0,
                 expected: {
-                    content: ["- [x] c", "- [ ] a", "- [ ] b", "\t- [x] d", "- [ ] e", "- [x] f"],
+                    content: ["- [x] c", "\t- [x] d", "- [x] f", "- [ ] a", "- [ ] b", "- [ ] e"],
                     result: {
                         start: 0,
-                        limit: 3,
+                        limit: 6,
                     },
                 },
             },
@@ -639,10 +639,10 @@ describe("reorderChecklist", () => {
                 content: ["- [x] a", "- [ ] b", "- [ ] c", "\t- [x] d", "- [ ] e", "- [x] f"],
                 index: 0,
                 expected: {
-                    content: ["- [ ] b", "- [ ] c", "- [x] a", "\t- [x] d", "- [ ] e", "- [x] f"],
+                    content: ["- [ ] b", "- [ ] c", "\t- [x] d", "- [ ] e", "- [x] a", "- [x] f"],
                     result: {
                         start: 0,
-                        limit: 3,
+                        limit: 5,
                     },
                 },
             },

@@ -70,6 +70,18 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                 })
             );
 
+        new Setting(containerEl)
+            .setName("Hierarchical checkbox reordering")
+            .setDesc(
+                "When enabled, checking a checkbox moves it along with all indented content (sub-tasks, paragraphs) as a block. When disabled, checkbox lines moves individually."
+            )
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.isHierarchicalReordering()).onChange(async (value) => {
+                    this.settingsManager.setHierarchicalReordering(value);
+                    await this.plugin.saveSettings();
+                })
+            );
+
         const descEl = createFragment();
         descEl.appendText("When enabled, tasks with any special checkbox characters will be sorted according to ");
         descEl.createEl("a", {
