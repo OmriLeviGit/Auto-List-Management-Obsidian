@@ -5,7 +5,7 @@
 	"description": "Automatically reorders checklists and numbered lists as you edit them.",
 	"authorUrl": "https://github.com/OmriLeviGit/Auto-List-Management-Obsidian",
 	"fundingUrl": "https://buymeacoffee.com/omrilevi",
-	"version": "2.0.10",
+	"version": "2.0.11",
 	"minAppVersion": "0.15.0",
 	"isDesktopOnly": true
 }
