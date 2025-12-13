@@ -1,9 +1,9 @@
-.smart-paste-toggle {
+.setting-enabled {
     opacity: 1;
     pointer-events: auto;
 }
 
-.smart-paste-toggle-disabled {
+.setting-disabled {
     opacity: 0.5;
     pointer-events: none;
 }

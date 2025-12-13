@@ -124,26 +124,11 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
             cls: "setting-item-description",
         });
 
+        new Setting(containerEl).setHeading();
+
         new Setting(containerEl).setHeading().setName("Numbered lists");
 
-        new Setting(containerEl)
-            .setName("Auto-renumber on changes")
-            .setDesc("Automatically sort numbered lists as changes are made.")
-            .addToggle((toggle) =>
-                toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
-                    this.settingsManager.setLiveNumberingUpdate(value);
-                    await this.plugin.saveSettings();
-
-                    if (value) {
-                        smartPastingToggleEl.classList.add("smart-paste-toggle");
-                        smartPastingToggleEl.classList.remove("smart-paste-toggle-disabled");
-                    } else {
-                        smartPastingToggleEl.classList.remove("smart-paste-toggle");
-                        smartPastingToggleEl.classList.add("smart-paste-toggle-disabled");
-                    }
-                })
-            );
-
+        // Create the dependent settings first to get their elements
         const smartPastingSetting = new Setting(containerEl)
             .setName("Smart pasting")
             .setDesc("Pasting keeps the sequencing consistent with the original numbered list.")
@@ -156,16 +141,7 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
 
         const smartPastingToggleEl = smartPastingSetting.settingEl;
 
-        const isLiveNumberingUpdateEnabled = this.settingsManager.getLiveNumberingUpdate();
-        if (isLiveNumberingUpdateEnabled) {
-            smartPastingToggleEl.classList.add("smart-paste-toggle");
-            smartPastingToggleEl.classList.remove("smart-paste-toggle-disabled");
-        } else {
-            smartPastingToggleEl.classList.add("smart-paste-toggle-disabled");
-            smartPastingToggleEl.classList.remove("smart-paste-toggle");
-        }
-
-        new Setting(containerEl)
+        const startsFromOneSetting = new Setting(containerEl)
             .setName("Start numbering from 1")
             .setDesc("Whether lists always start from 1 or preserve their original starting numbers.")
             .addToggle((toggle) =>
@@ -174,5 +150,46 @@ export default class AutoRenumberingSettings extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 })
             );
+
+        const startsFromOneToggleEl = startsFromOneSetting.settingEl;
+
+        // Now create the auto-renumber toggle and insert it at the top
+        const autoRenumberSetting = new Setting(containerEl)
+            .setName("Auto-renumber on changes")
+            .setDesc("Automatically sort numbered lists as changes are made.")
+            .addToggle((toggle) =>
+                toggle.setValue(this.settingsManager.getLiveNumberingUpdate()).onChange(async (value) => {
+                    this.settingsManager.setLiveNumberingUpdate(value);
+                    await this.plugin.saveSettings();
+
+                    if (value) {
+                        smartPastingToggleEl.classList.add("setting-enabled");
+                        smartPastingToggleEl.classList.remove("setting-disabled");
+                        startsFromOneToggleEl.classList.add("setting-enabled");
+                        startsFromOneToggleEl.classList.remove("setting-disabled");
+                    } else {
+                        smartPastingToggleEl.classList.remove("setting-enabled");
+                        smartPastingToggleEl.classList.add("setting-disabled");
+                        startsFromOneToggleEl.classList.remove("setting-enabled");
+                        startsFromOneToggleEl.classList.add("setting-disabled");
+                    }
+                })
+            );
+
+        // Move the auto-renumber setting to the top by moving the DOM element
+        containerEl.insertBefore(autoRenumberSetting.settingEl, smartPastingSetting.settingEl);
+
+        const isLiveNumberingUpdateEnabled = this.settingsManager.getLiveNumberingUpdate();
+        if (isLiveNumberingUpdateEnabled) {
+            smartPastingToggleEl.classList.add("setting-enabled");
+            smartPastingToggleEl.classList.remove("setting-disabled");
+            startsFromOneToggleEl.classList.add("setting-enabled");
+            startsFromOneToggleEl.classList.remove("setting-disabled");
+        } else {
+            smartPastingToggleEl.classList.add("setting-disabled");
+            smartPastingToggleEl.classList.remove("setting-enabled");
+            startsFromOneToggleEl.classList.add("setting-disabled");
+            startsFromOneToggleEl.classList.remove("setting-enabled");
+        }
     }
 }
