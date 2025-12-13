@@ -18,6 +18,7 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 ### Checklists
 
 -   Automatic reordering of checked/unchecked items
+-   Hierarchical reordering treats checkboxes and their indented content as unified blocks that move together
 -   Configurable sorting (checked items are sorted to the bottom or to the top)
 -   Smart handling when pasting or dragging content
 -   Works with mouse and keyboard interactions
@@ -47,6 +48,8 @@ This plugin automatically manages your lists in Obsidian, handling both numbered
 ### Checklists
 
 -   **Auto-sort on changes**: Sorts checklist items automatically when they are checked.
+
+-   **Hierarchical checkbox reordering**: When enabled, checking a checkbox moves it along with all indented content (sub-tasks, descriptions, paragraphs) as a unified block. When disabled, checkbox lines move individually without their indented content.
 
 -   **Sorting position**: Choose whether checked items should be placed at the top or bottom of the list.
 
@@ -102,4 +105,4 @@ The plugin was tested with documents containing lists with over 10,000 lines, an
 ## Known bugs & Limitations
 
 -   **Modifier keys**: To avoid conflicts with keyboard shortcuts, the automatic update is temporarily disabled when modifier Keys (`Ctrl`, `Command` on Mac, or `Alt/Option`) held down during editing.
--   [Reordering checklists items with their sub-items](https://github.com/OmriLeviGit/Auto-List-Management-Obsidian/issues/5)
+-   **Obsidian's smart lists with numbered checkboxes**: When using numbered lists with checklist items, Obsidian's default smart lists feature may cause incorrect numbering during checkbox reordering (e.g., lists starting from "2." instead of "1."). To prevent this, consider enabling the **Auto-renumber on changes** in plugin's settings - the two features work together without interfering with each other.
