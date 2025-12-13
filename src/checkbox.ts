@@ -158,6 +158,22 @@ function reorder(
         allLines.push(...blockLines);
     }
 
+    // If automatic renumbering is enabled, preserve the original first line's number
+    // This prevents glitches before the renumbering pass runs
+    if (SettingsManager.getInstance().getLiveNumberingUpdate() && allLines.length > 0) {
+        const originalLine = editor.getLine(startIndex);
+        const originalInfo = getLineInfo(originalLine);
+        const newFirstInfo = getLineInfo(allLines[0]);
+
+        if (originalInfo.number !== undefined && newFirstInfo.number !== undefined) {
+            // Reconstruct the line with original number but new content
+            // This handles different digit lengths correctly (1. vs 12. vs 123.)
+            const prefix = originalLine.substring(0, originalInfo.spaceCharsNum);
+            const suffix = allLines[0].substring(newFirstInfo.textOffset);
+            allLines[0] = prefix + originalInfo.number + ". " + suffix;
+        }
+    }
+
     // Phase 4: Optimization - Remove unchanged lines from the beginning
     let count = 0;
     for (; count < allLines.length; count++) {
@@ -189,7 +205,8 @@ function reorder(
             };
         }
 
-        const firstIsChecked = blocks[0]?.parentInfo.checkboxChar !== undefined && blocks[0].parentInfo.checkboxChar !== " ";
+        const firstIsChecked =
+            blocks[0]?.parentInfo.checkboxChar !== undefined && blocks[0].parentInfo.checkboxChar !== " ";
         if (!firstIsChecked) {
             return {
                 orderedItems,
@@ -295,10 +312,7 @@ function isSameStatus(info1: LineInfo, info2: LineInfo): boolean {
  * @param startLineIndex - Index of the checkbox line (parent)
  * @returns Object containing the extracted block and the index of the next line after the block
  */
-function extractBlock(
-    editor: Editor,
-    startLineIndex: number
-): { block: ChecklistBlock; nextIndex: number } {
+function extractBlock(editor: Editor, startLineIndex: number): { block: ChecklistBlock; nextIndex: number } {
     const parentLine = editor.getLine(startLineIndex);
     const parentInfo = getLineInfo(parentLine);
     const parentIndent = parentInfo.spaceIndent;
